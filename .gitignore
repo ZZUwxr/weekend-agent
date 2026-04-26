@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+
+.env
+.env.*
+
+database/pgdata/
+database/postgres.log
+
+data_process/generated_data/*.json
