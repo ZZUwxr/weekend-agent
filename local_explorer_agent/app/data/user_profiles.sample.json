@@ -1,0 +1,17 @@
+[
+  {
+    "user_id": "u001",
+    "name": "默认家庭用户",
+    "explicit_preferences": {
+      "likes": ["亲子", "低步行", "轻松", "健康"],
+      "dislikes": ["排队", "太远", "高强度赶路"],
+      "budget_preference": "medium",
+      "max_walking_minutes_per_segment": 15
+    },
+    "learned_weights": {
+      "低步行": 1.4,
+      "亲子": 1.5,
+      "健康": 1.3
+    }
+  }
+]

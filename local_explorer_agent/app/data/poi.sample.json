@@ -1,0 +1,211 @@
+[
+  {
+    "id": "poi_family_play_001",
+    "name": "南山亲子运动乐园",
+    "category": "亲子空间",
+    "city": "深圳",
+    "area": "科技生活区",
+    "address": "深圳市南山区模拟路 18 号",
+    "lon": 114.0521,
+    "lat": 22.5411,
+    "avg_price": 88,
+    "open_hours": "10:00-21:00",
+    "avg_stay_minutes": 80,
+    "indoor": true,
+    "weather_fit": ["晴天", "雨天", "高温"],
+    "energy_level": 4,
+    "crowd_risk": "medium",
+    "queue_risk": "low",
+    "suitable_for": ["亲子", "child", "family"],
+    "activity_tags": ["释放体力", "互动", "运动", "亲子"],
+    "mood_tags": ["活力", "安全", "轻松"],
+    "experience_scores": {
+      "photo_score": 3.6,
+      "conversation_score": 3.2,
+      "novelty_score": 4.0,
+      "relax_score": 3.0
+    },
+    "facilities": {
+      "restroom": true,
+      "baby_care_room": true,
+      "air_conditioning": true,
+      "accessible": true
+    },
+    "business_rules": {
+      "reservation_required": false,
+      "refund_friendly": true
+    },
+    "persona_fit": {
+      "child": 0.95,
+      "user": 0.72,
+      "spouse": 0.7
+    },
+    "conflict_relief_tags": ["energy_release", "pace_conflict"]
+  },
+  {
+    "id": "poi_healthy_dining_001",
+    "name": "湾区轻食研究所",
+    "category": "轻食",
+    "city": "深圳",
+    "area": "科技生活区",
+    "address": "深圳市南山区模拟路 36 号",
+    "lon": 114.057,
+    "lat": 22.5426,
+    "avg_price": 68,
+    "open_hours": "10:30-21:00",
+    "avg_stay_minutes": 55,
+    "indoor": true,
+    "weather_fit": ["晴天", "雨天", "高温"],
+    "energy_level": 1,
+    "crowd_risk": "low",
+    "queue_risk": "low",
+    "suitable_for": ["朋友", "约会", "family", "spouse"],
+    "activity_tags": ["吃饭", "轻食", "低卡", "聊天"],
+    "mood_tags": ["健康", "清爽", "安静"],
+    "experience_scores": {
+      "photo_score": 3.8,
+      "conversation_score": 4.4,
+      "novelty_score": 3.5,
+      "relax_score": 4.0
+    },
+    "facilities": {
+      "restroom": true,
+      "air_conditioning": true,
+      "accessible": true
+    },
+    "business_rules": {
+      "reservation_required": true,
+      "group_buy_available": true,
+      "refund_friendly": true
+    },
+    "persona_fit": {
+      "spouse": 0.96,
+      "user": 0.82,
+      "child": 0.65
+    },
+    "conflict_relief_tags": ["diet_conflict", "low_calorie"]
+  },
+  {
+    "id": "poi_bookstore_001",
+    "name": "城市森林书店",
+    "category": "书店",
+    "city": "深圳",
+    "area": "科技生活区",
+    "address": "深圳市南山区模拟路 52 号",
+    "lon": 114.0615,
+    "lat": 22.5441,
+    "avg_price": 35,
+    "open_hours": "10:00-22:00",
+    "avg_stay_minutes": 45,
+    "indoor": true,
+    "weather_fit": ["晴天", "雨天", "高温"],
+    "energy_level": 1,
+    "crowd_risk": "low",
+    "queue_risk": "low",
+    "suitable_for": ["亲子", "朋友", "family", "user"],
+    "activity_tags": ["阅读", "休息", "拍照", "低刺激"],
+    "mood_tags": ["安静", "文艺", "治愈", "松弛"],
+    "experience_scores": {
+      "photo_score": 4.2,
+      "conversation_score": 3.8,
+      "novelty_score": 3.7,
+      "relax_score": 4.5
+    },
+    "facilities": {
+      "restroom": true,
+      "air_conditioning": true,
+      "accessible": true
+    },
+    "business_rules": {
+      "reservation_required": false,
+      "quiet_required": true
+    },
+    "persona_fit": {
+      "user": 0.9,
+      "spouse": 0.82,
+      "child": 0.66
+    },
+    "conflict_relief_tags": ["relax", "min_regret"]
+  },
+  {
+    "id": "poi_park_001",
+    "name": "深圳湾微风草坪",
+    "category": "公园",
+    "city": "深圳",
+    "area": "海岸漫游区",
+    "address": "深圳市南山区海岸模拟段",
+    "lon": 114.066,
+    "lat": 22.536,
+    "avg_price": 0,
+    "open_hours": "06:00-22:30",
+    "avg_stay_minutes": 60,
+    "indoor": false,
+    "weather_fit": ["晴天", "阴天"],
+    "energy_level": 3,
+    "crowd_risk": "medium",
+    "queue_risk": "low",
+    "suitable_for": ["亲子", "family", "child"],
+    "activity_tags": ["散步", "释放体力", "户外", "拍照"],
+    "mood_tags": ["开阔", "自然", "松弛"],
+    "experience_scores": {
+      "photo_score": 4.5,
+      "conversation_score": 3.5,
+      "novelty_score": 3.3,
+      "relax_score": 4.1
+    },
+    "facilities": {
+      "restroom": true,
+      "accessible": true
+    },
+    "business_rules": {
+      "reservation_required": false
+    },
+    "persona_fit": {
+      "child": 0.9,
+      "user": 0.75,
+      "spouse": 0.68
+    },
+    "conflict_relief_tags": ["energy_release", "outdoor"]
+  },
+  {
+    "id": "poi_cafe_001",
+    "name": "半小时咖啡",
+    "category": "咖啡",
+    "city": "深圳",
+    "area": "科技生活区",
+    "address": "深圳市南山区模拟路 60 号",
+    "lon": 114.0598,
+    "lat": 22.5394,
+    "avg_price": 45,
+    "open_hours": "09:30-22:30",
+    "avg_stay_minutes": 45,
+    "indoor": true,
+    "weather_fit": ["晴天", "雨天", "高温"],
+    "energy_level": 1,
+    "crowd_risk": "low",
+    "queue_risk": "medium",
+    "suitable_for": ["朋友", "约会", "user", "spouse"],
+    "activity_tags": ["聊天", "休息", "轻办公"],
+    "mood_tags": ["松弛", "安静", "治愈"],
+    "experience_scores": {
+      "photo_score": 4.0,
+      "conversation_score": 4.6,
+      "novelty_score": 3.2,
+      "relax_score": 4.6
+    },
+    "facilities": {
+      "restroom": true,
+      "air_conditioning": true,
+      "charging_available": true
+    },
+    "business_rules": {
+      "reservation_required": false
+    },
+    "persona_fit": {
+      "user": 0.9,
+      "spouse": 0.85,
+      "child": 0.45
+    },
+    "conflict_relief_tags": ["relax", "compensation"]
+  }
+]
