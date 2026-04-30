@@ -29,11 +29,13 @@ class JSONPromptRunner:
         llm_client: BaseLLMClient,
         fallback: RuleBasedFallback | None = None,
         max_retries: int = 2,
+        allow_rule_based_fallback: bool = True,
     ) -> None:
         self.prompt_dir = prompt_dir
         self.llm_client = llm_client
         self.fallback = fallback or RuleBasedFallback()
         self.max_retries = max_retries
+        self.allow_rule_based_fallback = allow_rule_based_fallback
         self.last_fallback_reason: str | None = None
 
     def run(
@@ -52,7 +54,7 @@ class JSONPromptRunner:
             except (LLMError, ValidationError, ValueError, TypeError) as exc:
                 last_error = exc
                 break
-        if fallback is not None:
+        if fallback is not None and self.allow_rule_based_fallback:
             self.last_fallback_reason = self._safe_error(last_error)
             logger.warning(
                 "Falling back to rule-based output for %s: %s",
@@ -60,6 +62,9 @@ class JSONPromptRunner:
                 self.last_fallback_reason,
             )
             return fallback()
+        if fallback is not None and last_error is not None:
+            self.last_fallback_reason = self._safe_error(last_error)
+            raise last_error
         try:
             return self.fallback.complete_json(prompt, schema)
         except ValidationFlowError as exc:

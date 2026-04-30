@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -79,6 +79,22 @@ class DataHealthResponse(SchemaModel):
     overall_status: str
     files: dict[str, DataFileHealth]
     warnings: list[str] = Field(default_factory=list)
+
+
+PlanPreviewStreamEventType = Literal[
+    "step_start",
+    "step_complete",
+    "tool_call",
+    "candidate_start",
+    "candidate_complete",
+    "plan_complete",
+    "error",
+]
+
+
+class PlanPreviewStreamEvent(SchemaModel):
+    event: PlanPreviewStreamEventType
+    data: dict[str, Any] = Field(default_factory=dict)
 
 
 def build_meta_schemas() -> MetaSchemasResponse:

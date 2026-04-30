@@ -49,6 +49,7 @@ class GroupContext(DomainModel):
     roles: list[RoleProfile] = Field(default_factory=list)
     group_size: int = Field(default=0, ge=0)
     scene_label: str = "unknown"
+    input_query: str = ""
     inferred_constraints: list[str] = Field(default_factory=list)
     clarification_questions: list[str] = Field(default_factory=list)
     confidence_summary: dict[str, float] = Field(default_factory=dict)

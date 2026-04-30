@@ -6,8 +6,27 @@ __pycache__/
 .env
 .env.*
 !.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+frontend_web/node_modules/
+frontend_web/dist/
+frontend_web/*.tsbuildinfo
+frontend_phone/codex-prompts.md
 
 database/pgdata/
 database/postgres.log
 
-data_process/generated_data/*.json
+*.zip
+.test_analysis.json
+TEST_REPORT*.md
+test_reports/
+
+data_process/__pycache__/
+data_process/generated_data/
+data_process/generated_route_packs_30calls*/
+data_process/prompt/

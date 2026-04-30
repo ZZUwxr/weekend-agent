@@ -6,7 +6,7 @@
 
 本地已经在 conda 环境 `weekend-agent` 中初始化过一个 PostgreSQL 实例，并导入过当前生成数据。
 
-当前数据库实例已关闭；需要查询或导入数据时，先按“启动和关闭”章节启动。
+当前数据库实例默认不随应用自动启动；需要查询或导入数据时，先按“启动和关闭”章节启动。
 
 当前本地数据库连接地址：
 
@@ -26,17 +26,18 @@ database/pgdata
 
 | 表名 | 行数 | 说明 |
 | --- | ---: | --- |
-| `poi` | 500 | POI 基础数据 |
-| `poi_facilities` | 500 | 每个 POI 的设施数据 |
-| `poi_transportation` | 500 | 每个 POI 的交通与停车数据 |
-| `poi_business_rules` | 500 | 每个 POI 的经营规则 |
-| `route_edges` | 3000 | POI 之间的连接边 |
-| `user_profiles` | 3 | 示例用户画像 |
-| `user_preference_weights` | 16 | 示例用户偏好权重 |
+| `poi` | 117 | 新生成路线包里的真实感 POI |
+| `poi_facilities` | 117 | 每个 POI 的设施数据 |
+| `poi_transportation` | 117 | 每个 POI 的交通与停车数据 |
+| `poi_business_rules` | 117 | 每个 POI 的经营规则 |
+| `route_edges` | 88 | 新生成路线包里的 POI 连接边 |
+| `queue_status` | 117 | 新生成 POI 的排队状态 |
+| `user_profiles` | 0 | 用户画像等待真实用户系统写入 |
+| `user_preference_weights` | 0 | 用户偏好权重等待真实用户系统写入 |
 | `route_plans` | 0 | 用户路线记录，等待业务写入 |
 | `route_stops` | 0 | 路线站点记录，等待业务写入 |
-| `feedback` | 60 | 示例游后反馈 |
-| `poi_feedback_summary` | 500 | POI 聚合反馈摘要 |
+| `feedback` | 0 | 用户反馈等待业务写入 |
+| `poi_feedback_summary` | 117 | POI 聚合反馈摘要 |
 
 ## 启动和关闭
 
@@ -66,13 +67,20 @@ conda run -n weekend-agent psql "postgresql://wxr@localhost:5433/weekend_agent"
 
 ## 初始化和导入
 
-如果需要重新初始化表结构并导入 JSON：
+如果需要重新初始化表结构并用当前新生成数据替换数据库内容：
 
 ```bash
 conda run -n weekend-agent python database/import_generated_data.py \
   --database-url "postgresql://wxr@localhost:5433/weekend_agent" \
   --init-schema \
-  --truncate
+ --truncate
+```
+
+后端运行时读取数据库需要在 `.env` 中开启：
+
+```bash
+DATA_BACKEND=postgres
+DATABASE_URL=postgresql://wxr@localhost:5433/weekend_agent
 ```
 
 只校验 JSON 能否被读取，不连接数据库：
@@ -108,39 +116,26 @@ python3 database/import_generated_data.py --database-url "$DATABASE_URL" --init-
 
 ## 数据来源和构造思路
 
-当前种子数据来自：
+当前导入数据来自已经转换好的应用数据目录：
 
 ```bash
-data_process/Shenzhen.csv
+local_explorer_agent/app/data/poi.json
+local_explorer_agent/app/data/poi.intent_supplement.json
+local_explorer_agent/app/data/route_edges.json
+local_explorer_agent/app/data/queue_status.json
+local_explorer_agent/app/data/queue_status.intent_supplement.json
 ```
 
-该 CSV 主要包含：
-
-| 字段 | 含义 |
-| --- | --- |
-| `Feature` | 原始类别标记，当前为 A 到 M |
-| `Instance` | 原始实例编号 |
-| `Lon` | 经度 |
-| `Lat` | 纬度 |
-
-生成脚本：
+这些文件由新生成路线包转换而来：
 
 ```bash
-data_process/generated_data.py
+data_process/generated_route_packs_30calls
+data_process/convert_route_packs_to_system_data.py
 ```
 
-生成逻辑概括：
+`*.intent_supplement.json` 存放意图匹配补充数据，用于补齐烤肉、密室逃脱、小剧场、亲子空间、游乐园等稀缺类别；导入脚本会与主数据按 ID 合并后 upsert 到 PostgreSQL。
 
-1. 从 `Shenzhen.csv` 读取所有经纬度点。
-2. 默认随机抽样 500 条，避免 demo 数据过大。
-3. 将 `Feature` 映射为业务类别，例如咖啡、书店、甜品、展览、公园等。
-4. 根据类别模板生成价格、营业时间、停留时间、设施、规则、标签和描述。
-5. 根据经纬度范围粗略分配深圳区域，例如科技生活区、商圈活力区、艺术仓库区。
-6. 根据区域模板生成模拟地铁信息。
-7. 使用网格近邻方式为每个 POI 生成 6 条附近连接边。
-8. 生成示例用户画像和游后反馈。
-
-注意：当前地铁站信息是模拟数据，不是真实 GIS 最近地铁站计算结果。后续如果要提升真实性，可以增加一份深圳地铁站经纬度表，并用 PostGIS 计算最近站点。
+导入脚本默认只读取非 sample 文件；没有 `user_profiles.json` 或 `feedback.json` 时，对应表保持为空，避免旧示例数据混入新数据集。
 
 ## 表关系
 
@@ -151,6 +146,7 @@ poi 1 -- 1 poi_facilities
 poi 1 -- 1 poi_transportation
 poi 1 -- 1 poi_business_rules
 poi 1 -- 1 poi_feedback_summary
+poi 1 -- 1 queue_status
 
 poi 1 -- N route_edges.from_poi_id
 poi 1 -- N route_edges.to_poi_id
@@ -189,6 +185,7 @@ feedback.user_id 当前不加外键
 | `route_edges_from_idx` | 从某个 POI 查可达地点 |
 | `route_edges_to_idx` | 查到达某个 POI 的路线边 |
 | `route_edges_subway_idx` | 筛选建议地铁接驳的路线边 |
+| `queue_status_risk_idx` | 按排队风险筛选排队状态 |
 | `user_preference_weights_key_idx` | 按偏好项反查用户权重 |
 | `route_plans_user_idx` | 按用户查询路线记录 |
 | `route_stops_plan_idx` | 按路线读取站点顺序 |

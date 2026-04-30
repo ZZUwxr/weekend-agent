@@ -33,3 +33,16 @@ def data_health() -> DataHealthResponse:
     settings = get_settings()
     data_dir = settings.data_dir if settings.data_dir.is_absolute() else settings.data_dir.resolve()
     return DataHealthResponse.model_validate(check_data_health(data_dir))
+
+
+@router.get("/meta/runtime", tags=["meta"])
+def runtime_meta() -> dict[str, object]:
+    settings = get_settings()
+    return {
+        "llm_provider": settings.llm_provider,
+        "llm_model": settings.llm_model,
+        "llm_base_url": settings.llm_base_url,
+        "llm_allow_rule_based_fallback": settings.llm_allow_rule_based_fallback,
+        "data_backend": settings.data_backend,
+        "database_url_set": bool(settings.database_url),
+    }

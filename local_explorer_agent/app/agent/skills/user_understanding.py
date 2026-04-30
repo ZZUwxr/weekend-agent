@@ -22,7 +22,7 @@ class UserUnderstandingSkill:
         duration_minutes: int,
     ) -> GroupContext:
         if self.prompt_runner is not None:
-            return self.prompt_runner.run(
+            context = self.prompt_runner.run(
                 "user_understanding.md",
                 {
                     "user_query": user_query,
@@ -40,11 +40,14 @@ class UserUnderstandingSkill:
                     duration_minutes=duration_minutes,
                 ),
             )
-        return self._run_rule_based(
-            user_query=user_query,
-            city=city,
-            duration_minutes=duration_minutes,
-        )
+        else:
+            context = self._run_rule_based(
+                user_query=user_query,
+                city=city,
+                duration_minutes=duration_minutes,
+            )
+        context.input_query = user_query
+        return context
 
     def _run_rule_based(
         self,
@@ -78,13 +81,17 @@ class UserUnderstandingSkill:
             )
         ]
 
-        if any(token in user_query for token in ["老婆", "妻子", "爱人", "太太"]):
+        if any(
+            token in user_query
+            for token in ["老婆", "妻子", "爱人", "太太", "女朋友", "对象", "男朋友"]
+        ):
             spouse_constraints = []
             spouse_preferences = ["不被特殊对待", "轻松聊天"]
             hidden_needs = ["健康饮食但不想牺牲用餐氛围"]
             risk_points = ["低卡需求容易和亲子餐饮便利性冲突"]
             role_id = "spouse_partner"
-            if any(token in user_query for token in ["减肥", "减脂", "控糖", "低卡"]):
+            diet_tokens = ["减肥", "减脂", "控糖", "低卡", "健身", "清淡"]
+            if any(token in user_query for token in diet_tokens):
                 role_id = "spouse_dieter"
                 spouse_constraints.append("餐饮需低负担、低油低糖或轻食可选")
             roles.append(
@@ -101,7 +108,8 @@ class UserUnderstandingSkill:
                 )
             )
 
-        if any(token in user_query for token in ["孩子", "小孩", "娃", "宝宝"]):
+        child_tokens = ["孩子", "小孩", "娃", "宝宝", "女儿", "儿子", "孩子们"]
+        if any(token in user_query for token in child_tokens):
             age = self._extract_age(user_query)
             child_role_id = f"child_{age}yo" if age else "child"
             roles.append(
@@ -122,7 +130,7 @@ class UserUnderstandingSkill:
                 )
             )
 
-        if "老人" in user_query or "长辈" in user_query:
+        if any(token in user_query for token in ["老人", "长辈", "爸妈", "父母"]):
             roles.append(
                 RoleProfile(
                     role_id="elder_companion",
@@ -230,8 +238,21 @@ class UserUnderstandingSkill:
         return int(match.group(1)) if match else None
 
     def _is_friend_demo(self, query: str) -> bool:
-        friend_tokens = ["朋友", "2男2女", "两男两女", "男生", "女生", "周末"]
-        preference_tokens = ["拍照", "氛围", "预算", "别太折腾", "热闹"]
+        friend_tokens = ["朋友", "2男2女", "两男两女", "男生", "女生", "同事", "部门", "团建"]
+        preference_tokens = [
+            "拍照",
+            "氛围",
+            "预算",
+            "别太折腾",
+            "热闹",
+            "别太贵",
+            "烧烤",
+            "烤肉",
+            "桌游",
+            "密室",
+            "夜间",
+            "烟火气",
+        ]
         return any(token in query for token in friend_tokens) and any(
             token in query for token in preference_tokens
         )

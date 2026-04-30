@@ -19,6 +19,7 @@ class POITool(BaseTool):
         indoor: bool | None = None,
         max_queue_risk: str | None = None,
         limit: int = 5,
+        priority_categories: list[str] | None = None,
     ) -> ToolResult:
         started_at = time.perf_counter()
         data = self.repository.search(
@@ -28,6 +29,7 @@ class POITool(BaseTool):
             indoor=indoor,
             max_queue_risk=max_queue_risk,
             limit=limit,
+            priority_categories=priority_categories,
         )
         if not data:
             return self._result(

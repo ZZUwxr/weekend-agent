@@ -18,6 +18,11 @@ from local_explorer_agent.app.agent.skills.user_understanding import UserUnderst
 from local_explorer_agent.app.core.config import Settings, get_settings
 from local_explorer_agent.app.repositories.booking_repository import BookingRepository
 from local_explorer_agent.app.repositories.poi_repository import POIRepository
+from local_explorer_agent.app.repositories.postgres_repository import (
+    PostgresPOIRepository,
+    PostgresQueueRepository,
+    PostgresRouteRepository,
+)
 from local_explorer_agent.app.repositories.queue_repository import QueueRepository
 from local_explorer_agent.app.repositories.route_repository import RouteRepository
 from local_explorer_agent.app.repositories.weather_repository import WeatherRepository
@@ -25,6 +30,7 @@ from local_explorer_agent.app.services.execution_service import ExecutionService
 from local_explorer_agent.app.services.feedback_service import FeedbackService
 from local_explorer_agent.app.services.plan_service import PlanService
 from local_explorer_agent.app.tools.booking_tool import BookingTool
+from local_explorer_agent.app.tools.poi_query_tool import POIQueryRewriteTool
 from local_explorer_agent.app.tools.poi_tool import POITool
 from local_explorer_agent.app.tools.queue_tool import QueueTool
 from local_explorer_agent.app.tools.route_tool import RouteTool
@@ -47,18 +53,36 @@ def get_session_store() -> SessionStore:
 
 
 @lru_cache
-def get_poi_repository() -> POIRepository:
-    return POIRepository(_data_dir(get_settings()))
+def get_poi_repository():
+    settings = get_settings()
+    if settings.data_backend == "postgres":
+        return PostgresPOIRepository(
+            settings.database_url,
+            connect_timeout=settings.database_connect_timeout_seconds,
+        )
+    return POIRepository(_data_dir(settings))
 
 
 @lru_cache
-def get_route_repository() -> RouteRepository:
-    return RouteRepository(_data_dir(get_settings()))
+def get_route_repository():
+    settings = get_settings()
+    if settings.data_backend == "postgres":
+        return PostgresRouteRepository(
+            settings.database_url,
+            connect_timeout=settings.database_connect_timeout_seconds,
+        )
+    return RouteRepository(_data_dir(settings))
 
 
 @lru_cache
-def get_queue_repository() -> QueueRepository:
-    return QueueRepository(_data_dir(get_settings()))
+def get_queue_repository():
+    settings = get_settings()
+    if settings.data_backend == "postgres":
+        return PostgresQueueRepository(
+            settings.database_url,
+            connect_timeout=settings.database_connect_timeout_seconds,
+        )
+    return QueueRepository(_data_dir(settings))
 
 
 @lru_cache
@@ -74,6 +98,11 @@ def get_booking_repository() -> BookingRepository:
 @lru_cache
 def get_poi_tool() -> POITool:
     return POITool(get_poi_repository())
+
+
+@lru_cache
+def get_poi_query_tool() -> POIQueryRewriteTool:
+    return POIQueryRewriteTool(get_poi_repository())
 
 
 @lru_cache
@@ -131,6 +160,9 @@ def get_json_prompt_runner() -> JSONPromptRunner:
         prompt_dir=_prompt_dir(),
         llm_client=get_llm_client(),
         max_retries=settings.llm_max_retries,
+        allow_rule_based_fallback=(
+            settings.llm_provider == "mock" or settings.llm_allow_rule_based_fallback
+        ),
     )
 
 
@@ -138,6 +170,7 @@ def get_json_prompt_runner() -> JSONPromptRunner:
 def get_orchestrator() -> Orchestrator:
     prompt_runner = get_json_prompt_runner()
     place_selection_skill = PlaceSelectionSkill(
+        poi_query_tool=get_poi_query_tool(),
         poi_tool=get_poi_tool(),
         queue_tool=get_queue_tool(),
         weather_tool=get_weather_tool(),

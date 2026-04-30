@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from local_explorer_agent.app.main import app
@@ -85,3 +86,99 @@ def test_api_friends_preview() -> None:
     assert "budget_sensitive_role" in role_ids
     assert "atmosphere_vs_efficiency_conflict" in conflict_ids
     assert len(plan["plan_candidates"]) == 3
+
+
+def test_api_plan_preview_stream_emits_sse_events() -> None:
+    client = TestClient(app)
+    preview_payload = {
+        "user_id": "u001",
+        "query": "今天下午想和老婆孩子出去玩几小时，别太远，老婆最近在减肥，孩子5岁",
+        "city": "深圳",
+        "start_time": "2026-05-10T14:00:00",
+        "duration_minutes": 240,
+        "location": {"lat": 22.54, "lon": 114.05},
+    }
+
+    with client.stream(
+        "POST",
+        "/api/v1/plans/preview/stream",
+        json=preview_payload,
+    ) as response:
+        body = "".join(response.iter_text())
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/event-stream")
+    assert "event: step_start" in body
+    assert "event: step_complete" in body
+    assert "event: tool_call" in body
+    assert "event: candidate_start" in body
+    assert "event: candidate_complete" in body
+    assert "event: plan_complete" in body
+    assert '"step": 5' in body
+    assert '"tool": "poi_query"' in body
+    assert '"tool": "poi"' in body
+    assert "poi_data_empty" not in body
+
+
+@pytest.mark.parametrize(
+    ("query", "expected_categories"),
+    [
+        ("晚上想和朋友吃烤肉，别太贵，环境别太吵", {"烤肉", "烧烤"}),
+        ("周末晚上想看个小剧场或者脱口秀，结束后简单吃点", {"小剧场"}),
+        (
+            "明天下雨，想带孩子找个室内地方玩两三个小时，最好安全、少排队",
+            {"亲子空间", "游乐园"},
+        ),
+        (
+            "周日下午一家五口出去，爸妈、老婆和6岁孩子都在，"
+            "孩子想玩，爸妈想少走路，老婆想吃清淡点",
+            {"轻食"},
+        ),
+        (
+            "下班后朋友想找个夜间活动，别太正式，能放松聊天，有点烟火气",
+            {"烧烤", "夜间活动", "茶馆", "咖啡"},
+        ),
+    ],
+)
+def test_api_preview_keeps_strong_intent_categories(
+    query: str,
+    expected_categories: set[str],
+) -> None:
+    client = TestClient(app)
+    preview_payload = {
+        "user_id": "intent_regression",
+        "query": query,
+        "city": "深圳",
+        "start_time": "2026-05-10T14:00:00",
+        "duration_minutes": 240,
+        "location": {"lat": 22.54, "lon": 114.05},
+    }
+
+    response = client.post("/api/v1/plans/preview", json=preview_payload)
+
+    assert response.status_code == 200
+    plan = response.json()
+    recommended = next(
+        item
+        for item in plan["plan_candidates"]
+        if item["plan_id"] == plan["recommended_plan_id"]
+    )
+    categories = {
+        stage["selected_poi"]["category"]
+        for stage in recommended["stages"]
+        if stage.get("selected_poi")
+    }
+    assert expected_categories.intersection(categories)
+    for stage in recommended["stages"]:
+        if stage["stage_type"] == "dine" and stage.get("selected_poi"):
+            assert stage["selected_poi"]["category"] in {
+                "餐厅",
+                "轻食",
+                "火锅",
+                "烧烤",
+                "烤肉",
+                "甜品",
+                "茶馆",
+                "咖啡",
+                "桑拿鸡",
+            }

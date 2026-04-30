@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from local_explorer_agent.app.api.v1.router import router as api_v1_router
@@ -10,6 +11,13 @@ configure_logging()
 
 settings = get_settings()
 app = FastAPI(title=settings.app_name)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(api_v1_router, prefix="/api/v1")
 
 

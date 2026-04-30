@@ -3,8 +3,7 @@ import json
 import os
 from pathlib import Path
 
-
-DEFAULT_DATA_DIR = Path(__file__).resolve().parents[1] / "data_process" / "generated_data"
+DEFAULT_DATA_DIR = Path(__file__).resolve().parents[1] / "local_explorer_agent" / "app" / "data"
 DEFAULT_SCHEMA_FILE = Path(__file__).resolve().parent / "schema.sql"
 
 
@@ -15,6 +14,23 @@ class ChineseHelpFormatter(argparse.HelpFormatter):
 
 def load_json(data_dir, filename):
     return json.loads((data_dir / filename).read_text(encoding="utf-8"))
+
+
+def load_optional_json(data_dir, filename, default):
+    path = data_dir / filename
+    if not path.exists():
+        return default
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def merge_records_by_key(records, supplements, key):
+    by_key = {}
+    for record in [*records, *supplements]:
+        record_key = record.get(key) if isinstance(record, dict) else None
+        if not record_key:
+            continue
+        by_key[record_key] = record
+    return list(by_key.values())
 
 
 def as_jsonb(value):
@@ -34,6 +50,7 @@ def truncate_generated_tables(conn):
             route_stops,
             route_plans,
             feedback,
+            queue_status,
             route_edges,
             user_preference_weights,
             user_profiles,
@@ -213,15 +230,38 @@ def upsert_pois(conn, pois):
     """
 
     for poi in pois:
+        scores = poi.get("experience_scores", {})
+        rules = poi.get("business_rules", {})
         conn.execute(
             poi_sql,
             {
                 **poi,
+                "source_instance": poi.get("source_instance"),
+                "source_feature": poi.get("source_feature"),
+                "area": poi.get("area"),
+                "address": poi.get("address"),
+                "avg_price": poi.get("avg_price"),
+                "open_hours": poi.get("open_hours"),
+                "avg_stay_minutes": poi.get("avg_stay_minutes"),
+                "reservation_required": poi.get(
+                    "reservation_required", rules.get("reservation_required", False)
+                ),
+                "indoor": poi.get("indoor", True),
                 "weather_fit": as_jsonb(poi.get("weather_fit", [])),
+                "energy_level": poi.get("energy_level", 1),
+                "crowd_risk": poi.get("crowd_risk", "medium"),
+                "queue_risk": poi.get("queue_risk", "medium"),
                 "mood_tags": as_jsonb(poi.get("mood_tags", [])),
                 "activity_tags": as_jsonb(poi.get("activity_tags", [])),
                 "suitable_for": as_jsonb(poi.get("suitable_for", [])),
                 "avoid_for": as_jsonb(poi.get("avoid_for", [])),
+                "photo_score": poi.get("photo_score", scores.get("photo_score", 0)),
+                "conversation_score": poi.get(
+                    "conversation_score", scores.get("conversation_score", 0)
+                ),
+                "novelty_score": poi.get("novelty_score", scores.get("novelty_score", 0)),
+                "relax_score": poi.get("relax_score", scores.get("relax_score", 0)),
+                "description": poi.get("description"),
             },
         )
 
@@ -249,11 +289,19 @@ def upsert_pois(conn, pois):
             transportation_sql,
             {
                 "poi_id": poi["id"],
-                "subway_station": transportation.get("subway_station") or subway.get("nearest_station"),
-                "subway_lines": as_jsonb(transportation.get("subway_lines") or subway.get("lines", [])),
+                "subway_station": (
+                    transportation.get("subway_station") or subway.get("nearest_station")
+                ),
+                "subway_lines": as_jsonb(
+                    transportation.get("subway_lines") or subway.get("lines", [])
+                ),
                 "subway_exit": transportation.get("subway_exit") or subway.get("exit"),
-                "subway_distance_meters": transportation.get("subway_distance_meters") or subway.get("distance_meters"),
-                "subway_walk_minutes": transportation.get("subway_walk_minutes") or subway.get("walk_minutes"),
+                "subway_distance_meters": (
+                    transportation.get("subway_distance_meters") or subway.get("distance_meters")
+                ),
+                "subway_walk_minutes": (
+                    transportation.get("subway_walk_minutes") or subway.get("walk_minutes")
+                ),
                 "subway_recommended": subway.get("recommended", False),
                 "last_train_buffer_minutes": subway.get("last_train_buffer_minutes"),
                 "subway_access_note": subway.get("access_note"),
@@ -365,6 +413,29 @@ def upsert_route_edges(conn, edges):
         )
 
 
+def upsert_queue_status(conn, statuses):
+    sql = """
+        INSERT INTO queue_status (poi_id, queue_minutes, risk, mock_scenario, updated_at)
+        VALUES (%(poi_id)s, %(queue_minutes)s, %(risk)s, %(mock_scenario)s, NOW())
+        ON CONFLICT (poi_id) DO UPDATE SET
+            queue_minutes = EXCLUDED.queue_minutes,
+            risk = EXCLUDED.risk,
+            mock_scenario = EXCLUDED.mock_scenario,
+            updated_at = NOW()
+    """
+
+    for item in statuses:
+        conn.execute(
+            sql,
+            {
+                "poi_id": item["poi_id"],
+                "queue_minutes": item.get("queue_minutes", 10),
+                "risk": item.get("risk", "medium"),
+                "mock_scenario": item.get("mock_scenario"),
+            },
+        )
+
+
 def upsert_user_profiles(conn, users):
     profile_sql = """
         INSERT INTO user_profiles (
@@ -403,7 +474,9 @@ def upsert_user_profiles(conn, users):
                 "likes": as_jsonb(preferences.get("likes", [])),
                 "dislikes": as_jsonb(preferences.get("dislikes", [])),
                 "budget_preference": preferences.get("budget_preference"),
-                "max_walking_minutes_per_segment": preferences.get("max_walking_minutes_per_segment"),
+                "max_walking_minutes_per_segment": preferences.get(
+                    "max_walking_minutes_per_segment"
+                ),
                 "explicit_preferences": as_jsonb(preferences),
             },
         )
@@ -470,11 +543,29 @@ def parse_args():
         default=os.environ.get("DATABASE_URL"),
         help="PostgreSQL 连接地址，例如 postgresql://postgres:postgres@localhost:5432/weekend_agent",
     )
-    parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR, help="生成 JSON 文件所在目录。")
-    parser.add_argument("--schema-file", type=Path, default=DEFAULT_SCHEMA_FILE, help="数据库表结构 SQL 文件路径。")
-    parser.add_argument("--init-schema", action="store_true", help="导入前先执行 database/schema.sql 初始化表结构。")
+    parser.add_argument(
+        "--data-dir",
+        type=Path,
+        default=DEFAULT_DATA_DIR,
+        help="生成 JSON 文件所在目录。",
+    )
+    parser.add_argument(
+        "--schema-file",
+        type=Path,
+        default=DEFAULT_SCHEMA_FILE,
+        help="数据库表结构 SQL 文件路径。",
+    )
+    parser.add_argument(
+        "--init-schema",
+        action="store_true",
+        help="导入前先执行 database/schema.sql 初始化表结构。",
+    )
     parser.add_argument("--truncate", action="store_true", help="导入前清空生成数据相关表。")
-    parser.add_argument("--dry-run", action="store_true", help="只读取 JSON 并打印数量，不连接 PostgreSQL。")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="只读取 JSON 并打印数量，不连接 PostgreSQL。",
+    )
     return parser.parse_args()
 
 
@@ -482,14 +573,24 @@ def main():
     args = parse_args()
 
     data_dir = args.data_dir.resolve()
-    pois = load_json(data_dir, "poi.json")
+    pois = merge_records_by_key(
+        load_json(data_dir, "poi.json"),
+        load_optional_json(data_dir, "poi.intent_supplement.json", []),
+        "id",
+    )
     edges = load_json(data_dir, "route_edges.json")
-    users = load_json(data_dir, "user_profiles.json")
-    feedback_items = load_json(data_dir, "feedback.json")
+    queue_status = merge_records_by_key(
+        load_optional_json(data_dir, "queue_status.json", []),
+        load_optional_json(data_dir, "queue_status.intent_supplement.json", []),
+        "poi_id",
+    )
+    users = load_optional_json(data_dir, "user_profiles.json", [])
+    feedback_items = load_optional_json(data_dir, "feedback.json", [])
 
     if args.dry_run:
         print(f"已读取 {len(pois)} 条 POI")
         print(f"已读取 {len(edges)} 条路线边")
+        print(f"已读取 {len(queue_status)} 条排队状态")
         print(f"已读取 {len(users)} 条用户画像")
         print(f"已读取 {len(feedback_items)} 条反馈")
         return
@@ -510,11 +611,13 @@ def main():
 
         upsert_pois(conn, pois)
         upsert_route_edges(conn, edges)
+        upsert_queue_status(conn, queue_status)
         upsert_user_profiles(conn, users)
         upsert_feedback(conn, feedback_items)
 
     print(f"已导入 {len(pois)} 条 POI")
     print(f"已导入 {len(edges)} 条路线边")
+    print(f"已导入 {len(queue_status)} 条排队状态")
     print(f"已导入 {len(users)} 条用户画像")
     print(f"已导入 {len(feedback_items)} 条反馈")
 

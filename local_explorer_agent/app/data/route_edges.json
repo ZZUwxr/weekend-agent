@@ -1,0 +1,2998 @@
+[
+  {
+    "from": "gen_couple_date_1_poi_1",
+    "to": "gen_couple_date_1_poi_2",
+    "distance_meters": 18500,
+    "walking_minutes": 240,
+    "cycling_minutes": 55,
+    "taxi_minutes": 25,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 3,
+    "shade_score": 2,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "两地距离较远，建议直接打车，车程约25分钟，费用约45元。"
+  },
+  {
+    "from": "gen_couple_date_1_poi_2",
+    "to": "gen_couple_date_1_poi_3",
+    "distance_meters": 12000,
+    "walking_minutes": 150,
+    "cycling_minutes": 40,
+    "taxi_minutes": 22,
+    "subway_recommended": true,
+    "subway_minutes": 35,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2,
+    "shade_score": 3,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "雨天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "可乘坐地铁11号线转2号线至海上世界站，全程约35分钟。打车约22分钟，费用约35元。"
+  },
+  {
+    "from": "gen_couple_date_1_poi_3",
+    "to": "gen_couple_date_1_poi_4",
+    "distance_meters": 8000,
+    "walking_minutes": 100,
+    "cycling_minutes": 30,
+    "taxi_minutes": 15,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 3,
+    "shade_score": 3,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "雨天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "可乘坐地铁2号线直达后海站，全程约25分钟。打车约15分钟，费用约25元。"
+  },
+  {
+    "from": "gen_couple_date_2_poi_1",
+    "to": "gen_couple_date_2_poi_2",
+    "distance_meters": 5200,
+    "walking_minutes": 75,
+    "cycling_minutes": 20,
+    "taxi_minutes": 12,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi",
+      "cycling"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 3,
+    "shade_score": 4,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 3,
+    "route_note": "两地距离较远，建议打车或骑行。步行会消耗过多体力，影响后续体验。"
+  },
+  {
+    "from": "gen_couple_date_2_poi_2",
+    "to": "gen_couple_date_2_poi_3",
+    "distance_meters": 4800,
+    "walking_minutes": 65,
+    "cycling_minutes": 18,
+    "taxi_minutes": 10,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi",
+      "cycling"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 3,
+    "shade_score": 4,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 3,
+    "route_note": "返回创意园片区，打车最方便。骑行也可，但注意南油片区道路较复杂。"
+  },
+  {
+    "from": "gen_couple_date_2_poi_3",
+    "to": "gen_couple_date_2_poi_4",
+    "distance_meters": 9500,
+    "walking_minutes": 130,
+    "cycling_minutes": 35,
+    "taxi_minutes": 18,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2,
+    "shade_score": 3,
+    "crowd_level": "high",
+    "suitable_weather": [
+      "晴天",
+      "阴天",
+      "雨天"
+    ],
+    "energy_cost": 4,
+    "route_note": "距离较远，强烈建议乘坐地铁（2号线转12号线）或打车。步行或骑行不现实。"
+  },
+  {
+    "from": "gen_family_1_poi_restaurant_1",
+    "to": "gen_family_1_poi_teahouse_1",
+    "distance_meters": 850,
+    "walking_minutes": 12,
+    "cycling_minutes": 5,
+    "taxi_minutes": 8,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "taxi"
+    ],
+    "route_type": "普通街道",
+    "scenic_score": 2.0,
+    "shade_score": 3.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "从科技园前往后海社区，途经部分办公区和住宅区街道，人行道平整，有树荫。"
+  },
+  {
+    "from": "gen_family_1_poi_teahouse_1",
+    "to": "gen_family_1_poi_exhibition_1",
+    "distance_meters": 1200,
+    "walking_minutes": 18,
+    "cycling_minutes": 7,
+    "taxi_minutes": 10,
+    "subway_recommended": true,
+    "subway_minutes": 15,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "taxi",
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.5,
+    "shade_score": 2.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天",
+      "雨天"
+    ],
+    "energy_cost": 3,
+    "route_note": "距离较远，建议乘坐地铁（后海站->侨城东站，1号线直达）以节省体力。若选择步行，需穿越部分街区。"
+  },
+  {
+    "from": "gen_family_1_poi_exhibition_1",
+    "to": "gen_family_1_poi_park_1",
+    "distance_meters": 1500,
+    "walking_minutes": 22,
+    "cycling_minutes": 9,
+    "taxi_minutes": 12,
+    "subway_recommended": true,
+    "subway_minutes": 18,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "taxi",
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.0,
+    "shade_score": 2.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 3,
+    "route_note": "从侨城东到宝安中心距离较远，强烈建议乘坐地铁（侨城东站->宝安中心站，1号线直达）。步行路线较长且景观一般。"
+  },
+  {
+    "from": "gen_family_2_meilin_chenji_canteen",
+    "to": "gen_family_2_futian_center_greenway",
+    "distance_meters": 12000,
+    "walking_minutes": 150,
+    "cycling_minutes": 45,
+    "taxi_minutes": 20,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi",
+      "subway"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 2.0,
+    "shade_score": 1.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "两地距离较远，建议打车或地铁（9号线转1号线）前往，车程约20-25分钟。步行不现实。"
+  },
+  {
+    "from": "gen_family_2_futian_center_greenway",
+    "to": "gen_family_2_ajuan_tangshui",
+    "distance_meters": 3200,
+    "walking_minutes": 40,
+    "cycling_minutes": 12,
+    "taxi_minutes": 10,
+    "subway_recommended": true,
+    "subway_minutes": 15,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "taxi",
+      "subway"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 2.5,
+    "shade_score": 2.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "步行距离约4公里，对长辈偏长。建议打车（约10分钟）或地铁（1号线转9号线至景田站）。"
+  },
+  {
+    "from": "gen_family_2_ajuan_tangshui",
+    "to": "gen_family_2_qiaoxiang_tearoom",
+    "distance_meters": 5500,
+    "walking_minutes": 70,
+    "cycling_minutes": 20,
+    "taxi_minutes": 15,
+    "subway_recommended": true,
+    "subway_minutes": 20,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi",
+      "subway"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 2.0,
+    "shade_score": 2.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "距离较远，建议打车（约15分钟）或地铁（9号线转2号线至侨香站）。"
+  },
+  {
+    "from": "gen_family_3_p1_restaurant",
+    "to": "gen_family_3_p2_bookstore",
+    "distance_meters": 50,
+    "walking_minutes": 2,
+    "cycling_minutes": 0,
+    "taxi_minutes": 0,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking"
+    ],
+    "route_type": "室内连通",
+    "scenic_score": 2.0,
+    "shade_score": 5.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "雨天",
+      "阴天",
+      "高温"
+    ],
+    "energy_cost": 1,
+    "route_note": "同在壹方城商场内，从L3乘扶梯或直梯下一层到L2，全程室内有空调。"
+  },
+  {
+    "from": "gen_family_3_p2_bookstore",
+    "to": "gen_family_3_p3_exhibition",
+    "distance_meters": 30,
+    "walking_minutes": 1,
+    "cycling_minutes": 0,
+    "taxi_minutes": 0,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking"
+    ],
+    "route_type": "室内连通",
+    "scenic_score": 2.5,
+    "shade_score": 5.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "雨天",
+      "阴天",
+      "高温"
+    ],
+    "energy_cost": 1,
+    "route_note": "书店出来即是L2层中庭展区，步行距离极短，无需出商场。"
+  },
+  {
+    "from": "gen_family_3_p3_exhibition",
+    "to": "gen_family_3_p4_teahouse",
+    "distance_meters": 150,
+    "walking_minutes": 3,
+    "cycling_minutes": 0,
+    "taxi_minutes": 0,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking"
+    ],
+    "route_type": "室内连通",
+    "scenic_score": 2.0,
+    "shade_score": 5.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "雨天",
+      "阴天",
+      "高温"
+    ],
+    "energy_cost": 1,
+    "route_note": "从L2展区乘直梯下一楼，步行至B座茶档，全程室内，靠近西门方便打车。"
+  },
+  {
+    "from": "gen_friends_1_nanyou_afen_bbq",
+    "to": "gen_friends_1_baoan_aqiang_chadang",
+    "distance_meters": 5800,
+    "walking_minutes": 85,
+    "cycling_minutes": 25,
+    "taxi_minutes": 18,
+    "subway_recommended": true,
+    "subway_minutes": 30,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "taxi",
+      "subway"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 2.0,
+    "shade_score": 3.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "烧烤店到茶档距离较远，建议打车或地铁（9号线转1号线）。打车约18分钟，地铁约30分钟含换乘。"
+  },
+  {
+    "from": "gen_friends_1_baoan_aqiang_chadang",
+    "to": "gen_friends_1_kejiyuan_lime_boardgame",
+    "distance_meters": 16500,
+    "walking_minutes": 240,
+    "cycling_minutes": 50,
+    "taxi_minutes": 25,
+    "subway_recommended": true,
+    "subway_minutes": 35,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "taxi",
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.5,
+    "shade_score": 3.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "雨天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "从宝安到科技园，地铁（1号线转2号线）是最优选择，约35分钟。打车约25分钟，但晚高峰可能拥堵。"
+  },
+  {
+    "from": "gen_friends_1_kejiyuan_lime_boardgame",
+    "to": "gen_friends_1_xili_night_congee",
+    "distance_meters": 3200,
+    "walking_minutes": 45,
+    "cycling_minutes": 12,
+    "taxi_minutes": 10,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi",
+      "cycling"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 1.5,
+    "shade_score": 2.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "雨天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "桌游吧到夜宵粥铺距离不远，深夜时段打车最方便，约10分钟。骑行约12分钟。"
+  },
+  {
+    "from": "gen_friends_2_poi_1",
+    "to": "gen_friends_2_poi_2",
+    "distance_meters": 12000,
+    "walking_minutes": 30,
+    "cycling_minutes": 25,
+    "taxi_minutes": 20,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2,
+    "shade_score": 3,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "从南山科技园到车公庙，地铁2号线转1号线，约25分钟。打车约20分钟，但周末可能堵车。"
+  },
+  {
+    "from": "gen_friends_2_poi_2",
+    "to": "gen_friends_2_poi_3",
+    "distance_meters": 8000,
+    "walking_minutes": 20,
+    "cycling_minutes": 18,
+    "taxi_minutes": 15,
+    "subway_recommended": true,
+    "subway_minutes": 20,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2,
+    "shade_score": 3,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "雨天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "从车公庙到梅林，地铁7号线直达梅村站，约20分钟。步行较远，建议地铁或打车。"
+  },
+  {
+    "from": "gen_friends_2_poi_3",
+    "to": "gen_friends_2_poi_4",
+    "distance_meters": 5000,
+    "walking_minutes": 15,
+    "cycling_minutes": 12,
+    "taxi_minutes": 10,
+    "subway_recommended": true,
+    "subway_minutes": 15,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 3,
+    "shade_score": 4,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "雨天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从梅林到上沙，地铁9号线转7号线，约15分钟。打车约10分钟，夜间交通顺畅。"
+  },
+  {
+    "from": "gen_friends_3_gangxia_jibao",
+    "to": "gen_friends_3_baishizhou_zhuoyou",
+    "distance_meters": 12500,
+    "walking_minutes": 180,
+    "cycling_minutes": 50,
+    "taxi_minutes": 25,
+    "subway_recommended": true,
+    "subway_minutes": 35,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "taxi",
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.0,
+    "shade_score": 1.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "从岗厦到白石洲距离较远，建议打车或地铁（岗厦北->车公庙->白石洲），地铁约35分钟。"
+  },
+  {
+    "from": "gen_friends_3_baishizhou_zhuoyou",
+    "to": "gen_friends_3_houhai_tangshui",
+    "distance_meters": 8500,
+    "walking_minutes": 120,
+    "cycling_minutes": 35,
+    "taxi_minutes": 18,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi",
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.5,
+    "shade_score": 1.5,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从白石洲到后海，地铁1号线转2号线很方便，约25分钟。打车也很快。"
+  },
+  {
+    "from": "gen_friends_3_houhai_tangshui",
+    "to": "gen_friends_3_kejiyuan_dache",
+    "distance_meters": 4000,
+    "walking_minutes": 55,
+    "cycling_minutes": 18,
+    "taxi_minutes": 10,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 2.0,
+    "shade_score": 1.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "雨天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从后海糖水铺到科技园打车点距离不远，打车约10分钟，是散场前的最后一段移动。"
+  },
+  {
+    "from": "gen_low_budget_1_poi_1",
+    "to": "gen_low_budget_1_poi_2",
+    "distance_meters": 400,
+    "walking_minutes": 6,
+    "cycling_minutes": 3,
+    "taxi_minutes": 5,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking"
+    ],
+    "route_type": "步行友好",
+    "scenic_score": 3.0,
+    "shade_score": 2.0,
+    "crowd_level": "high",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "在古城主街内穿行，沿途有各种小店和巷口，步行距离很短。"
+  },
+  {
+    "from": "gen_low_budget_1_poi_2",
+    "to": "gen_low_budget_1_poi_3",
+    "distance_meters": 8500,
+    "walking_minutes": 120,
+    "cycling_minutes": 35,
+    "taxi_minutes": 20,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.0,
+    "shade_score": 1.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天",
+      "雨天"
+    ],
+    "energy_cost": 3,
+    "route_note": "距离较远，强烈建议乘坐地铁（1号线转5号线/11号线）或打车前往，步行不现实。"
+  },
+  {
+    "from": "gen_low_budget_1_poi_3",
+    "to": "gen_low_budget_1_poi_4",
+    "distance_meters": 7000,
+    "walking_minutes": 100,
+    "cycling_minutes": 30,
+    "taxi_minutes": 18,
+    "subway_recommended": true,
+    "subway_minutes": 20,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.5,
+    "shade_score": 1.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天",
+      "雨天"
+    ],
+    "energy_cost": 2,
+    "route_note": "同样距离较远，建议乘坐地铁（11号线转2号线）或打车。"
+  },
+  {
+    "from": "gen_low_budget_2_poi_1",
+    "to": "gen_low_budget_2_poi_2",
+    "distance_meters": 28000,
+    "walking_minutes": 180,
+    "cycling_minutes": 90,
+    "taxi_minutes": 40,
+    "subway_recommended": true,
+    "subway_minutes": 50,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.0,
+    "shade_score": 3.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "从深圳湾公园站乘2号线到宝安中心站，换乘1号线，全程约50分钟。打车约40分钟，费用较高。"
+  },
+  {
+    "from": "gen_low_budget_2_poi_2",
+    "to": "gen_low_budget_2_poi_3",
+    "distance_meters": 15000,
+    "walking_minutes": 120,
+    "cycling_minutes": 60,
+    "taxi_minutes": 25,
+    "subway_recommended": true,
+    "subway_minutes": 35,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.0,
+    "shade_score": 2.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "雨天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从宝安中心站乘5号线到灵芝站，步行3分钟到咖啡店，全程约35分钟。"
+  },
+  {
+    "from": "gen_low_budget_2_poi_3",
+    "to": "gen_low_budget_2_poi_4",
+    "distance_meters": 18000,
+    "walking_minutes": 150,
+    "cycling_minutes": 75,
+    "taxi_minutes": 30,
+    "subway_recommended": true,
+    "subway_minutes": 40,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.0,
+    "shade_score": 3.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从灵芝站乘5号线到前海湾站，换乘1号线到桃园站，步行6分钟到绿道，全程约40分钟。"
+  },
+  {
+    "from": "gen_low_budget_3_poi_1",
+    "to": "gen_low_budget_3_poi_2",
+    "distance_meters": 500,
+    "walking_minutes": 7,
+    "cycling_minutes": 3,
+    "taxi_minutes": 3,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking"
+    ],
+    "route_type": "步行友好",
+    "scenic_score": 3.0,
+    "shade_score": 2.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "从糖水档步行至三巷入口，街巷内电动车多，注意安全。"
+  },
+  {
+    "from": "gen_low_budget_3_poi_2",
+    "to": "gen_low_budget_3_poi_3",
+    "distance_meters": 2000,
+    "walking_minutes": 30,
+    "cycling_minutes": 10,
+    "taxi_minutes": 10,
+    "subway_recommended": true,
+    "subway_minutes": 20,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.0,
+    "shade_score": 1.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 3,
+    "route_note": "建议乘地铁1号线从白石洲站到宝安中心站，节省体力；步行则需穿越城市街道。"
+  },
+  {
+    "from": "gen_low_budget_3_poi_3",
+    "to": "gen_low_budget_3_poi_4",
+    "distance_meters": 1500,
+    "walking_minutes": 20,
+    "cycling_minutes": 8,
+    "taxi_minutes": 8,
+    "subway_recommended": true,
+    "subway_minutes": 15,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "walking",
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.0,
+    "shade_score": 1.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "从宝安中心站乘地铁5号线转7号线到沙尾站；步行则沿城市道路，较单调。"
+  },
+  {
+    "from": "gen_night_gathering_1_poi_1",
+    "to": "gen_night_gathering_1_poi_2",
+    "distance_meters": 8000,
+    "walking_minutes": 100,
+    "cycling_minutes": 30,
+    "taxi_minutes": 20,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "taxi",
+      "subway"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 2.0,
+    "shade_score": 2.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 3,
+    "route_note": "从岗厦到上沙，建议打车或地铁（1号线转7号线），夜间步行较远不安全。"
+  },
+  {
+    "from": "gen_night_gathering_1_poi_2",
+    "to": "gen_night_gathering_1_poi_3",
+    "distance_meters": 3000,
+    "walking_minutes": 40,
+    "cycling_minutes": 15,
+    "taxi_minutes": 10,
+    "subway_recommended": true,
+    "subway_minutes": 15,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "taxi",
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.5,
+    "shade_score": 3.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天",
+      "雨天"
+    ],
+    "energy_cost": 2,
+    "route_note": "上沙到水围，地铁7号线直达水围站，步行短；或打车10分钟，夜间舒适。"
+  },
+  {
+    "from": "gen_night_gathering_1_poi_3",
+    "to": "gen_night_gathering_1_poi_4",
+    "distance_meters": 1500,
+    "walking_minutes": 20,
+    "cycling_minutes": 8,
+    "taxi_minutes": 5,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "taxi"
+    ],
+    "route_type": "步行友好",
+    "scenic_score": 2.0,
+    "shade_score": 2.5,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "水围到皇岗村步行20分钟，沿途有路灯；或打车5分钟，适合散场。"
+  },
+  {
+    "from": "gen_night_gathering_2_poi_1",
+    "to": "gen_night_gathering_2_poi_2",
+    "distance_meters": 2000,
+    "walking_minutes": 30,
+    "cycling_minutes": 10,
+    "taxi_minutes": 10,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "taxi"
+    ],
+    "route_type": "普通街道",
+    "scenic_score": 2.0,
+    "shade_score": 3.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "从岗厦到车公庙，步行约30分钟，夜间建议打车以节省时间。"
+  },
+  {
+    "from": "gen_night_gathering_2_poi_2",
+    "to": "gen_night_gathering_2_poi_3",
+    "distance_meters": 3000,
+    "walking_minutes": 40,
+    "cycling_minutes": 15,
+    "taxi_minutes": 15,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "taxi"
+    ],
+    "route_type": "普通街道",
+    "scenic_score": 1.5,
+    "shade_score": 2.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 3,
+    "route_note": "从车公庙到上沙，距离较远，建议打车，尤其是夜间。"
+  },
+  {
+    "from": "gen_night_gathering_2_poi_3",
+    "to": "gen_night_gathering_2_poi_4",
+    "distance_meters": 10000,
+    "walking_minutes": 120,
+    "cycling_minutes": 40,
+    "taxi_minutes": 25,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 1.0,
+    "shade_score": 1.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天",
+      "雨天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从上沙到皇岗村地铁站，距离远，必须打车，步行不现实。"
+  },
+  {
+    "from": "gen_night_gathering_3_poi_1",
+    "to": "gen_night_gathering_3_poi_2",
+    "distance_meters": 8200,
+    "walking_minutes": 100,
+    "cycling_minutes": 30,
+    "taxi_minutes": 18,
+    "subway_recommended": false,
+    "subway_minutes": 35,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "taxi",
+      "subway"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 2.0,
+    "shade_score": 1.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "雨天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "演出约22:00结束，地铁1号线南山站末班车约23:00，但需换乘2/8号线，时间紧张。建议直接打车前往侨香巷茶室，车程约18分钟，费用约25元，确保准时到达且不疲劳。"
+  },
+  {
+    "from": "gen_night_gathering_3_poi_2",
+    "to": "gen_night_gathering_3_poi_3",
+    "distance_meters": 2100,
+    "walking_minutes": 28,
+    "cycling_minutes": 10,
+    "taxi_minutes": 8,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "taxi"
+    ],
+    "route_type": "步行友好",
+    "scenic_score": 2.5,
+    "shade_score": 2.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "从侨香路步行至白石洲东四坊，距离约2.1公里，步行约28分钟。沿途经过香蜜湖片区和部分城中村边缘，夜间有路灯，但部分路段较安静。若觉得累或天气不佳，可短途打车，费用约12元。"
+  },
+  {
+    "from": "gen_night_gathering_3_poi_3",
+    "to": "gen_night_gathering_3_poi_4",
+    "distance_meters": 1200,
+    "walking_minutes": 16,
+    "cycling_minutes": 6,
+    "taxi_minutes": 5,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking"
+    ],
+    "route_type": "步行友好",
+    "scenic_score": 1.5,
+    "shade_score": 1.0,
+    "crowd_level": "high",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从白石洲烤肉排档步行至后海地铁站J口，距离约1.2公里，步行约16分钟。路线会穿过白石洲主干道和后海滨路，夜间人流车流仍较多，路灯明亮，安全感较好。不建议打车，因为距离短且可能堵车。"
+  },
+  {
+    "from": "gen_parent_child_1_poi_meilin_qingshi",
+    "to": "gen_parent_child_1_poi_baishizhou_qinziguan",
+    "distance_meters": 10000,
+    "walking_minutes": 150,
+    "cycling_minutes": 40,
+    "taxi_minutes": 20,
+    "subway_recommended": true,
+    "subway_minutes": 30,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "taxi",
+      "subway"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 2.0,
+    "shade_score": 3.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 3,
+    "route_note": "梅林到白石洲距离较远，建议打车或地铁，避免孩子疲劳。"
+  },
+  {
+    "from": "gen_parent_child_1_poi_baishizhou_qinziguan",
+    "to": "gen_parent_child_1_poi_houhai_tangshui",
+    "distance_meters": 5000,
+    "walking_minutes": 60,
+    "cycling_minutes": 20,
+    "taxi_minutes": 15,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi",
+      "cycling"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 3.0,
+    "shade_score": 4.0,
+    "crowd_level": "high",
+    "suitable_weather": [
+      "晴天",
+      "阴天",
+      "雨天"
+    ],
+    "energy_cost": 2,
+    "route_note": "白石洲到后海可打车，沿途有深圳湾景观，但周末交通可能拥堵。"
+  },
+  {
+    "from": "gen_parent_child_1_poi_houhai_tangshui",
+    "to": "gen_parent_child_1_poi_laoxiao_chadang",
+    "distance_meters": 3000,
+    "walking_minutes": 35,
+    "cycling_minutes": 12,
+    "taxi_minutes": 10,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi",
+      "walking"
+    ],
+    "route_type": "步行友好",
+    "scenic_score": 2.5,
+    "shade_score": 3.5,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "后海到景田距离适中，可步行或打车，沿途有社区公园。"
+  },
+  {
+    "from": "gen_parent_child_2_chen_ji_fan_tang",
+    "to": "gen_parent_child_2_long_hua_yi_fang_cheng_er_tong_le_yuan",
+    "distance_meters": 18000,
+    "walking_minutes": 5,
+    "cycling_minutes": 40,
+    "taxi_minutes": 30,
+    "subway_recommended": true,
+    "subway_minutes": 35,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.0,
+    "shade_score": 5.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "雨天",
+      "阴天",
+      "晴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "从车公庙地铁站乘坐4号线（清湖方向）直达龙华地铁站，约30分钟。出站后跟随商场指引步行8分钟到达乐园，全程室内有空调。"
+  },
+  {
+    "from": "gen_parent_child_2_long_hua_yi_fang_cheng_er_tong_le_yuan",
+    "to": "gen_parent_child_2_nan_shan_jiu_chang_shu_ju",
+    "distance_meters": 25000,
+    "walking_minutes": 8,
+    "cycling_minutes": 55,
+    "taxi_minutes": 35,
+    "subway_recommended": true,
+    "subway_minutes": 50,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.0,
+    "shade_score": 5.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "雨天",
+      "阴天",
+      "晴天"
+    ],
+    "energy_cost": 3,
+    "route_note": "从龙华地铁站乘坐4号线（福田口岸方向）至深圳北站，换乘5号线（赤湾方向）至荔湾地铁站。全程约45分钟，换乘一次。出站后步行5分钟到达书店。这是路线中最长的移动段，建议让孩子在地铁上稍作休息。"
+  },
+  {
+    "from": "gen_parent_child_2_nan_shan_jiu_chang_shu_ju",
+    "to": "gen_parent_child_2_a_juan_tian_pin",
+    "distance_meters": 6000,
+    "walking_minutes": 3,
+    "cycling_minutes": 15,
+    "taxi_minutes": 15,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.0,
+    "shade_score": 5.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "雨天",
+      "阴天",
+      "晴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从荔湾地铁站乘坐5号线（黄贝岭方向）至前海湾站，换乘9号线（文锦方向）至南山书城地铁站。全程约20分钟。出站步行3分钟即到甜品店。若孩子疲惫，打车是更舒适的选择。"
+  },
+  {
+    "from": "gen_parent_child_3_poi_szbay_grass",
+    "to": "gen_parent_child_3_poi_qxcanteen",
+    "distance_meters": 8500,
+    "walking_minutes": 0,
+    "cycling_minutes": 25,
+    "taxi_minutes": 20,
+    "subway_recommended": true,
+    "subway_minutes": 35,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "taxi",
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 3.0,
+    "shade_score": 2.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "两地距离较远，不建议步行或骑行。推荐从深圳湾公园站乘9号线至景田，换乘2号线至侨香站，全程约35分钟。或打车约20分钟。"
+  },
+  {
+    "from": "gen_parent_child_3_poi_qxcanteen",
+    "to": "gen_parent_child_3_poi_ba_family",
+    "distance_meters": 12000,
+    "walking_minutes": 0,
+    "cycling_minutes": 35,
+    "taxi_minutes": 25,
+    "subway_recommended": true,
+    "subway_minutes": 40,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi",
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.0,
+    "shade_score": 1.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "雨天",
+      "阴天",
+      "高温"
+    ],
+    "energy_cost": 1,
+    "route_note": "从侨香站乘2号线直达宝安中心站，约40分钟。或打车约25分钟。地铁出行经济且避免堵车。"
+  },
+  {
+    "from": "gen_parent_child_3_poi_ba_family",
+    "to": "gen_parent_child_3_poi_alley_dessert",
+    "distance_meters": 3500,
+    "walking_minutes": 10,
+    "cycling_minutes": 10,
+    "taxi_minutes": 8,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi",
+      "cycling"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 2.0,
+    "shade_score": 2.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "距离不远，但进入甲岸村道路狭窄，推车不便。建议打车至村口，步行进入约5分钟。若孩子精力尚可，也可骑行前往。"
+  },
+  {
+    "from": "gen_pet_friendly_1_pet_friendly_1_poi_1",
+    "to": "gen_pet_friendly_1_pet_friendly_1_poi_2",
+    "distance_meters": 5500,
+    "walking_minutes": 15,
+    "cycling_minutes": 10,
+    "taxi_minutes": 12,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi",
+      "cycling"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 2.0,
+    "shade_score": 1.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "两地距离较远，步行不现实。建议打车或骑行（需宠物适应）。打车约12分钟，费用约20元。"
+  },
+  {
+    "from": "gen_pet_friendly_1_pet_friendly_1_poi_2",
+    "to": "gen_pet_friendly_1_pet_friendly_1_poi_3",
+    "distance_meters": 6000,
+    "walking_minutes": 15,
+    "cycling_minutes": 12,
+    "taxi_minutes": 15,
+    "subway_recommended": true,
+    "subway_minutes": 20,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.0,
+    "shade_score": 2.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天",
+      "雨天"
+    ],
+    "energy_cost": 1,
+    "route_note": "推荐地铁，后海站到南油站仅3站，快捷且避免宠物在出租车内紧张。步行距离短。"
+  },
+  {
+    "from": "gen_pet_friendly_1_pet_friendly_1_poi_3",
+    "to": "gen_pet_friendly_1_pet_friendly_1_poi_4",
+    "distance_meters": 8000,
+    "walking_minutes": 20,
+    "cycling_minutes": 15,
+    "taxi_minutes": 18,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.0,
+    "shade_score": 2.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "地铁最方便，南油站到深圳湾公园站直达。打车也可，但晚高峰可能堵车。"
+  },
+  {
+    "from": "gen_pet_friendly_2_poi_1",
+    "to": "gen_pet_friendly_2_poi_2",
+    "distance_meters": 8500,
+    "walking_minutes": 120,
+    "cycling_minutes": 30,
+    "taxi_minutes": 20,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.0,
+    "shade_score": 2.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "两地距离较远，建议乘坐地铁（5号线转1号线）或打车，避免宠物和人过度疲劳。步行不推荐。"
+  },
+  {
+    "from": "gen_pet_friendly_2_poi_2",
+    "to": "gen_pet_friendly_2_poi_3",
+    "distance_meters": 7500,
+    "walking_minutes": 105,
+    "cycling_minutes": 25,
+    "taxi_minutes": 18,
+    "subway_recommended": true,
+    "subway_minutes": 22,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.5,
+    "shade_score": 2.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "从古城南门附近打车或乘地铁（1号线转2号线）前往蛇口，是更轻松的选择。"
+  },
+  {
+    "from": "gen_pet_friendly_2_poi_3",
+    "to": "gen_pet_friendly_2_poi_4",
+    "distance_meters": 12000,
+    "walking_minutes": 168,
+    "cycling_minutes": 40,
+    "taxi_minutes": 25,
+    "subway_recommended": true,
+    "subway_minutes": 30,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 2.0,
+    "shade_score": 2.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "蛇口到宝安距离较远，强烈建议打车或地铁（2号线转5号线），为宠物和主人节省体力。"
+  },
+  {
+    "from": "gen_pet_friendly_3_poi_1",
+    "to": "gen_pet_friendly_3_poi_2",
+    "distance_meters": 200,
+    "walking_minutes": 3,
+    "cycling_minutes": 1,
+    "taxi_minutes": 2,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "cycling",
+      "taxi"
+    ],
+    "route_type": "步行友好",
+    "scenic_score": 3.0,
+    "shade_score": 2.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "短距离步行，连接草坪和步道，平坦易走。"
+  },
+  {
+    "from": "gen_pet_friendly_3_poi_2",
+    "to": "gen_pet_friendly_3_poi_3",
+    "distance_meters": 7000,
+    "walking_minutes": 90,
+    "cycling_minutes": 30,
+    "taxi_minutes": 15,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "cycling",
+      "taxi"
+    ],
+    "route_type": "普通街道",
+    "scenic_score": 2.5,
+    "shade_score": 3.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 3,
+    "route_note": "较长步行，建议根据体力选择出租车或骑行。沿途有社区风光，但部分路段无遮阴。"
+  },
+  {
+    "from": "gen_pet_friendly_3_poi_3",
+    "to": "gen_pet_friendly_3_poi_4",
+    "distance_meters": 14000,
+    "walking_minutes": 180,
+    "cycling_minutes": 60,
+    "taxi_minutes": 20,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "cycling",
+      "taxi"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 2.0,
+    "shade_score": 2.5,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 4,
+    "route_note": "距离较远，强烈建议打车或骑行以节省时间和体力。步行不现实，尤其带宠物时。"
+  },
+  {
+    "from": "gen_photo_checkin_1_poi_1",
+    "to": "gen_photo_checkin_1_poi_2",
+    "distance_meters": 2500,
+    "walking_minutes": 35,
+    "cycling_minutes": 12,
+    "taxi_minutes": 10,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "cycling",
+      "taxi"
+    ],
+    "route_type": "普通街道",
+    "scenic_score": 2.5,
+    "shade_score": 2.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "从侨城东旧仓到OCT创意园，途经城市街道，有一定距离，建议骑行或打车。"
+  },
+  {
+    "from": "gen_photo_checkin_1_poi_2",
+    "to": "gen_photo_checkin_1_poi_3",
+    "distance_meters": 1800,
+    "walking_minutes": 25,
+    "cycling_minutes": 8,
+    "taxi_minutes": 8,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "cycling",
+      "taxi"
+    ],
+    "route_type": "普通街道",
+    "scenic_score": 2.0,
+    "shade_score": 1.5,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从创意园前往后海片区，距离适中，可选择步行或骑行。"
+  },
+  {
+    "from": "gen_photo_checkin_1_poi_3",
+    "to": "gen_photo_checkin_1_poi_4",
+    "distance_meters": 3200,
+    "walking_minutes": 45,
+    "cycling_minutes": 15,
+    "taxi_minutes": 12,
+    "subway_recommended": true,
+    "subway_minutes": 20,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.5,
+    "shade_score": 1.0,
+    "crowd_level": "high",
+    "suitable_weather": [
+      "晴天",
+      "阴天",
+      "雨天"
+    ],
+    "energy_cost": 3,
+    "route_note": "从后海到南头古城距离较远，强烈建议乘坐地铁（2号线转12号线）或打车，步行耗时过长且体验一般。"
+  },
+  {
+    "from": "gen_photo_checkin_2_poi_1",
+    "to": "gen_photo_checkin_2_poi_2",
+    "distance_meters": 15000,
+    "walking_minutes": 30,
+    "cycling_minutes": 20,
+    "taxi_minutes": 15,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "walking",
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.0,
+    "shade_score": 3.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "从福田会展中心站乘地铁1号线转9号线到南油站，步行约30分钟。"
+  },
+  {
+    "from": "gen_photo_checkin_2_poi_2",
+    "to": "gen_photo_checkin_2_poi_3",
+    "distance_meters": 800,
+    "walking_minutes": 12,
+    "cycling_minutes": 5,
+    "taxi_minutes": 5,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking"
+    ],
+    "route_type": "步行友好",
+    "scenic_score": 3.0,
+    "shade_score": 2.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从南油肖记甜品步行约12分钟到后海旧厂买手店，沿途有街区景观。"
+  },
+  {
+    "from": "gen_photo_checkin_2_poi_3",
+    "to": "gen_photo_checkin_2_poi_4",
+    "distance_meters": 5000,
+    "walking_minutes": 15,
+    "cycling_minutes": 10,
+    "taxi_minutes": 10,
+    "subway_recommended": true,
+    "subway_minutes": 12,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.5,
+    "shade_score": 3.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从后海站乘地铁2号线到侨香站，步行约15分钟。"
+  },
+  {
+    "from": "gen_photo_checkin_2_poi_4",
+    "to": "gen_photo_checkin_2_poi_5",
+    "distance_meters": 6000,
+    "walking_minutes": 13,
+    "cycling_minutes": 8,
+    "taxi_minutes": 10,
+    "subway_recommended": true,
+    "subway_minutes": 10,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 4.0,
+    "shade_score": 1.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从侨香站乘地铁2号线到后海站，步行约13分钟到夜景转角。"
+  },
+  {
+    "from": "gen_photo_checkin_3_poi_1",
+    "to": "gen_photo_checkin_3_poi_2",
+    "distance_meters": 1200,
+    "walking_minutes": 18,
+    "cycling_minutes": 8,
+    "taxi_minutes": 10,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "cycling",
+      "taxi"
+    ],
+    "route_type": "普通街道",
+    "scenic_score": 3.0,
+    "shade_score": 2.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 3,
+    "route_note": "从南头古城步行至OCT-LOFT创意园，沿途经过居民区和小型商铺，注意路口交通。"
+  },
+  {
+    "from": "gen_photo_checkin_3_poi_2",
+    "to": "gen_photo_checkin_3_poi_3",
+    "distance_meters": 2500,
+    "walking_minutes": 35,
+    "cycling_minutes": 15,
+    "taxi_minutes": 12,
+    "subway_recommended": true,
+    "subway_minutes": 15,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "walking",
+      "cycling",
+      "taxi",
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.0,
+    "shade_score": 1.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "建议乘坐地铁2号线转9号线至深圳湾公园站，步行距离短。若选择步行，沿途以城市道路为主，较晒。"
+  },
+  {
+    "from": "gen_photo_checkin_3_poi_3",
+    "to": "gen_photo_checkin_3_poi_4",
+    "distance_meters": 1800,
+    "walking_minutes": 25,
+    "cycling_minutes": 10,
+    "taxi_minutes": 8,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "cycling",
+      "taxi"
+    ],
+    "route_type": "步行友好",
+    "scenic_score": 3.5,
+    "shade_score": 2.5,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "从深圳湾口袋公园步行至楼下咖啡馆，可选择沿海边绿道行走一段，风景较好，后转入社区道路。"
+  },
+  {
+    "from": "gen_rainy_indoor_1_poi_1",
+    "to": "gen_rainy_indoor_1_poi_2",
+    "distance_meters": 8000,
+    "walking_minutes": 100,
+    "cycling_minutes": 30,
+    "taxi_minutes": 20,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.0,
+    "shade_score": 5.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "雨天"
+    ],
+    "energy_cost": 2,
+    "route_note": "地铁侨城东站到车公庙站，全程室内，避免雨天撑伞。"
+  },
+  {
+    "from": "gen_rainy_indoor_1_poi_2",
+    "to": "gen_rainy_indoor_1_poi_3",
+    "distance_meters": 6000,
+    "walking_minutes": 75,
+    "cycling_minutes": 25,
+    "taxi_minutes": 15,
+    "subway_recommended": true,
+    "subway_minutes": 20,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.5,
+    "shade_score": 5.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "雨天"
+    ],
+    "energy_cost": 2,
+    "route_note": "地铁车公庙站到宝安中心站，直通商场，少走路。"
+  },
+  {
+    "from": "gen_rainy_indoor_1_poi_3",
+    "to": "gen_rainy_indoor_1_poi_4",
+    "distance_meters": 10000,
+    "walking_minutes": 120,
+    "cycling_minutes": 40,
+    "taxi_minutes": 25,
+    "subway_recommended": true,
+    "subway_minutes": 30,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.0,
+    "shade_score": 5.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "雨天"
+    ],
+    "energy_cost": 3,
+    "route_note": "地铁宝安中心站到科技园站，需换乘，但全程室内，打车也可行。"
+  },
+  {
+    "from": "gen_rainy_indoor_2_poi_1",
+    "to": "gen_rainy_indoor_2_poi_2",
+    "distance_meters": 15000,
+    "walking_minutes": 0,
+    "cycling_minutes": 0,
+    "taxi_minutes": 30,
+    "subway_recommended": true,
+    "subway_minutes": 40,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.0,
+    "shade_score": 5.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "雨天",
+      "阴天",
+      "高温"
+    ],
+    "energy_cost": 1,
+    "route_note": "从南油西站乘9号线到车公庙站，换乘1/7/11号线（同站换乘）一站即到，全程地铁内，无需出站。"
+  },
+  {
+    "from": "gen_rainy_indoor_2_poi_2",
+    "to": "gen_rainy_indoor_2_poi_3",
+    "distance_meters": 8000,
+    "walking_minutes": 0,
+    "cycling_minutes": 0,
+    "taxi_minutes": 20,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.0,
+    "shade_score": 5.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "雨天",
+      "阴天",
+      "高温"
+    ],
+    "energy_cost": 1,
+    "route_note": "车公庙站乘2号线（或10号线）到岗厦北站，出站后步行约6分钟穿过有顶棚的巷道。"
+  },
+  {
+    "from": "gen_rainy_indoor_2_poi_3",
+    "to": "gen_rainy_indoor_2_poi_4",
+    "distance_meters": 12000,
+    "walking_minutes": 0,
+    "cycling_minutes": 0,
+    "taxi_minutes": 25,
+    "subway_recommended": true,
+    "subway_minutes": 35,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.0,
+    "shade_score": 5.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "雨天",
+      "阴天",
+      "高温"
+    ],
+    "energy_cost": 1,
+    "route_note": "岗厦北站乘5号线到民治站，出站后步行约8分钟到达社区茶档。"
+  },
+  {
+    "from": "gen_rainy_indoor_3_poi_1",
+    "to": "gen_rainy_indoor_3_poi_2",
+    "distance_meters": 12000,
+    "walking_minutes": 6,
+    "cycling_minutes": 25,
+    "taxi_minutes": 20,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.0,
+    "shade_score": 5.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "雨天",
+      "高温"
+    ],
+    "energy_cost": 2,
+    "route_note": "从壹方城宝安中心站乘1号线（机场东方向）到侨城北站，约20分钟，出站后步行6分钟至OCT创意园。雨天建议打车，约20分钟。"
+  },
+  {
+    "from": "gen_rainy_indoor_3_poi_2",
+    "to": "gen_rainy_indoor_3_poi_3",
+    "distance_meters": 15000,
+    "walking_minutes": 8,
+    "cycling_minutes": 30,
+    "taxi_minutes": 25,
+    "subway_recommended": true,
+    "subway_minutes": 30,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.0,
+    "shade_score": 5.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "雨天",
+      "高温"
+    ],
+    "energy_cost": 3,
+    "route_note": "从侨城北站乘2号线（赤湾方向）到世界之窗站，换乘1号线（罗湖方向）到深大站，约25分钟，出站步行8分钟。雨天打车更优。"
+  },
+  {
+    "from": "gen_rainy_indoor_3_poi_3",
+    "to": "gen_rainy_indoor_3_poi_4",
+    "distance_meters": 50,
+    "walking_minutes": 2,
+    "cycling_minutes": 1,
+    "taxi_minutes": 1,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking"
+    ],
+    "route_type": "室内连通",
+    "scenic_score": 1.0,
+    "shade_score": 5.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "雨天",
+      "阴天",
+      "高温"
+    ],
+    "energy_cost": 1,
+    "route_note": "同楼层步行，从咖啡店出门右转即到展览厅，全程室内。"
+  },
+  {
+    "from": "gen_solo_relax_1_poi_1",
+    "to": "gen_solo_relax_1_poi_2",
+    "distance_meters": 500,
+    "walking_minutes": 10,
+    "cycling_minutes": 4,
+    "taxi_minutes": 5,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking"
+    ],
+    "route_type": "步行友好",
+    "scenic_score": 3.0,
+    "shade_score": 2.5,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从古城西门出来，沿南山大道向南步行，转入安静巷子，约10分钟可达咖啡馆。"
+  },
+  {
+    "from": "gen_solo_relax_1_poi_2",
+    "to": "gen_solo_relax_1_poi_3",
+    "distance_meters": 6800,
+    "walking_minutes": 85,
+    "cycling_minutes": 25,
+    "taxi_minutes": 18,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.5,
+    "shade_score": 4.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "雨天",
+      "阴天",
+      "高温"
+    ],
+    "energy_cost": 1,
+    "route_note": "建议乘坐地铁12号线转1号线，从南头古城站到侨城东站，全程约25分钟，轻松舒适。"
+  },
+  {
+    "from": "gen_solo_relax_1_poi_3",
+    "to": "gen_solo_relax_1_poi_4",
+    "distance_meters": 8500,
+    "walking_minutes": 105,
+    "cycling_minutes": 30,
+    "taxi_minutes": 22,
+    "subway_recommended": true,
+    "subway_minutes": 30,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.0,
+    "shade_score": 4.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "雨天",
+      "阴天",
+      "高温"
+    ],
+    "energy_cost": 1,
+    "route_note": "建议乘坐地铁1号线转9号线，从侨城东站到梅村站，全程约30分钟，避免疲劳。"
+  },
+  {
+    "from": "gen_solo_relax_2_poi_1",
+    "to": "gen_solo_relax_2_poi_2",
+    "distance_meters": 12000,
+    "walking_minutes": 150,
+    "cycling_minutes": 40,
+    "taxi_minutes": 25,
+    "subway_recommended": true,
+    "subway_minutes": 30,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.0,
+    "shade_score": 3.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从科技园到宝安中心，建议地铁1号线转5号线，约30分钟，避免步行长途。"
+  },
+  {
+    "from": "gen_solo_relax_2_poi_2",
+    "to": "gen_solo_relax_2_poi_3",
+    "distance_meters": 8000,
+    "walking_minutes": 100,
+    "cycling_minutes": 25,
+    "taxi_minutes": 15,
+    "subway_recommended": true,
+    "subway_minutes": 20,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.5,
+    "shade_score": 3.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从宝安中心到侨城东，地铁5号线直达，约20分钟，轻松便捷。"
+  },
+  {
+    "from": "gen_solo_relax_2_poi_3",
+    "to": "gen_solo_relax_2_poi_4",
+    "distance_meters": 500,
+    "walking_minutes": 7,
+    "cycling_minutes": 3,
+    "taxi_minutes": 5,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking"
+    ],
+    "route_type": "步行友好",
+    "scenic_score": 3.0,
+    "shade_score": 4.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天",
+      "雨天"
+    ],
+    "energy_cost": 0,
+    "route_note": "侨城东到南油步行仅7分钟，沿途有绿荫，适合轻度散步。"
+  },
+  {
+    "from": "gen_solo_relax_3_poi_1",
+    "to": "gen_solo_relax_3_poi_2",
+    "distance_meters": 1500,
+    "walking_minutes": 20,
+    "cycling_minutes": 8,
+    "taxi_minutes": 7,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "taxi"
+    ],
+    "route_type": "步行友好",
+    "scenic_score": 3.0,
+    "shade_score": 4.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从商场出来，穿过香蜜湖片区的社区公园和安静街道，步行约20分钟，沿途绿树成荫，适合放松行走。"
+  },
+  {
+    "from": "gen_solo_relax_3_poi_2",
+    "to": "gen_solo_relax_3_poi_3",
+    "distance_meters": 6000,
+    "walking_minutes": 0,
+    "cycling_minutes": 25,
+    "taxi_minutes": 20,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.0,
+    "shade_score": 1.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "雨天",
+      "阴天",
+      "高温"
+    ],
+    "energy_cost": 1,
+    "route_note": "距离较远，强烈推荐地铁。从侨香站（2号线）坐到世界之窗站换乘1号线，再到桃园站下车，全程约25分钟，避免户外行走疲劳。"
+  },
+  {
+    "from": "gen_solo_relax_3_poi_3",
+    "to": "gen_solo_relax_3_poi_4",
+    "distance_meters": 1200,
+    "walking_minutes": 15,
+    "cycling_minutes": 6,
+    "taxi_minutes": 5,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking"
+    ],
+    "route_type": "步行友好",
+    "scenic_score": 2.0,
+    "shade_score": 3.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从旧厂区出来，沿着南山大道辅路向南步行，穿过几个街口即可到达白石洲村口，路程轻松，感受从艺术区到生活区的过渡。"
+  },
+  {
+    "from": "gen_supplement_couple_hotpot_1_poi_nantou_walk",
+    "to": "gen_supplement_couple_hotpot_1_poi_chegongmiao_hotpot",
+    "distance_meters": 5200,
+    "walking_minutes": 75,
+    "cycling_minutes": 25,
+    "taxi_minutes": 15,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.0,
+    "shade_score": 1.5,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天",
+      "雨天"
+    ],
+    "energy_cost": 2,
+    "route_note": "建议从桃园站乘1号线至车公庙站，避免傍晚步行距离过长。"
+  },
+  {
+    "from": "gen_supplement_couple_hotpot_1_poi_chegongmiao_hotpot",
+    "to": "gen_supplement_couple_hotpot_1_poi_qiaoxiang_tearoom",
+    "distance_meters": 3800,
+    "walking_minutes": 55,
+    "cycling_minutes": 18,
+    "taxi_minutes": 12,
+    "subway_recommended": true,
+    "subway_minutes": 20,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.5,
+    "shade_score": 2.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天",
+      "雨天"
+    ],
+    "energy_cost": 2,
+    "route_note": "从车公庙站乘7号线转2号线至侨香站，最方便。"
+  },
+  {
+    "from": "gen_supplement_couple_hotpot_1_poi_qiaoxiang_tearoom",
+    "to": "gen_supplement_couple_hotpot_1_poi_haiwan_nightview",
+    "distance_meters": 4100,
+    "walking_minutes": 60,
+    "cycling_minutes": 20,
+    "taxi_minutes": 14,
+    "subway_recommended": true,
+    "subway_minutes": 18,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.5,
+    "shade_score": 2.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "从侨香站乘2号线直达后海站，出站步行即到。"
+  },
+  {
+    "from": "gen_supplement_friends_bbq_1_poi_bbq_nanyou",
+    "to": "gen_supplement_friends_bbq_1_poi_teahouse_baoan",
+    "distance_meters": 18500,
+    "walking_minutes": 220,
+    "cycling_minutes": 55,
+    "taxi_minutes": 30,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi",
+      "cycling"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 1.0,
+    "shade_score": 2.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天",
+      "雨天"
+    ],
+    "energy_cost": 1,
+    "route_note": "距离较远，且烧烤后通常已晚，建议直接打车前往，费用约50元。"
+  },
+  {
+    "from": "gen_supplement_friends_bbq_1_poi_teahouse_baoan",
+    "to": "gen_supplement_friends_bbq_1_poi_park_shenzhenwan",
+    "distance_meters": 12800,
+    "walking_minutes": 155,
+    "cycling_minutes": 40,
+    "taxi_minutes": 25,
+    "subway_recommended": true,
+    "subway_minutes": 35,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.0,
+    "shade_score": 3.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "地铁5号线转9号线，直达深圳湾公园站，出站步行5分钟到草坡。"
+  },
+  {
+    "from": "gen_supplement_friends_bbq_1_poi_park_shenzhenwan",
+    "to": "gen_supplement_friends_bbq_1_poi_dessert_shangsha",
+    "distance_meters": 9200,
+    "walking_minutes": 110,
+    "cycling_minutes": 30,
+    "taxi_minutes": 20,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.5,
+    "shade_score": 2.5,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天",
+      "雨天"
+    ],
+    "energy_cost": 1,
+    "route_note": "地铁9号线到上沙站，C口出进入城中村，步行3分钟到达。"
+  },
+  {
+    "from": "gen_supplement_friends_boardgame_1_poi_1",
+    "to": "gen_supplement_friends_boardgame_1_poi_2",
+    "distance_meters": 10000,
+    "walking_minutes": 120,
+    "cycling_minutes": 40,
+    "taxi_minutes": 20,
+    "subway_recommended": true,
+    "subway_minutes": 30,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi",
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.0,
+    "shade_score": 3.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "建议地铁1号线直达科技园站，避免晚高峰堵车。"
+  },
+  {
+    "from": "gen_supplement_friends_boardgame_1_poi_2",
+    "to": "gen_supplement_friends_boardgame_1_poi_3",
+    "distance_meters": 8000,
+    "walking_minutes": 100,
+    "cycling_minutes": 30,
+    "taxi_minutes": 15,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi",
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.5,
+    "shade_score": 3.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "地铁1号线从科技园站到车公庙站，方便快捷。"
+  },
+  {
+    "from": "gen_supplement_friends_boardgame_1_poi_3",
+    "to": "gen_supplement_friends_boardgame_1_poi_4",
+    "distance_meters": 5000,
+    "walking_minutes": 60,
+    "cycling_minutes": 20,
+    "taxi_minutes": 10,
+    "subway_recommended": true,
+    "subway_minutes": 15,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "taxi",
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 3.0,
+    "shade_score": 2.5,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "地铁11号线转2号线到黄贝岭站，或打车更快。"
+  },
+  {
+    "from": "gen_supplement_friends_escape_1_poi_001",
+    "to": "gen_supplement_friends_escape_1_poi_002",
+    "distance_meters": 15000,
+    "walking_minutes": 180,
+    "cycling_minutes": 45,
+    "taxi_minutes": 25,
+    "subway_recommended": false,
+    "subway_minutes": 40,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "taxi"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 1.0,
+    "shade_score": 1.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "密室结束较晚，建议直接打车前往火锅店，约25分钟车程。"
+  },
+  {
+    "from": "gen_supplement_friends_escape_1_poi_002",
+    "to": "gen_supplement_friends_escape_1_poi_003",
+    "distance_meters": 3200,
+    "walking_minutes": 20,
+    "cycling_minutes": 10,
+    "taxi_minutes": 8,
+    "subway_recommended": true,
+    "subway_minutes": 15,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "subway",
+      "taxi"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.0,
+    "shade_score": 3.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从车公庙地铁站乘7号线至上沙站，仅2站，约10分钟。出站后步行2分钟即达。"
+  },
+  {
+    "from": "gen_supplement_friends_escape_1_poi_003",
+    "to": "gen_supplement_friends_escape_1_poi_004",
+    "distance_meters": 2100,
+    "walking_minutes": 15,
+    "cycling_minutes": 8,
+    "taxi_minutes": 6,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "taxi"
+    ],
+    "route_type": "步行友好",
+    "scenic_score": 1.5,
+    "shade_score": 2.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "步行穿过上沙村和滨河路辅道，约15分钟。夜间建议结伴步行或直接打车。"
+  },
+  {
+    "from": "gen_supplement_friends_hotpot_2_poi_hotpot_1",
+    "to": "gen_supplement_friends_hotpot_2_poi_boardgame_2",
+    "distance_meters": 5000,
+    "walking_minutes": 60,
+    "cycling_minutes": 20,
+    "taxi_minutes": 15,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi",
+      "cycling"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 2.0,
+    "shade_score": 3.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "从蛇口到白石洲，距离较远，建议打车或骑行，步行耗时较长。"
+  },
+  {
+    "from": "gen_supplement_friends_hotpot_2_poi_boardgame_2",
+    "to": "gen_supplement_friends_hotpot_2_poi_dessert_3",
+    "distance_meters": 3000,
+    "walking_minutes": 40,
+    "cycling_minutes": 12,
+    "taxi_minutes": 10,
+    "subway_recommended": true,
+    "subway_minutes": 15,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "subway",
+      "taxi",
+      "walking"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.5,
+    "shade_score": 3.5,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "雨天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "白石洲到南油，地铁1号线转9号线方便，但步行也可行，沿途有城中村景观。"
+  },
+  {
+    "from": "gen_supplement_friends_hotpot_2_poi_dessert_3",
+    "to": "gen_supplement_friends_hotpot_2_poi_transport_4",
+    "distance_meters": 2000,
+    "walking_minutes": 25,
+    "cycling_minutes": 8,
+    "taxi_minutes": 7,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "taxi"
+    ],
+    "route_type": "步行友好",
+    "scenic_score": 3.0,
+    "shade_score": 4.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "南油到科技园东门，步行约25分钟，夜间街道安静，但打车更快。"
+  },
+  {
+    "from": "gen_supplement_night_bbq_2_poi_1",
+    "to": "gen_supplement_night_bbq_2_poi_2",
+    "distance_meters": 8500,
+    "walking_minutes": 120,
+    "cycling_minutes": 35,
+    "taxi_minutes": 25,
+    "subway_recommended": true,
+    "subway_minutes": 30,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "taxi",
+      "subway"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 2.0,
+    "shade_score": 3.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "岗厦到白石洲距离较远，夜间建议打车或地铁（岗厦北->车公庙->白石洲，约30分钟），步行不现实。"
+  },
+  {
+    "from": "gen_supplement_night_bbq_2_poi_2",
+    "to": "gen_supplement_night_bbq_2_poi_3",
+    "distance_meters": 4200,
+    "walking_minutes": 60,
+    "cycling_minutes": 18,
+    "taxi_minutes": 15,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi",
+      "cycling"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 2.5,
+    "shade_score": 2.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "白石洲到后海老社区，夜间公交少，建议打车（约15分钟），骑行需注意路况。"
+  },
+  {
+    "from": "gen_supplement_night_bbq_2_poi_3",
+    "to": "gen_supplement_night_bbq_2_poi_4",
+    "distance_meters": 15000,
+    "walking_minutes": 210,
+    "cycling_minutes": 55,
+    "taxi_minutes": 35,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 1.5,
+    "shade_score": 2.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "后海到皇岗村距离远，且深夜无地铁，必须打车。注意周末凌晨可能堵车，预留充足时间。"
+  },
+  {
+    "from": "gen_supplement_night_boardgame_2_poi_1",
+    "to": "gen_supplement_night_boardgame_2_poi_2",
+    "distance_meters": 1500,
+    "walking_minutes": 20,
+    "cycling_minutes": 8,
+    "taxi_minutes": 10,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "cycling",
+      "taxi"
+    ],
+    "route_type": "普通街道",
+    "scenic_score": 2.0,
+    "shade_score": 3.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 2,
+    "route_note": "从科技园到南油，走科发路转南海大道，夜间车流较少，步行约20分钟。"
+  },
+  {
+    "from": "gen_supplement_night_boardgame_2_poi_2",
+    "to": "gen_supplement_night_boardgame_2_poi_3",
+    "distance_meters": 800,
+    "walking_minutes": 12,
+    "cycling_minutes": 5,
+    "taxi_minutes": 8,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "cycling",
+      "taxi"
+    ],
+    "route_type": "步行友好",
+    "scenic_score": 2.5,
+    "shade_score": 3.5,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从南油巷子出来，沿海德二道往海边方向走，约12分钟。"
+  },
+  {
+    "from": "gen_supplement_night_boardgame_2_poi_3",
+    "to": "gen_supplement_night_boardgame_2_poi_4",
+    "distance_meters": 12000,
+    "walking_minutes": 150,
+    "cycling_minutes": 45,
+    "taxi_minutes": 25,
+    "subway_recommended": true,
+    "subway_minutes": 30,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "taxi",
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.5,
+    "shade_score": 1.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "雨天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "距离较远，建议打车或地铁。地铁从后海站2号线到福田站换4号线到皇岗村站，约30分钟。"
+  },
+  {
+    "from": "gen_supplement_parent_child_park_1_poi_1",
+    "to": "gen_supplement_parent_child_park_1_poi_2",
+    "distance_meters": 20000,
+    "walking_minutes": 180,
+    "cycling_minutes": 60,
+    "taxi_minutes": 35,
+    "subway_recommended": true,
+    "subway_minutes": 45,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "walking",
+      "cycling",
+      "taxi",
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 1.0,
+    "shade_score": 1.0,
+    "crowd_level": "high",
+    "suitable_weather": [
+      "晴天",
+      "阴天",
+      "雨天"
+    ],
+    "energy_cost": 3,
+    "route_note": "建议地铁7号线转4号线，避免堵车。出站后步行至商场。"
+  },
+  {
+    "from": "gen_supplement_parent_child_park_1_poi_2",
+    "to": "gen_supplement_parent_child_park_1_poi_3",
+    "distance_meters": 1500,
+    "walking_minutes": 20,
+    "cycling_minutes": 8,
+    "taxi_minutes": 5,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "cycling",
+      "taxi"
+    ],
+    "route_type": "步行友好",
+    "scenic_score": 3.0,
+    "shade_score": 4.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "穿过商场和公园步道，有树荫，适合推婴儿车。"
+  },
+  {
+    "from": "gen_supplement_parent_child_park_1_poi_3",
+    "to": "gen_supplement_parent_child_park_1_poi_4",
+    "distance_meters": 15000,
+    "walking_minutes": 150,
+    "cycling_minutes": 50,
+    "taxi_minutes": 30,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking",
+      "cycling",
+      "taxi"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 2.0,
+    "shade_score": 2.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天",
+      "雨天"
+    ],
+    "energy_cost": 2,
+    "route_note": "距离较远，建议打车前往。糖水铺位于老巷子，下车后需步行几分钟。"
+  },
+  {
+    "from": "gen_supplement_parent_child_park_2_poi_1",
+    "to": "gen_supplement_parent_child_park_2_poi_2",
+    "distance_meters": 12000,
+    "walking_minutes": 5,
+    "cycling_minutes": 25,
+    "taxi_minutes": 20,
+    "subway_recommended": true,
+    "subway_minutes": 25,
+    "subway_transfer_count": 1,
+    "transit_modes": [
+      "taxi",
+      "subway"
+    ],
+    "route_type": "地铁更优",
+    "scenic_score": 2.0,
+    "shade_score": 3.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "雨天",
+      "晴天",
+      "阴天",
+      "高温"
+    ],
+    "energy_cost": 2,
+    "route_note": "车公庙至宝安中心地铁需换乘，但全程在地下，雨天无忧。打车约20分钟，费用约35元。"
+  },
+  {
+    "from": "gen_supplement_parent_child_park_2_poi_2",
+    "to": "gen_supplement_parent_child_park_2_poi_3",
+    "distance_meters": 300,
+    "walking_minutes": 5,
+    "cycling_minutes": 2,
+    "taxi_minutes": 3,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking"
+    ],
+    "route_type": "室内连通",
+    "scenic_score": 1.5,
+    "shade_score": 5.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "雨天",
+      "晴天",
+      "阴天",
+      "高温"
+    ],
+    "energy_cost": 1,
+    "route_note": "从奇乐堡所在的2楼乘电梯下至B1层，步行至书店，全程室内，无需出商场。"
+  },
+  {
+    "from": "gen_supplement_parent_child_park_2_poi_3",
+    "to": "gen_supplement_parent_child_park_2_poi_4",
+    "distance_meters": 80,
+    "walking_minutes": 2,
+    "cycling_minutes": 1,
+    "taxi_minutes": 1,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "walking"
+    ],
+    "route_type": "室内连通",
+    "scenic_score": 1.0,
+    "shade_score": 5.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "雨天",
+      "晴天",
+      "阴天",
+      "高温"
+    ],
+    "energy_cost": 1,
+    "route_note": "书店与甜品店同在B1层，步行仅需2分钟，非常便捷。"
+  },
+  {
+    "from": "gen_supplement_parent_child_space_1_poi_001",
+    "to": "gen_supplement_parent_child_space_1_poi_002",
+    "distance_meters": 12500,
+    "walking_minutes": 180,
+    "cycling_minutes": 45,
+    "taxi_minutes": 25,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 2.0,
+    "shade_score": 2.0,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "距离较远，建议直接打车，车程约25分钟。地铁需换乘且步行距离长，不适合带小孩。"
+  },
+  {
+    "from": "gen_supplement_parent_child_space_1_poi_002",
+    "to": "gen_supplement_parent_child_space_1_poi_003",
+    "distance_meters": 8500,
+    "walking_minutes": 120,
+    "cycling_minutes": 30,
+    "taxi_minutes": 18,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 2.5,
+    "shade_score": 2.5,
+    "crowd_level": "medium",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从白石洲打车到宝安中心约18分钟。不建议步行或骑行，距离太长孩子会累。"
+  },
+  {
+    "from": "gen_supplement_parent_child_space_1_poi_003",
+    "to": "gen_supplement_parent_child_space_1_poi_004",
+    "distance_meters": 9200,
+    "walking_minutes": 130,
+    "cycling_minutes": 35,
+    "taxi_minutes": 20,
+    "subway_recommended": false,
+    "subway_minutes": null,
+    "subway_transfer_count": 0,
+    "transit_modes": [
+      "taxi"
+    ],
+    "route_type": "打车更优",
+    "scenic_score": 2.0,
+    "shade_score": 2.0,
+    "crowd_level": "low",
+    "suitable_weather": [
+      "晴天",
+      "阴天"
+    ],
+    "energy_cost": 1,
+    "route_note": "从宝安中心打车到西丽茶档约20分钟。此段无便捷公共交通，打车是唯一合理选择。"
+  }
+]

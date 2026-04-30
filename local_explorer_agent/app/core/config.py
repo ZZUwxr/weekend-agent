@@ -19,7 +19,11 @@ class Settings(BaseSettings):
     llm_use_structured_output: bool = True
     llm_api_style: Literal["chat_completions", "responses"] = "chat_completions"
     llm_trust_env: bool = False
+    llm_allow_rule_based_fallback: bool = False
     openai_api_key: str | None = None
+    data_backend: Literal["json", "postgres"] = "json"
+    database_url: str | None = None
+    database_connect_timeout_seconds: float = 3
     data_dir: Path = Field(
         default_factory=lambda: Path(__file__).resolve().parents[1] / "data"
     )

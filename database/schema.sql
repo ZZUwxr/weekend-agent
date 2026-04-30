@@ -113,6 +113,14 @@ CREATE TABLE IF NOT EXISTS route_edges (
     CONSTRAINT route_edges_not_self CHECK (from_poi_id <> to_poi_id)
 );
 
+CREATE TABLE IF NOT EXISTS queue_status (
+    poi_id TEXT PRIMARY KEY REFERENCES poi(id) ON DELETE CASCADE,
+    queue_minutes INTEGER NOT NULL DEFAULT 10,
+    risk TEXT NOT NULL DEFAULT 'medium',
+    mock_scenario TEXT,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS user_profiles (
     user_id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -197,6 +205,7 @@ CREATE INDEX IF NOT EXISTS poi_transportation_subway_lines_gin ON poi_transporta
 CREATE INDEX IF NOT EXISTS route_edges_from_idx ON route_edges (from_poi_id);
 CREATE INDEX IF NOT EXISTS route_edges_to_idx ON route_edges (to_poi_id);
 CREATE INDEX IF NOT EXISTS route_edges_subway_idx ON route_edges (subway_recommended);
+CREATE INDEX IF NOT EXISTS queue_status_risk_idx ON queue_status (risk);
 CREATE INDEX IF NOT EXISTS user_preference_weights_key_idx ON user_preference_weights (preference_key);
 CREATE INDEX IF NOT EXISTS route_plans_user_idx ON route_plans (user_id);
 CREATE INDEX IF NOT EXISTS route_stops_plan_idx ON route_stops (route_plan_id, stop_order);
