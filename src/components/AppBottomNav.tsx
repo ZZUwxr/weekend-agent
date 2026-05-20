@@ -1,4 +1,4 @@
-import { CalendarDays, CircleUser, House, Map } from "lucide-react";
+import { CalendarDays, CircleUser, Compass, House } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   HOME_PATH,
@@ -11,11 +11,11 @@ import { Button } from "./ui/button";
 
 type ItemLabel = "首页" | "地图" | "行程" | "我的";
 
-type Item = { label: ItemLabel; Icon: typeof Map; to: string };
+type Item = { label: ItemLabel; Icon: typeof House; to: string };
 
 const items: Item[] = [
   { label: "首页", Icon: House, to: HOME_PATH },
-  { label: "地图", Icon: Map, to: TRIP_LIVE_MAP_PATH },
+  { label: "地图", Icon: Compass, to: TRIP_LIVE_MAP_PATH },
   { label: "行程", Icon: CalendarDays, to: ITINERARY_HUB_PATH },
   { label: "我的", Icon: CircleUser, to: PROFILE_PATH },
 ];
@@ -23,10 +23,10 @@ const items: Item[] = [
 export type AppJourneyFlowState = { travelId: string; planId: string };
 
 type AppBottomNavProps = {
-  /** 高亮底栏项；`null` 表示不高亮（例如在对话页）。 */
+  /** 高亮底栏项；`null` 表示四项均为弱态（少用；对话等与首页同构时一般用「首页」）。 */
   active: ItemLabel | null;
   /**
-   * 与 `JourneyBottomNav` 一致。未传时使用默认 mock 行程，便于从首页/对话直达地图、行程、我的。
+   * 与 `JourneyBottomNav` 一致。未传时使用默认 mock 行程，便于从首页直达地图、行程、我的。
    */
   journeyFlow?: AppJourneyFlowState;
 };
@@ -44,11 +44,11 @@ export function AppBottomNav({ active, journeyFlow }: AppBottomNavProps): JSX.El
               <item.Icon
                 className={`shrink-0 ${isActive ? "text-black" : "text-[#9ca3af]"}`}
                 style={{ width: 20, height: 20 }}
-                strokeWidth={1.75}
+                strokeWidth={isActive ? 2.35 : 1.75}
               />
               <span
-                className={`[font-family:'Pacifico',Helvetica] text-[6px] font-normal leading-[16.5px] tracking-[0] ${
-                  isActive ? "text-black" : "text-[#9ca3af]"
+                className={`[font-family:'Pacifico',Helvetica] text-[6px] leading-[16.5px] tracking-[0] ${
+                  isActive ? "font-semibold text-black" : "font-normal text-[#9ca3af]"
                 }`}
               >
                 {item.label}

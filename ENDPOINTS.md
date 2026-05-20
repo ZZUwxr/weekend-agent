@@ -838,6 +838,55 @@ This document outlines all the backend endpoints required for the frontend appli
 
 ---
 
+### 20. User preferences — PUT（保存四页偏好）
+
+前端封装：`saveTravelModePreferences` · `saveDietaryPreferences` · `saveActivityPreferences` · `saveBudgetPacePreferences`（见各 `*-preferences.service.ts` / `travel-mode-settings.service.ts`）。  
+未配置 `VITE_API_BASE_URL` 时前端**不请求**，本地视为保存成功以便开发。
+
+| 方法 | 路径 | 请求体 TypeScript 类型 |
+|------|------|------------------------|
+| `PUT` | `/api/user/preferences/travel-mode` | `SaveTravelModePreferencesBody` |
+| `PUT` | `/api/user/preferences/dietary` | `SaveDietaryPreferencesBody` |
+| `PUT` | `/api/user/preferences/activity` | `SaveActivityPreferencesBody` |
+| `PUT` | `/api/user/preferences/budget-pace` | `SaveBudgetPacePreferencesBody` |
+
+**响应（建议）：** `UserPreferenceSaveResponseDto` — `{ "ok": true, "updatedAt": "ISO-8601" }`
+
+**请求体示例（出行方式）：**
+```json
+{
+  "selectedMethodId": "taxi",
+  "selectedRadiusKm": 5,
+  "selectedDurationId": "dur-afternoon"
+}
+```
+
+**请求体示例（饮食）：**
+```json
+{
+  "selectedNeedIds": ["need-lowcal", "need-allergen"],
+  "allergenNote": "花生、海鲜"
+}
+```
+
+---
+
+### 21. Travel flow — POST/PATCH（预订 / 支付写操作）
+
+前端封装：`src/lib/api/travel-flow-writes.service.ts` · `postBookingTodoAction` · `postBookingCheckoutConfirm` · `postTravelPaymentOrder` · `patchTravelPaymentOrderComplete`。  
+页面可在用户点击「确认」「去支付」等时调用；未配置 base URL 时返回 mock 成功，不阻塞导航。
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| `POST` | `/api/travel/:travelId/booking-todos/actions` | 预约待办流中的操作；body：`BookingTodoActionBody`（`planId`, `itemId`, `action`, 可选 `metadata`） |
+| `POST` | `/api/travel/:travelId/booking-checkout/confirm` | 预约核对页汇总确认；body：`TravelBookingCheckoutConfirmBody` |
+| `POST` | `/api/travel/:travelId/payment/orders` | 创建支付单；body：`TravelPaymentSubmitBody`；响应可含 `paymentUrl` 跳转收银台 |
+| `PATCH` | `/api/travel/:travelId/payment/orders/:orderId/complete?planId=` | 支付结果同步（轮询成功或回调后由前端或后端二选一发起的确认，按实际网关调整） |
+
+实际 URL、鉴权与支付回调以网关为准；**保持请求/响应字段与 `types.ts` 中对齐**即可替换实现。
+
+---
+
 ## Error Responses
 
 All endpoints follow standard HTTP status codes:

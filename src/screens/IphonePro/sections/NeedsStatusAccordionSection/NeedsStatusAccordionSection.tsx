@@ -1,5 +1,5 @@
-import { Baby, ChevronDown as ChevronDownIcon, Search as SearchIcon } from "lucide-react";
-import { Card, CardContent } from "../../../../components/ui/card";
+import { Baby } from "lucide-react";
+import { FIGMA_CHAT_177 } from "../../../../lib/api/mock/figma-chat-177-assets";
 import type { NeedsSectionDto } from "../../../../lib/api/types";
 
 export type NeedsStatusAccordionSectionProps = {
@@ -10,53 +10,51 @@ export const NeedsStatusAccordionSection = ({
   data,
 }: NeedsStatusAccordionSectionProps): JSX.Element => {
   return (
-    <section className="w-full bg-white">
-      <Card className="w-full overflow-hidden rounded-[0px_10.98px_10.98px_10.98px] border border-[#fbf3ab] bg-white shadow-[0px_2.75px_13.73px_#00000008]">
-        <CardContent className="p-0">
-          <header className="flex items-center gap-[5.49px] px-[11px] pt-[11px]">
-            <SearchIcon
-              className="h-[14px] w-[14px] shrink-0 text-[#1f2937]"
-              strokeWidth={1.75}
-            />
-            <h2 className="flex items-center [font-family:'PingFang_SC-Regular',Helvetica] text-[11px] font-normal leading-[16.5px] tracking-[0] text-[#0f1c2d]">
-              {data.headerTitle}
-            </h2>
-            <div className="flex-1" />
-            <ChevronDownIcon
-              className="h-[14px] w-[14px] shrink-0 text-[#6b7280]"
-              strokeWidth={1.75}
-            />
-          </header>
-          <div className="overflow-x-auto px-[11px] pb-[11px] pt-[7px]">
-            <div className="flex min-w-max gap-[5px]">
-              {data.cards.map((card, index) => (
-                <article
-                  key={card.id || `${card.title}-${index}`}
-                  className="flex h-[60px] w-[132px] shrink-0 flex-col rounded-[10.03px] border border-[#d7d7d7] bg-[radial-gradient(50%_50%_at_50%_50%,rgba(225,240,255,0.44)_24%,rgba(255,255,255,0.44)_100%)] shadow-[0px_1px_2px_#d0e7ff]"
-                >
-                  <div className="flex items-center gap-[5.49px] px-[9px] pt-[4px]">
-                    {card.icon === "baby" ? (
-                      <Baby className="h-[14px] w-[14px] shrink-0 text-[#0f1c2d]" strokeWidth={1.75} />
-                    ) : (
-                      <span className="flex h-[19.22px] w-[10.68px] items-center justify-center [font-family:'Liberation_Serif-Regular',Helvetica] text-[13.7px] font-normal leading-[19.2px] tracking-[0] text-[#0f1c2d]">
-                        {card.icon}
-                      </span>
-                    )}
-                    <span className="[font-family:'WenQuanYi_Zen_Hei-Medium',Helvetica] text-[11px] font-medium leading-[16.5px] tracking-[0] text-[#0f1c2d]">
-                      {card.title}
-                    </span>
-                  </div>
-                  <p className="px-[11px] pt-[3.8px] [font-family:'PingFang_SC-Regular',Helvetica] text-[7px] font-normal leading-[11px] tracking-[0] text-[#434655]">
-                    {card.description[0]}
-                    <br />
-                    {card.description[1]}
-                  </p>
-                </article>
-              ))}
-            </div>
+    <section className="w-full">
+      <div className="w-full rounded-bl-[10.983px] rounded-br-[10.983px] rounded-tr-[10.983px] border-[0.5px] border-[#fbf3ab] bg-white shadow-[0px_2.746px_6.864px_rgba(0,0,0,0.03)]">
+        <header className="flex items-center gap-[5.5px] px-[10.5px] pb-0 pt-[10.5px]">
+          <img
+            src={FIGMA_CHAT_177.needsSearchIcon}
+            alt=""
+            className="h-[10px] w-[10px] shrink-0 object-contain"
+          />
+          <div className="min-w-0 flex-1 leading-[16.475px] [font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[10.983px] font-normal text-[#0f1c2d]">
+            {data.headerTitle}
           </div>
-        </CardContent>
-      </Card>
+          <img
+            src={FIGMA_CHAT_177.needsHeaderChevron}
+            alt=""
+            className="h-[5.5px] w-[8px] shrink-0 object-contain opacity-70"
+          />
+        </header>
+        <div className="overflow-x-auto px-[10.5px] pb-[10.5px] pt-[9px]">
+          <div className="flex w-max gap-[5px]">
+            {data.cards.map((card, index) => (
+              <article
+                key={card.id || `${card.title}-${index}`}
+                className="flex h-[59px] w-[132px] shrink-0 flex-col rounded-[10.027px] border-[0.836px] border-[#d8d8d8] bg-[linear-gradient(rgba(225,240,255,0.44)_23.6%,rgba(255,255,255,0.44)_100%)] shadow-[0px_1px_2px_0px_#d1e8ff]"
+              >
+                <div className="flex items-center gap-[5.5px] px-2 pb-0 pt-[3px]">
+                  {card.icon === "baby" ? (
+                    <Baby className="h-[13px] w-[13px] shrink-0 text-[#0f1c2d]" strokeWidth={1.75} />
+                  ) : (
+                    <span className="flex min-h-[19px] min-w-[11px] items-center justify-center [font-family:'Liberation_Serif','PingFang_SC',sans-serif] text-[13.7px] font-normal leading-[19px] text-[#0f1c2d]">
+                      {card.icon}
+                    </span>
+                  )}
+                  <span className="[font-family:'WenQuanYi_Zen_Hei','Zen_Hei','PingFang_SC',sans-serif] text-[11px] font-medium leading-[16.5px] text-[#0f1c2d]">
+                    {card.title}
+                  </span>
+                </div>
+                <div className="flex flex-col px-[10px] pt-[6px] [font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[7px] font-normal leading-[11px] text-[#434655]">
+                  {card.description[0] ? <p className="mb-0">{card.description[0]}</p> : null}
+                  {card.description[1] ? <p>{card.description[1]}</p> : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
     </section>
   );
 };

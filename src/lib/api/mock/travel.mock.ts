@@ -10,6 +10,7 @@ export const MOCK_CLARIFICATION: ClarificationCardDto = {
       id: "child_age",
       kind: "chips",
       question: "孩子多大？",
+      selectedOptionIds: ["age_3_5"],
       options: [
         { id: "age_3_5", label: "3-5岁" },
         { id: "age_6_8", label: "6-8岁" },
@@ -20,6 +21,7 @@ export const MOCK_CLARIFICATION: ClarificationCardDto = {
       id: "diet",
       kind: "chips",
       question: "爱人的饮食偏好？",
+      selectedOptionIds: ["diet_lowcal"],
       options: [
         { id: "diet_lowcal", label: "正在减肥/低卡" },
         { id: "diet_veg", label: "素食" },
@@ -30,7 +32,7 @@ export const MOCK_CLARIFICATION: ClarificationCardDto = {
     {
       id: "extra",
       kind: "supplementary",
-      question: "还有需要补充的吗？",
+      question: "还有什么需要补充的吗？",
       placeholder: "补充一下...",
     },
   ],
@@ -38,6 +40,7 @@ export const MOCK_CLARIFICATION: ClarificationCardDto = {
 
 export const MOCK_CONVERSATION_PAGE: TravelConversationPageDto = {
   travelId: MOCK_TRAVEL_ID,
+  followUpUserMessage: "孩子5岁、老婆处于减肥期、我注重性价比",
   statusSteps: [
     { id: "s1", text: "正在理解你的出行意图…", icon: "loader" },
     { id: "s2", text: "检测到你们的需求有冲突…", icon: "alert" },
@@ -62,9 +65,9 @@ export const MOCK_CONVERSATION_PAGE: TravelConversationPageDto = {
       },
       {
         id: "n3",
-        title: "老婆",
-        icon: "👩",
-        description: ["减脂期，低卡健康餐，偏好参与", "感强活动"],
+        title: "Jack",
+        icon: "👨",
+        description: ["性价比"],
       },
     ],
   },

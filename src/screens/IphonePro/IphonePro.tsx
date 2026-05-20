@@ -1,83 +1,89 @@
-import {
-  ChevronLeft,
-  CircleAlert as AlertCircle,
-  ArrowLeftRight,
-  ChevronRight,
-  Lightbulb,
-  Loader as Loader2,
-} from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { ChevronLeft } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AppBottomNav } from "../../components/AppBottomNav";
-import { Card, CardContent } from "../../components/ui/card";
-import {
-  CHAT_PATH,
-  HOME_PATH,
-  PLANS_PATH,
-} from "../../routes";
+import { ContentFitZoom } from "../../components/ContentFitZoom";
+import { EmbeddedStatusBarImage } from "../../components/EmbeddedStatusBar";
+import { AppScreenShell } from "../../components/AppScreenShell";
+import { CHAT_PATH, HOME_PATH, PLANS_PATH } from "../../routes";
 import {
   fetchTravelConversationPage,
 } from "../../lib/api/travel.service";
 import { MOCK_TRAVEL_ID } from "../../lib/api/mock/travel.mock";
-import type { TravelConversationPageDto, TravelStatusStepDto } from "../../lib/api/types";
+import type { TravelConversationPageDto } from "../../lib/api/types";
 import { NeedsStatusAccordionSection } from "./sections/NeedsStatusAccordionSection";
 import { TravelIntentPromptSection } from "./sections/TravelIntentPromptSection";
+import { FIGMA_CHAT_177 } from "../../lib/api/mock/figma-chat-177-assets";
+import { embeddedBackButtonTopClass } from "../../lib/embeddedStatusBar";
+import { cn } from "../../lib/utils";
 
-const DEFAULT_USER_MESSAGE = "我和家人想在在今天下午出门放松放松";
-
-const STATUS_ICONS = {
-  loader: Loader2,
-  alert: AlertCircle,
-  arrows: ArrowLeftRight,
-  lightbulb: Lightbulb,
-} as const;
+const DEFAULT_USER_MESSAGE = "我和家人想在今天下午出门放松放松";
 
 type ChatLocationState = { message?: string; travelId?: string };
 
-type ProgressRow = {
-  stepId: string;
-  text: string;
-  Icon: (typeof STATUS_ICONS)[keyof typeof STATUS_ICONS];
-};
-
-type MainFlowBlock =
-  | { id: "progress"; row: ProgressRow }
-  | { id: "travelPrompt" };
-
-function stepToRow(step: TravelStatusStepDto): ProgressRow {
-  return {
-    stepId: step.id,
-    text: step.text,
-    Icon: STATUS_ICONS[step.icon],
-  };
-}
-
-function buildMainFlow(bundle: TravelConversationPageDto): MainFlowBlock[] {
-  const { statusSteps } = bundle;
-  if (statusSteps.length === 0) {
-    return [{ id: "travelPrompt" }];
-  }
-  return [
-    { id: "progress", row: stepToRow(statusSteps[0]) },
-    { id: "travelPrompt" },
-    ...statusSteps.slice(1).map((s) => ({ id: "progress", row: stepToRow(s) }) as const),
-  ];
-}
-
-function StatusProgressCard({ text, Icon }: Omit<ProgressRow, "stepId">): JSX.Element {
+function UserYellowBubble({ children, className = "" }: { children: string; className?: string }): JSX.Element {
   return (
-    <Card className="rounded-[0px_11.53px_11.53px_11.53px] border-0 bg-white shadow-[0px_2.88px_14.41px_#00000008]">
-      <CardContent className="flex min-h-9 items-center justify-between gap-3 px-[11px] py-[9px]">
-        <div className="flex min-w-0 items-center gap-[5.76px]">
-          <Icon className="h-[14px] w-[14px] shrink-0 text-[#0f1c2d]" strokeWidth={1.75} />
-          <p className="[font-family:'PingFang_SC-Regular',Helvetica] text-[11.5px] font-normal leading-[17.3px] tracking-[0] text-[#0f1c2d]">
-            {text}
+    <div
+      className={`ml-auto w-[261px] max-w-full rounded-bl-[15.417px] rounded-br-[15.417px] rounded-tl-[15.417px] bg-[#ffd100] px-[15px] py-[5px] shadow-[0px_2.675px_0.964px_rgba(0,0,0,0.05)] ${className}`}
+    >
+      <p className="text-right [font-family:'HYQiHei-Regular',Helvetica] text-[13.604px] font-normal leading-[26.318px] text-[#343d43]">
+        {children}
+      </p>
+    </div>
+  );
+}
+
+function UserYellowBubbleWide({ children }: { children: string }): JSX.Element {
+  return (
+    <div className="flex w-full justify-end">
+      <div className="max-w-full overflow-x-auto [-webkit-overflow-scrolling:touch] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-[3px]">
+        <div className="inline-flex rounded-bl-[15.417px] rounded-br-[15.417px] rounded-tl-[15.417px] bg-[#ffd100] px-[15px] py-[5px] shadow-[0px_2.675px_0.964px_rgba(0,0,0,0.05)]">
+          <p className="m-0 whitespace-nowrap text-right [font-family:'HYQiHei-Regular',Helvetica] text-[13.604px] font-normal leading-[26.318px] text-[#343d43]">
+            {children}
           </p>
         </div>
-        <ChevronRight className="h-[12px] w-[12px] shrink-0 text-[#6b7280]" strokeWidth={1.75} />
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
+}
+
+function AiStatusStrip({
+  text,
+  variant,
+  className = "",
+  navigateTo,
+  navigateState,
+}: {
+  text: string;
+  variant: "first" | "rest";
+  className?: string;
+  navigateTo?: string;
+  navigateState?: { travelId?: string };
+}): JSX.Element {
+  const iconSrc = variant === "first" ? FIGMA_CHAT_177.statusIconFirst : FIGMA_CHAT_177.statusIconRest;
+  const plCls = variant === "first" ? "pl-[9px]" : "pl-[14px]";
+  const shell = `flex h-[36px] w-full items-center gap-[5.76px] rounded-bl-[11.525px] rounded-br-[11.525px] rounded-tr-[11.525px] bg-white pr-[13px] shadow-[0px_2.881px_7.203px_rgba(0,0,0,0.03)] ${plCls} ${className}`;
+  const body = (
+    <>
+      <img src={iconSrc} alt="" className="h-[10px] w-[10px] shrink-0 object-contain" />
+      <p className="min-w-0 flex-1 [font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[11.525px] font-normal leading-[17.288px] text-[#0f1c2d]">
+        {text}
+      </p>
+      <img src={FIGMA_CHAT_177.statusChevron} alt="" className="h-[6px] w-[9px] shrink-0 object-contain opacity-80" />
+    </>
+  );
+  if (navigateTo) {
+    return (
+      <Link
+        to={navigateTo}
+        state={navigateState}
+        className={`${shell} cursor-pointer text-inherit no-underline outline-none transition-opacity hover:opacity-95 active:opacity-[0.92]`}
+      >
+        {body}
+      </Link>
+    );
+  }
+  return <div className={shell}>{body}</div>;
 }
 
 export const IphonePro = (): JSX.Element => {
@@ -117,70 +123,86 @@ export const IphonePro = (): JSX.Element => {
     };
   }, [travelId]);
 
-  const mainFlowBlocks = useMemo(
-    () => (bundle ? buildMainFlow(bundle) : []),
-    [bundle],
-  );
+  const firstStep = bundle?.statusSteps[0];
+  const restSteps = bundle?.statusSteps.slice(1) ?? [];
+
+  const journeyFlow = { travelId, planId: "plan-a" };
 
   return (
-    <main className="relative min-h-[874px] w-full overflow-hidden bg-white">
-      <div className="relative mx-auto flex min-h-[874px] w-full max-w-[402px] flex-col px-8 pb-3 pt-[52px]">
-        <header className="mb-5 flex items-center gap-1">
-          <Link
-            to={HOME_PATH}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#0f1c2d] hover:bg-black/[0.04]"
-            aria-label="返回首页"
-          >
-            <ChevronLeft className="h-6 w-6" strokeWidth={1.75} />
-          </Link>
-          <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[15px] font-medium text-[#333c43]">
-            出行助手 · 对话
-          </span>
-        </header>
-        <section className="flex justify-end">
-          <Card className="w-[261px] rounded-[15.42px_0px_15.42px_15.42px] border-0 bg-[#ffd100] shadow-[0px_2.68px_1.93px_#0000000d]">
-            <CardContent className="px-[15px] py-[5px]">
-              <p className="[font-family:'HYQiHei-Regular',Helvetica] text-right text-[13.6px] font-normal leading-[26.3px] tracking-[0] text-[#333c43]">
-                {userMessage}
-              </p>
-            </CardContent>
-          </Card>
-        </section>
+    <AppScreenShell>
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <img
+            src={FIGMA_CHAT_177.bgBlobA}
+            alt=""
+            className="absolute -left-[551px] -top-[321px] h-[795px] w-[1293px] max-w-none opacity-95"
+          />
+          <img
+            src={FIGMA_CHAT_177.bgBlobB}
+            alt=""
+            className="absolute -left-[122px] top-[100px] h-[1046px] w-[1507px] max-w-none opacity-95"
+          />
+        </div>
 
-        {loadError ? (
-          <p className="mt-4 text-center text-[13px] text-red-600">{loadError}</p>
-        ) : !bundle ? (
-          <p className="mt-8 text-center text-[13px] text-[#6b7280]">加载中…</p>
-        ) : (
-          <>
-            <section className="mt-4 flex flex-col gap-4">
-              {mainFlowBlocks.map((block) =>
-                block.id === "travelPrompt" ? (
-                  <TravelIntentPromptSection
-                    key="block-travel-prompt"
-                    data={bundle.clarification}
-                  />
-                ) : (
-                  <StatusProgressCard key={block.row.stepId} text={block.row.text} Icon={block.row.Icon} />
-                ),
-              )}
-            </section>
-            <section className="mt-4">
-              <NeedsStatusAccordionSection data={bundle.needsSection} />
-            </section>
-            <div className="mt-5 flex justify-center">
-              <Link
-                to={PLANS_PATH}
-                state={{ travelId }}
-                className="rounded-full bg-[#50a9fe]/12 px-4 py-2 [font-family:'HYQiHei-Regular',Helvetica] text-[12px] font-medium text-[#2a7bc8] transition-opacity hover:opacity-90"
-              >
-                查看双方案对比
-              </Link>
-            </div>
-          </>
-        )}
-        <AppBottomNav active={null} journeyFlow={{ travelId, planId: "plan-a" }} />
-      </div>
-    </main>
+        <Link
+          to={HOME_PATH}
+          className={cn(
+            "absolute left-[10px] z-20 flex h-10 w-10 items-center justify-center rounded-full text-[#251e1e] hover:bg-black/[0.04]",
+            embeddedBackButtonTopClass(),
+          )}
+          aria-label="返回首页"
+        >
+          <ChevronLeft className="h-6 w-6" strokeWidth={1.75} />
+        </Link>
+
+        <div className="relative z-[1] flex min-h-0 flex-1 flex-col overflow-x-hidden">
+          <EmbeddedStatusBarImage src={FIGMA_CHAT_177.statusBar} />
+
+          <ContentFitZoom
+            className="px-[29px] pb-3 pt-3 [touch-action:pan-y]"
+            recalcKey={`${loadError ?? ""}:${bundle?.statusSteps?.length ?? 0}:${bundle?.followUpUserMessage ?? ""}`}
+          >
+            {loadError ? (
+              <p className="py-12 text-center text-[13px] text-red-600">{loadError}</p>
+            ) : !bundle ? (
+              <p className="py-12 text-center text-[13px] text-[#6b7280]">加载中…</p>
+            ) : (
+              <div className="flex flex-col gap-[18px]">
+                <UserYellowBubble>{userMessage}</UserYellowBubble>
+
+                {firstStep ? (
+                  <AiStatusStrip variant="first" text={firstStep.text} />
+                ) : null}
+
+                <TravelIntentPromptSection data={bundle.clarification} />
+
+                {bundle.followUpUserMessage ? (
+                  <UserYellowBubbleWide>{bundle.followUpUserMessage}</UserYellowBubbleWide>
+                ) : null}
+
+                <NeedsStatusAccordionSection data={bundle.needsSection} />
+
+                {restSteps.map((step, idx) => {
+                  const toPlans = step.id === "s4" || /两个方案/.test(step.text);
+                  return (
+                    <AiStatusStrip
+                      key={step.id}
+                      variant="rest"
+                      text={step.text}
+                      className={idx === restSteps.length - 1 ? "mb-1" : ""}
+                      navigateTo={toPlans ? PLANS_PATH : undefined}
+                      navigateState={toPlans ? { travelId } : undefined}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </ContentFitZoom>
+
+          <div className="relative z-[1] mt-auto bg-white px-3 pb-2 pt-1">
+            {/* 对话页不属于「首页」四 tab：高亮任一 tab 会使人误以为路由未跳转 */}
+            <AppBottomNav active="首页" journeyFlow={journeyFlow} />
+          </div>
+        </div>
+    </AppScreenShell>
   );
 };

@@ -1,8 +1,10 @@
-import { Check, ChevronLeft, ChevronRight, Target, Users } from "lucide-react";
+import { Check, ChevronRight, Target, Users } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Card, CardContent } from "../../components/ui/card";
-import { fetchActivityPreferencesPage } from "../../lib/api";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ContentFitZoom } from "../../components/ContentFitZoom";
+import { UserSettingsChrome, UserSettingsIconWrap, userSettingsCardClass } from "../../components/UserSettingsChrome";
+import { fetchActivityPreferencesPage, saveActivityPreferences } from "../../lib/api";
+import { FIGMA_USER_SETTINGS_114 } from "../../lib/api/mock/figma-user-settings-114-assets";
 import { MOCK_TRAVEL_ID } from "../../lib/api/mock/travel.mock";
 import type { ActivityPreferencesPageDto } from "../../lib/api/types";
 import { ACTIVITY_PREFERENCES_PATH, PROFILE_PATH } from "../../routes";
@@ -20,6 +22,8 @@ export const ActivityPreferencesScreen = (): JSX.Element => {
   const [page, setPage] = useState<ActivityPreferencesPageDto | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     const prev = document.title;
@@ -56,150 +60,137 @@ export const ActivityPreferencesScreen = (): JSX.Element => {
     );
   };
 
-  const onSave = (): void => {
-    navigate(PROFILE_PATH, { state: flow });
+  const onSave = async (): Promise<void> => {
+    if (!page) return;
+    setSaveError(null);
+    setSaving(true);
+    try {
+      await saveActivityPreferences({ selectedTagIds: selectedTags });
+      navigate(PROFILE_PATH, { state: flow });
+    } catch (e: unknown) {
+      setSaveError(e instanceof Error ? e.message : "保存失败");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const loaded = page != null;
+  const statusBarSrc = page?.statusBarImageUrl ?? FIGMA_USER_SETTINGS_114.statusBar;
 
   return (
-    <main className="relative min-h-[874px] w-full overflow-hidden bg-[#f3f4f6]">
-      <div className="relative mx-auto flex min-h-[874px] w-full max-w-[402px] flex-col">
-        {page ? (
-          <img
-            src={page.statusBarImageUrl}
-            alt=""
-            className="h-[61px] w-full shrink-0 object-cover object-top"
-            height={61}
-            width={402}
-          />
+    <UserSettingsChrome
+      travelId={travelId}
+      planId={planId}
+      navTitle={page?.navTitle ?? "活动偏好"}
+      navSubtitle={page?.navSubtitle}
+      backLabel={page?.backLabel ?? "返回"}
+      statusBarSrc={statusBarSrc}
+      footer={
+        page ? (
+          <button
+            type="button"
+            onClick={() => {
+              void onSave();
+            }}
+            disabled={saving}
+            className="mt-2 w-full shrink-0 rounded-[14px] bg-[#ffd100] py-3.5 [font-family:'HYQiHei-Regular',Helvetica] text-[15px] font-bold text-[#343d43] shadow-[0px_4px_16px_rgba(245,200,20,0.38)] transition-opacity hover:opacity-95 active:scale-[0.99] disabled:opacity-60"
+          >
+            {saving ? "保存中…" : page.saveButtonLabel}
+          </button>
+        ) : null
+      }
+    >
+      <ContentFitZoom className="space-y-3 pb-2" recalcKey={selectedTags.join(",")}>
+        {saveError ? (
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-center text-[13px] text-red-600">{saveError}</p>
+        ) : null}
+        {loadError ? (
+          <p className="text-center text-[13px] text-red-600">{loadError}</p>
+        ) : !loaded ? (
+          <p className="py-8 text-center text-[13px] text-[#64748b]">加载中…</p>
         ) : (
-          <div className="h-[61px] w-full shrink-0 bg-white/90" />
-        )}
-
-        <div className="flex min-h-0 flex-1 flex-col px-4 pb-6 pt-1">
-          <header className="mb-3">
-            <div className="flex items-center gap-1">
-              <Link
-                to={PROFILE_PATH}
-                state={flow}
-                className="flex shrink-0 items-center gap-0.5 text-[#2563eb] hover:opacity-80"
-              >
-                <ChevronLeft className="h-6 w-6" strokeWidth={1.75} />
-                <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[15px] font-medium">
-                  {page?.backLabel ?? "返回"}
-                </span>
-              </Link>
-              <div className="min-w-0 flex-1 text-center">
-                <h1 className="[font-family:'HYQiHei-Regular',Helvetica] text-[15px] font-semibold text-[#111827]">
-                  {page?.navTitle ?? "活动偏好"}
-                </h1>
-              </div>
-              <span className="w-14 shrink-0" aria-hidden />
-            </div>
-            {page?.navSubtitle ? (
-              <p className="mt-1 text-center [font-family:'HYQiHei-Regular',Helvetica] text-[11px] font-medium text-[#6b7280]">
-                {page.navSubtitle}
-              </p>
-            ) : null}
-          </header>
-
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-4">
-            {loadError ? (
-              <p className="text-center text-[13px] text-red-600">{loadError}</p>
-            ) : !loaded ? (
-              <p className="py-8 text-center text-[13px] text-[#64748b]">加载中…</p>
-            ) : (
-              <>
-                <Card className="overflow-hidden rounded-[16px] border border-[#e5e7eb] bg-white shadow-[0px_2px_12px_rgba(0,0,0,0.04)]">
-                  <CardContent className="p-0">
-                    <div className="flex items-center gap-2 border-b border-[#f3f4f6] px-3 py-2.5">
-                      <Target className="h-4 w-4 text-[#2563eb]" strokeWidth={1.75} />
-                      <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[14px] font-bold text-[#111827]">
-                        {page.tagsSectionTitle}
-                      </span>
-                    </div>
-                    {page.tagOptions.map((opt, i) => {
-                      const checked = selectedTags.includes(opt.id);
-                      return (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => toggleTag(opt.id)}
-                          className={`flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-[#fafafa] ${
-                            i < page.tagOptions.length - 1 ? "border-b border-[#f3f4f6]" : ""
-                          }`}
-                        >
-                          <span
-                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 ${
-                              checked
-                                ? "border-[#2563eb] bg-[#2563eb] text-white"
-                                : "border-[#d1d5db] bg-white"
-                            }`}
-                            aria-hidden
-                          >
-                            {checked ? <Check className="h-3 w-3" strokeWidth={3} /> : null}
-                          </span>
-                          <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[13px] font-semibold text-[#374151]">
-                            {opt.label}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </CardContent>
-                </Card>
-
-                <Card className="overflow-hidden rounded-[16px] border border-[#e5e7eb] bg-white shadow-[0px_2px_12px_rgba(0,0,0,0.04)]">
-                  <CardContent className="p-0">
-                    <div className="flex items-center gap-2 border-b border-[#f3f4f6] px-3 py-2.5">
-                      <Users className="h-4 w-4 text-[#2563eb]" strokeWidth={1.75} />
-                      <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[14px] font-bold text-[#111827]">
-                        {page.familySectionTitle}
-                      </span>
-                    </div>
-                    {page.familyMembers.map((m, i) => (
-                      <button
-                        key={m.id}
-                        type="button"
-                        className={`flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-[#fafafa] ${
-                          i < page.familyMembers.length - 1 ? "border-b border-[#f3f4f6]" : ""
+          <>
+            <div className={userSettingsCardClass}>
+              <div className="p-0">
+                <div className="flex items-center gap-2 border-b border-[#faf2ac]/90 px-3 py-2.5">
+                  <UserSettingsIconWrap>
+                    <Target className="h-4 w-4" strokeWidth={1.75} />
+                  </UserSettingsIconWrap>
+                  <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[14px] font-bold text-[#1e293b]">
+                    {page.tagsSectionTitle}
+                  </span>
+                </div>
+                {page.tagOptions.map((opt, i) => {
+                  const checked = selectedTags.includes(opt.id);
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => toggleTag(opt.id)}
+                      className={`flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-[#fffef8] ${
+                        i < page.tagOptions.length - 1 ? "border-b border-[#faf2ac]/50" : ""
+                      }`}
+                    >
+                      <span
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 ${
+                          checked
+                            ? "border-[#eab308] bg-[#eab308] text-white"
+                            : "border-[#d1d5db] bg-white"
                         }`}
+                        aria-hidden
                       >
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#eff6ff] text-xl">
-                          {m.avatarImageUrl ? (
-                            <img src={m.avatarImageUrl} alt="" className="h-full w-full object-cover" />
-                          ) : (
-                            <span>{m.avatarEmoji ?? "👤"}</span>
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="[font-family:'HYQiHei-Regular',Helvetica] text-[13px] font-bold text-[#111827]">
-                            {m.name}
-                          </p>
-                          <p className="mt-0.5 [font-family:'HYQiHei-Regular',Helvetica] text-[11px] font-medium text-[#6b7280]">
-                            {m.summaryLine}
-                          </p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 shrink-0 text-[#d1d5db]" strokeWidth={1.75} />
-                      </button>
-                    ))}
-                  </CardContent>
-                </Card>
-              </>
-            )}
-          </div>
+                        {checked ? <Check className="h-3 w-3" strokeWidth={3} /> : null}
+                      </span>
+                      <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[13px] font-semibold text-[#374151]">
+                        {opt.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-          {page ? (
-            <button
-              type="button"
-              onClick={onSave}
-              className="mt-auto w-full rounded-[14px] bg-[#2563eb] py-3.5 [font-family:'HYQiHei-Regular',Helvetica] text-[15px] font-bold text-white shadow-[0px_4px_14px_rgba(37,99,235,0.35)] transition-opacity hover:opacity-95 active:scale-[0.99]"
-            >
-              {page.saveButtonLabel}
-            </button>
-          ) : null}
-        </div>
-      </div>
-    </main>
+            <div className={userSettingsCardClass}>
+              <div className="p-0">
+                <div className="flex items-center gap-2 border-b border-[#faf2ac]/90 px-3 py-2.5">
+                  <UserSettingsIconWrap>
+                    <Users className="h-4 w-4" strokeWidth={1.75} />
+                  </UserSettingsIconWrap>
+                  <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[14px] font-bold text-[#1e293b]">
+                    {page.familySectionTitle}
+                  </span>
+                </div>
+                {page.familyMembers.map((m, i) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    className={`flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-[#fffef8] ${
+                      i < page.familyMembers.length - 1 ? "border-b border-[#faf2ac]/50" : ""
+                    }`}
+                  >
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#fffbeb] text-xl ring-1 ring-[#fef3c7]">
+                      {m.avatarImageUrl ? (
+                        <img src={m.avatarImageUrl} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <span>{m.avatarEmoji ?? "👤"}</span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="[font-family:'HYQiHei-Regular',Helvetica] text-[13px] font-bold text-[#1e293b]">
+                        {m.name}
+                      </p>
+                      <p className="mt-0.5 [font-family:'HYQiHei-Regular',Helvetica] text-[11px] font-medium text-[#6b7280]">
+                        {m.summaryLine}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-[#d1d5db]" strokeWidth={1.75} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </ContentFitZoom>
+    </UserSettingsChrome>
   );
 };

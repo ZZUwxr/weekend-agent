@@ -2,6 +2,25 @@ import type { ItineraryTimelinePageDto } from "./types";
 import { getApiBaseUrl } from "./config";
 import { MOCK_ITINERARY_TIMELINE } from "./mock/timeline.mock";
 
+/** Mock：按所选方案替换角标与顶部条文案（与第三页 Plan A/B id 对齐） */
+function mergeTimelineMockWithPlan(
+  base: Omit<ItineraryTimelinePageDto, "travelId" | "planId">,
+  travelId: string,
+  planId: string,
+): ItineraryTimelinePageDto {
+  const isB = planId === "plan-b";
+  if (!isB) {
+    return { ...base, travelId, planId };
+  }
+  return {
+    ...base,
+    travelId,
+    planId,
+    planPillLabel: "Plan B",
+    aiStatusMessage: "您已确认Plan B，正在生成Plan B 的详细时间轴＆路线…",
+  };
+}
+
 /**
  * 第四屏 · 已选方案详细时间轴与路线（Figma 1:465）
  *
@@ -26,7 +45,7 @@ export async function fetchItineraryTimelinePage(
   const base = getApiBaseUrl();
   if (!base) {
     await new Promise((r) => setTimeout(r, 140));
-    return { ...MOCK_ITINERARY_TIMELINE, travelId, planId };
+    return mergeTimelineMockWithPlan(MOCK_ITINERARY_TIMELINE, travelId, planId);
   }
   const { apiRequest } = await import("./client");
   const q = new URLSearchParams({ planId });

@@ -1,8 +1,12 @@
-import { Car, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { Car, ChevronLeft, ChevronRight, Navigation, Share2, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AppBottomNav } from "../../components/AppBottomNav";
+import { EmbeddedStatusBarImage, EmbeddedStatusBarPlaceholder } from "../../components/EmbeddedStatusBar";
+import { AppScreenShell } from "../../components/AppScreenShell";
+import { ContentFitZoom } from "../../components/ContentFitZoom";
 import { Card, CardContent } from "../../components/ui/card";
+import { useTripContentUnlocked } from "../../hooks/useTripContentUnlocked";
 import { fetchTripLiveMapPage } from "../../lib/api";
 import { MOCK_TRAVEL_ID } from "../../lib/api/mock/travel.mock";
 import type {
@@ -11,7 +15,8 @@ import type {
   TripLiveMapRemindersCardDto,
   TripLiveMapSnapshotCardDto,
 } from "../../lib/api/types";
-import { PAYMENT_PATH, TRIP_LIVE_MAP_PATH } from "../../routes";
+import { ITINERARY_HUB_PATH, TRIP_LIVE_MAP_PATH } from "../../routes";
+import { TripLiveMapEmptyView } from "./TripLiveMapEmptyView";
 
 type MapLocationState = { travelId?: string; planId?: string };
 
@@ -106,9 +111,21 @@ function RemindersCard({ card }: { card: TripLiveMapRemindersCardDto }): JSX.Ele
 
 export const TripLiveMapScreen = (): JSX.Element => {
   const { state, pathname } = useLocation();
+  const navigate = useNavigate();
   const loc = state as MapLocationState | null;
   const travelId = loc?.travelId ?? MOCK_TRAVEL_ID;
   const planId = loc?.planId ?? "plan-a";
+  const flow = { travelId, planId };
+
+  const goBack = (): void => {
+    const hist = typeof window.history !== "undefined" ? window.history.state : null;
+    const idx =
+      typeof hist === "object" && hist !== null && "idx" in hist
+        ? Number((hist as { idx?: unknown }).idx)
+        : NaN;
+    if (!Number.isNaN(idx) && idx > 0) navigate(-1);
+    else navigate(ITINERARY_HUB_PATH, { state: flow });
+  };
 
   const [page, setPage] = useState<TripLiveMapPageDto | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -124,7 +141,14 @@ export const TripLiveMapScreen = (): JSX.Element => {
     };
   }, [pathname]);
 
+  const unlocked = useTripContentUnlocked();
+
   useEffect(() => {
+    if (!unlocked) {
+      setPage(null);
+      setLoadError(null);
+      return;
+    }
     let active = true;
     setLoadError(null);
     setPage(null);
@@ -138,23 +162,23 @@ export const TripLiveMapScreen = (): JSX.Element => {
     return () => {
       active = false;
     };
-  }, [travelId, planId]);
+  }, [travelId, planId, unlocked]);
 
-  const flowBack = { travelId, planId };
+  if (!unlocked) {
+    return <TripLiveMapEmptyView travelId={travelId} planId={planId} />;
+  }
 
   return (
-    <main className="relative min-h-[874px] w-full overflow-hidden bg-white">
-      <div className="relative mx-auto flex min-h-[874px] w-full max-w-[402px] flex-col">
+    <AppScreenShell frameClassName="bg-white">
         {page ? (
-          <img
+          <EmbeddedStatusBarImage
             src={page.statusBarImageUrl}
-            alt=""
-            className="relative z-20 h-[61px] w-full shrink-0 object-cover object-top"
+            className="relative z-20"
             height={61}
             width={402}
           />
         ) : (
-          <div className="relative z-20 h-[61px] w-full shrink-0 bg-white/90" />
+          <EmbeddedStatusBarPlaceholder className="relative z-20 bg-white/90" />
         )}
 
       <div className="relative flex min-h-0 flex-1 flex-col">
@@ -168,14 +192,14 @@ export const TripLiveMapScreen = (): JSX.Element => {
               />
             ) : null}
             <div
-              className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-[rgba(209,232,255,0.53)] from-[0.962%] to-[rgba(255,255,255,0.02)] to-[88%]"
+              className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-white/20 via-transparent to-white/10"
               aria-hidden
             />
             {page ? (
               <img
                 src={page.mapImageUrl}
                 alt=""
-                className="absolute inset-0 z-[2] h-full w-full object-cover object-[center_20%]"
+                className="absolute inset-0 z-[2] h-full w-full object-cover object-center"
               />
             ) : (
               <div className="absolute inset-0 z-[2] flex items-center justify-center [font-family:'HYQiHei-Regular',Helvetica] text-[13px] text-[#6b7280]">
@@ -183,39 +207,46 @@ export const TripLiveMapScreen = (): JSX.Element => {
               </div>
             )}
 
-            {page?.mapCornerImageUrl ? (
-              <img
-                src={page.mapCornerImageUrl}
-                alt=""
-                className="absolute right-2 top-2 z-[4] h-11 w-[7.25rem] max-w-[46%] object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
-                height={44}
-                width={116}
-              />
-            ) : null}
-
-            <div className="absolute left-3 top-3 z-[5] flex items-center gap-1">
-              <Link
-                to={PAYMENT_PATH}
-                state={flowBack}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/90 text-[#0f1c2d] shadow-sm backdrop-blur-sm hover:bg-white"
-                aria-label="返回付款"
-              >
-                <ChevronLeft className="h-5 w-5" strokeWidth={1.75} />
-              </Link>
-            </div>
-
-            <div className="pointer-events-none absolute bottom-2 left-1/2 z-[5] h-1 w-10 -translate-x-1/2 rounded-full bg-[#ffd100]" />
-
-            {page ? (
+            <div className="absolute left-3 top-3 z-[6]">
               <button
                 type="button"
-                className="absolute bottom-4 right-4 z-[5] flex h-14 w-14 flex-col items-center justify-center rounded-full bg-[#ffd100] text-[#343d43] shadow-[0px_4px_14px_rgba(0,0,0,0.18)] transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                aria-label="返回上一页"
+                onClick={goBack}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-[#0f172a] shadow-[0_2px_10px_rgba(15,23,42,0.1)] backdrop-blur-sm transition-opacity hover:opacity-95"
               >
-                <Car className="h-6 w-6" strokeWidth={1.5} />
-                <span className="mt-0.5 [font-family:'HYQiHei-Regular',Helvetica] text-[9px] font-bold leading-none">
-                  {page.callRideButtonLabel}
-                </span>
+                <ChevronLeft className="h-[22px] w-[22px]" strokeWidth={1.85} aria-hidden />
               </button>
+            </div>
+
+            {page ? (
+              <>
+                <div className="absolute right-3 top-3 z-[6] flex gap-2">
+                  <button
+                    type="button"
+                    aria-label="导航"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-[#0f172a] shadow-[0_2px_10px_rgba(15,23,42,0.1)] backdrop-blur-sm transition-opacity hover:opacity-95"
+                  >
+                    <Navigation className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="分享"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-[#0f172a] shadow-[0_2px_10px_rgba(15,23,42,0.1)] backdrop-blur-sm transition-opacity hover:opacity-95"
+                  >
+                    <Share2 className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  className="absolute bottom-4 right-3 z-[6] flex min-w-[4.5rem] flex-col items-center justify-center rounded-2xl bg-white px-3 py-2.5 text-[#334155] shadow-[0_4px_20px_rgba(15,23,42,0.14)] ring-1 ring-black/[0.04] transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <Car className="h-7 w-7 text-[#fbbf24]" strokeWidth={1.5} />
+                  <span className="mt-1 [font-family:'HYQiHei-Regular',Helvetica] text-[10px] font-bold leading-none">
+                    {page.callRideButtonLabel}
+                  </span>
+                </button>
+              </>
             ) : null}
           </div>
         </div>
@@ -226,22 +257,22 @@ export const TripLiveMapScreen = (): JSX.Element => {
           ) : !page ? (
             <p className="py-6 text-center text-[13px] text-[#6b7280]">加载中…</p>
           ) : (
-            <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto pb-2">
+            <ContentFitZoom
+              className="space-y-2.5 pb-2"
+              recalcKey={`${page.snapshotCard.timelineText}|${page.remindersCard.reminderLines.join("|")}|${page.aiBubbleText.slice(0, 40)}`}
+            >
               <SnapshotCard card={page.snapshotCard} />
               <LocationCard card={page.locationCard} />
               <RemindersCard card={page.remindersCard} />
-            </div>
-          )}
-
-          {page ? (
-            <div className="mb-2 flex justify-start pt-1">
-              <div className="max-w-[92%] rounded-br-[11.53px] rounded-bl-[11.53px] rounded-tr-[11.53px] bg-white px-3 py-2 shadow-[0px_2.88px_7.2px_rgba(0,0,0,0.03)]">
-                <p className="[font-family:'PingFang_SC-Regular',Helvetica] text-[12px] font-semibold text-[#626262]">
-                  {page.aiBubbleText}
-                </p>
+              <div className="mb-2 flex justify-start pt-1">
+                <div className="max-w-[92%] rounded-br-[11.53px] rounded-bl-[11.53px] rounded-tr-[11.53px] bg-white px-3 py-2 shadow-[0px_2.88px_7.2px_rgba(0,0,0,0.03)]">
+                  <p className="[font-family:'PingFang_SC-Regular',Helvetica] text-[12px] font-semibold text-[#626262]">
+                    {page.aiBubbleText}
+                  </p>
+                </div>
               </div>
-            </div>
-          ) : null}
+            </ContentFitZoom>
+          )}
 
           <div className="flex items-center gap-2 pt-1">
             <div className="relative flex min-h-[46px] flex-1 items-center rounded-[30px] border-[0.5px] border-[#50a9fe] bg-white pl-2 pr-2 shadow-[0px_2px_8px_#00000008]">
@@ -276,7 +307,6 @@ export const TripLiveMapScreen = (): JSX.Element => {
           <AppBottomNav active="地图" journeyFlow={{ travelId, planId }} />
         </div>
       </div>
-      </div>
-    </main>
+    </AppScreenShell>
   );
 };

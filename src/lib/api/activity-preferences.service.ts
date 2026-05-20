@@ -1,4 +1,8 @@
-import type { ActivityPreferencesPageDto } from "./types";
+import type {
+  ActivityPreferencesPageDto,
+  SaveActivityPreferencesBody,
+  UserPreferenceSaveResponseDto,
+} from "./types";
 import { getApiBaseUrl } from "./config";
 import { MOCK_ACTIVITY_PREFERENCES_PAGE } from "./mock/activity-preferences.mock";
 
@@ -16,4 +20,23 @@ export async function fetchActivityPreferencesPage(): Promise<ActivityPreference
   }
   const { apiRequest } = await import("./client");
   return apiRequest<ActivityPreferencesPageDto>("/api/user/preferences/activity");
+}
+
+/**
+ * **后端契约:** `PUT /api/user/preferences/activity`
+ * 请求体：{@link SaveActivityPreferencesBody}
+ */
+export async function saveActivityPreferences(
+  body: SaveActivityPreferencesBody,
+): Promise<UserPreferenceSaveResponseDto> {
+  const base = getApiBaseUrl();
+  if (!base) {
+    await new Promise((r) => setTimeout(r, 80));
+    return { ok: true };
+  }
+  const { apiRequest } = await import("./client");
+  return apiRequest<UserPreferenceSaveResponseDto>("/api/user/preferences/activity", {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
 }

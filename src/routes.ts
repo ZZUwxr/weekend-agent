@@ -17,15 +17,21 @@ export const PAYMENT_PATH = "/itinerary/payment";
 export const TRIP_LIVE_MAP_PATH = "/itinerary/map-live";
 /** 第九屏：支付成功与预订确认 */
 export const PAYMENT_CONFIRMATION_PATH = "/itinerary/payment-confirmation";
-/** 第十屏：行程主页（当前阶段 / 历史） */
+/** 第十屏：行程结束对话与收尾（Figma node 159:6179） */
+export const TRIP_WRAP_PATH = "/itinerary/trip-wrap";
+/** 第十屏后 · 行程体验反馈（Figma node 187:568） */
+export const TRIP_FEEDBACK_PATH = "/itinerary/trip-feedback";
+/** 第十屏后 · 反馈完成感谢（Figma node 211:344） */
+export const TRIP_FEEDBACK_DONE_PATH = "/itinerary/trip-feedback-done";
+/** 第十一屏：行程主页（当前阶段 / 历史） */
 export const ITINERARY_HUB_PATH = "/itinerary/journey";
-/** 第十一屏：我的（档案 / 偏好 / 模板） */
+/** 第十二屏：我的（档案 / 偏好 / 模板） */
 export const PROFILE_PATH = "/profile";
-/** 第十二屏：出行方式与距离（偏好子页） */
+/** 第十三屏：出行方式与距离（Figma node 114:3529） */
 export const TRAVEL_MODE_SETTINGS_PATH = "/settings/travel-mode";
-/** 第十三屏：饮食偏好（偏好子页） */
+/** 第十四屏：饮食偏好 / 饮食限制（Figma node 114:3829） */
 export const DIETARY_PREFERENCES_PATH = "/settings/dietary-preferences";
-/** 第十四屏：活动偏好（偏好子页） */
+/** 第十五屏：活动偏好（Figma node 114:4022） */
 export const ACTIVITY_PREFERENCES_PATH = "/settings/activity-preferences";
-/** 第十五屏：预算与节奏（偏好子页） */
+/** 第十六屏：预算与节奏（Figma node 114:4248） */
 export const BUDGET_PACE_PREFERENCES_PATH = "/settings/budget-pace";

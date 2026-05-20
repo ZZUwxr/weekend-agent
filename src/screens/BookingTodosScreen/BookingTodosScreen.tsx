@@ -2,6 +2,9 @@ import { ChevronDown, ChevronLeft, ChevronRight, Search, Sparkles } from "lucide
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AppBottomNav } from "../../components/AppBottomNav";
+import { EmbeddedStatusBarImage, EmbeddedStatusBarPlaceholder } from "../../components/EmbeddedStatusBar";
+import { AppScreenShell } from "../../components/AppScreenShell";
+import { ContentFitZoom } from "../../components/ContentFitZoom";
 import { Card, CardContent } from "../../components/ui/card";
 import { fetchBookingTodosPage } from "../../lib/api";
 import { MOCK_TRAVEL_ID } from "../../lib/api/mock/travel.mock";
@@ -176,18 +179,11 @@ export const BookingTodosScreen = (): JSX.Element => {
   const timelineBack = { travelId, planId };
 
   return (
-    <main className="relative min-h-[874px] w-full overflow-hidden bg-[linear-gradient(180deg,#fffef5_0%,#ffffff_38%,#ffffff_100%)]">
-      <div className="relative mx-auto flex min-h-[874px] w-full max-w-[402px] flex-col">
+    <AppScreenShell frameClassName="bg-[linear-gradient(180deg,#fffef5_0%,#ffffff_38%,#ffffff_100%)]">
         {page ? (
-          <img
-            src={page.statusBarImageUrl}
-            alt=""
-            className="h-[61px] w-full shrink-0 object-cover object-top"
-            height={61}
-            width={402}
-          />
+          <EmbeddedStatusBarImage src={page.statusBarImageUrl} height={61} width={402} />
         ) : (
-          <div className="h-[61px] w-full shrink-0 bg-white/80" />
+          <EmbeddedStatusBarPlaceholder className="bg-white/80" />
         )}
 
         <div className="flex min-h-0 flex-1 flex-col px-8 pb-3 pt-2">
@@ -205,7 +201,7 @@ export const BookingTodosScreen = (): JSX.Element => {
             </span>
           </header>
 
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-2">
+          <ContentFitZoom className="space-y-3 pb-2" recalcKey={page?.flow?.length ?? 0}>
             {loadError ? (
               <p className="text-center text-[13px] text-red-600">{loadError}</p>
             ) : !page ? (
@@ -226,7 +222,7 @@ export const BookingTodosScreen = (): JSX.Element => {
                 </div>
               </>
             )}
-          </div>
+          </ContentFitZoom>
 
           <div className="mt-auto flex flex-col gap-3 pt-4">
             <div className="flex items-center gap-2">
@@ -260,9 +256,8 @@ export const BookingTodosScreen = (): JSX.Element => {
             </div>
           </div>
 
-          <AppBottomNav active="行程" journeyFlow={{ travelId, planId }} />
+          <AppBottomNav active="首页" journeyFlow={{ travelId, planId }} />
         </div>
-      </div>
-    </main>
+    </AppScreenShell>
   );
 };

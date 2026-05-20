@@ -1,19 +1,20 @@
 import type { TripLiveMapPageDto } from "../types";
 import { MOCK_HOME_DASHBOARD } from "./home.mock";
 
-/** 以下资源与 Figma「第八屏」node 1:734 导出一致（MCP asset，约 7 天有效；后端可换持久 CDN） */
+/** 远景底纹（与双方案地图底层一致，可选） */
 const FIGMA_MAP_BACKDROP =
   "https://www.figma.com/api/mcp/asset/f0839aab-b9ae-4b72-9fce-88fbae753e9c";
-const FIGMA_MAP_ROUTE =
-  "https://www.figma.com/api/mcp/asset/ffc7f232-b731-4680-ba85-ff94f7a3f1d4";
-const FIGMA_MAP_CORNER =
-  "https://www.figma.com/api/mcp/asset/9aa8ed5c-6733-491e-a7bc-729a769ad169";
+
+/**
+ * Figma「第八屏」node 1:734 · 行程中地图（解锁态）
+ * `public/trip-live-map-1734.png` 为稿面导出；后端可换同尺寸合成图 URL。
+ */
+const TRIP_MAP_UNLOCKED_COMPOSITE = `${import.meta.env.BASE_URL}trip-live-map-1734.png`;
 
 export const MOCK_TRIP_LIVE_MAP_PAGE: Omit<TripLiveMapPageDto, "travelId" | "planId"> = {
   statusBarImageUrl: MOCK_HOME_DASHBOARD.statusBarImageUrl,
   mapBackdropImageUrl: FIGMA_MAP_BACKDROP,
-  mapImageUrl: FIGMA_MAP_ROUTE,
-  mapCornerImageUrl: FIGMA_MAP_CORNER,
+  mapImageUrl: TRIP_MAP_UNLOCKED_COMPOSITE,
   snapshotCard: {
     title: "行程快照",
     timelineText: "14:30 🚗 出发 → 14:45 🎯 农场 → 17:00 🍽️ 晚餐 → 18:10 🌿 散步",

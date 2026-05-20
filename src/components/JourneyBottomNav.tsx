@@ -1,13 +1,19 @@
-import { CalendarDays, CircleUser, Map, MessageSquare } from "lucide-react";
+import { CalendarDays, CircleUser, Compass, House } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
-import { CHAT_PATH, ITINERARY_HUB_PATH, PROFILE_PATH, TRIP_LIVE_MAP_PATH } from "../routes";
+import {
+  HOME_PATH,
+  ITINERARY_HUB_PATH,
+  PROFILE_PATH,
+  TRIP_LIVE_MAP_PATH,
+} from "../routes";
 
-type Tab = "对话" | "地图" | "行程" | "我的";
+type Tab = "首页" | "地图" | "行程" | "我的";
 
-const items: { label: Tab; Icon: typeof MessageSquare; to: string; withFlow: boolean }[] = [
-  { label: "对话", Icon: MessageSquare, to: CHAT_PATH, withFlow: true },
-  { label: "地图", Icon: Map, to: TRIP_LIVE_MAP_PATH, withFlow: true },
+/** 与 AppBottomNav 一致：第一项为首页 `/`，便于从行程/我的与从地图回主流程时行为统一 */
+const items: { label: Tab; Icon: typeof House; to: string; withFlow: boolean }[] = [
+  { label: "首页", Icon: House, to: HOME_PATH, withFlow: true },
+  { label: "地图", Icon: Compass, to: TRIP_LIVE_MAP_PATH, withFlow: true },
   { label: "行程", Icon: CalendarDays, to: ITINERARY_HUB_PATH, withFlow: true },
   { label: "我的", Icon: CircleUser, to: PROFILE_PATH, withFlow: true },
 ];

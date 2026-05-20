@@ -1,12 +1,11 @@
 import type { ItineraryTimelinePageDto } from "../types";
-import { MOCK_HOME_DASHBOARD } from "./home.mock";
+import { FIGMA_TIMELINE_465 } from "./figma-timeline-465-assets";
 
 export const MOCK_ITINERARY_TIMELINE: Omit<ItineraryTimelinePageDto, "travelId" | "planId"> = {
-  statusBarImageUrl: MOCK_HOME_DASHBOARD.statusBarImageUrl,
-  voiceInputIconUrl: MOCK_HOME_DASHBOARD.voiceInputIconUrl,
+  statusBarImageUrl: FIGMA_TIMELINE_465.statusBar,
+  voiceInputIconUrl: FIGMA_TIMELINE_465.voiceChip,
   planPillLabel: "Plan A",
-  aiStatusMessage:
-    "您已确认Plan A，正在生成Plan A 的详细时间轴＆路线…",
+  aiStatusMessage: "您已确认PLan A，正在生成Plan A 的详细时间轴＆路线…",
   cardTitle: "时间轴＆路线…",
   segments: [
     {
@@ -50,13 +49,13 @@ export const MOCK_ITINERARY_TIMELINE: Omit<ItineraryTimelinePageDto, "travelId" 
       scheduleNote: "7 分钟",
       title: "转场",
       metaLines: ["沿江步行前往滨江绿道 (600 米，约 7 分钟)"],
-      detailLines: ["🍽️ 素然花园 → 🌿 滨江绿道"],
+      detailLines: ["🍴 素然花园 → 🌿 滨江绿道"],
       transport: { emoji: "🚶", label: "步行" },
     },
     {
       id: "seg-6",
       scheduleLabel: "18:10-18:40",
-      scheduleNote: "30 分钟",
+      scheduleNote: "7 分钟",
       title: "滨江绿道",
       metaLines: ["30 分钟｜低强度缓冲"],
       detailLines: ["老婆可悠闲拍照赏江景，孩子仍有空间小跑玩耍。"],

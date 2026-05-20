@@ -11,6 +11,9 @@ import {
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AppBottomNav } from "../../components/AppBottomNav";
+import { EmbeddedStatusBarImage, EmbeddedStatusBarPlaceholder } from "../../components/EmbeddedStatusBar";
+import { AppScreenShell } from "../../components/AppScreenShell";
+import { ContentFitZoom } from "../../components/ContentFitZoom";
 import { Card, CardContent } from "../../components/ui/card";
 import { fetchPaymentConfirmationPage } from "../../lib/api";
 import { MOCK_TRAVEL_ID } from "../../lib/api/mock/travel.mock";
@@ -25,6 +28,7 @@ import {
   PAYMENT_CONFIRMATION_PATH,
   PAYMENT_PATH,
   TRIP_LIVE_MAP_PATH,
+  TRIP_WRAP_PATH,
 } from "../../routes";
 
 type PaymentConfirmLocationState = { travelId?: string; planId?: string };
@@ -142,7 +146,9 @@ export const PaymentConfirmationScreen = (): JSX.Element => {
     setPage(null);
     fetchPaymentConfirmationPage(travelId, planId)
       .then((data) => {
-        if (active) setPage(data);
+        if (active) {
+          setPage(data);
+        }
       })
       .catch((e: unknown) => {
         if (active) setLoadError(e instanceof Error ? e.message : "加载失败");
@@ -155,18 +161,11 @@ export const PaymentConfirmationScreen = (): JSX.Element => {
   const flow = { travelId, planId };
 
   return (
-    <main className="relative min-h-[874px] w-full overflow-hidden bg-[linear-gradient(180deg,#fffef5_0%,#ffffff_38%,#ffffff_100%)]">
-      <div className="relative mx-auto flex min-h-[874px] w-full max-w-[402px] flex-col">
+    <AppScreenShell frameClassName="bg-[linear-gradient(180deg,#fffef5_0%,#ffffff_38%,#ffffff_100%)]">
         {page ? (
-          <img
-            src={page.statusBarImageUrl}
-            alt=""
-            className="h-[61px] w-full shrink-0 object-cover object-top"
-            height={61}
-            width={402}
-          />
+          <EmbeddedStatusBarImage src={page.statusBarImageUrl} height={61} width={402} />
         ) : (
-          <div className="h-[61px] w-full shrink-0 bg-white/80" />
+          <EmbeddedStatusBarPlaceholder className="bg-white/80" />
         )}
 
         <div className="flex min-h-0 flex-1 flex-col px-4 pb-3 pt-2">
@@ -184,7 +183,7 @@ export const PaymentConfirmationScreen = (): JSX.Element => {
             </span>
           </header>
 
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-2">
+          <ContentFitZoom className="space-y-3 pb-2" recalcKey={page?.rows?.length ?? 0}>
             {loadError ? (
               <p className="text-center text-[13px] text-red-600">{loadError}</p>
             ) : !page ? (
@@ -320,6 +319,13 @@ export const PaymentConfirmationScreen = (): JSX.Element => {
 
                 <div className="flex flex-wrap gap-2">
                   <Link
+                    to={TRIP_WRAP_PATH}
+                    state={flow}
+                    className="inline-flex w-fit rounded-full border border-[#fde68a] bg-[#fffbeb] px-3 py-2 [font-family:'HYQiHei-Regular',Helvetica] text-[11px] font-semibold text-[#b45309] shadow-[0px_2px_8px_rgba(180,83,9,0.1)] transition-opacity hover:opacity-90"
+                  >
+                    行程结束确认
+                  </Link>
+                  <Link
                     to={TRIP_LIVE_MAP_PATH}
                     state={flow}
                     className="inline-flex w-fit rounded-full border border-[#cfe6ff] bg-[#f3f9ff] px-3 py-2 [font-family:'HYQiHei-Regular',Helvetica] text-[11px] font-semibold text-[#0f6fdc] shadow-[0px_2px_8px_rgba(15,109,220,0.12)] transition-opacity hover:opacity-90"
@@ -336,7 +342,7 @@ export const PaymentConfirmationScreen = (): JSX.Element => {
                 </div>
               </>
             )}
-          </div>
+          </ContentFitZoom>
 
           <div className="mt-auto flex flex-col gap-3 pt-4">
             <div className="flex items-center gap-2">
@@ -360,19 +366,19 @@ export const PaymentConfirmationScreen = (): JSX.Element => {
                   className="min-w-0 flex-1 bg-transparent py-2 pl-2 pr-2 [font-family:'HYQiHei-Regular',Helvetica] text-[13px] text-[#333c43] outline-none placeholder:text-[#333c4380]"
                 />
               </div>
-              <button
-                type="button"
-                aria-label="发送"
+              <Link
+                to={TRIP_WRAP_PATH}
+                state={flow}
+                aria-label="进入行程结束确认"
                 className="flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-full bg-[#251e1e] text-white shadow-[0px_2px_8px_#00000025] transition-opacity hover:opacity-90"
               >
                 <ChevronRight className="h-5 w-5" strokeWidth={2} />
-              </button>
+              </Link>
             </div>
           </div>
 
-          <AppBottomNav active="行程" journeyFlow={{ travelId, planId }} />
+          <AppBottomNav active="首页" journeyFlow={{ travelId, planId }} />
         </div>
-      </div>
-    </main>
+    </AppScreenShell>
   );
 };

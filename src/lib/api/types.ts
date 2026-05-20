@@ -1,6 +1,6 @@
 /** 与后端的契约类型；mock 与真实接口应返回同一结构 */
 
-export type HomeSceneVariant = "couple" | "friends" | "family";
+export type HomeSceneVariant = "couple" | "friends" | "family" | "solo";
 
 export type HomeSceneCardDto = {
   id: string;
@@ -61,6 +61,8 @@ export type ClarificationFieldDto = {
   options?: ClarificationOptionDto[];
   /** supplementary 类型的按钮文案占位 */
   placeholder?: string;
+  /** Mock / 服务端可下发：预选中的选项 id，用于与高保真稿一致的高亮边框 */
+  selectedOptionIds?: string[];
 };
 
 /** 「想确认一下」整块由后端驱动 */
@@ -88,6 +90,8 @@ export type TravelConversationPageDto = {
   statusSteps: TravelStatusStepDto[];
   clarification: ClarificationCardDto;
   needsSection: NeedsSectionDto;
+  /** 澄清卡片后出现第二条用户气泡（例如补充家庭信息），无则整块不渲染 */
+  followUpUserMessage?: string;
 };
 
 export type PlanActivityTagDto = {
@@ -113,12 +117,13 @@ export type PlanMemberRatingDto = {
 
 export type TravelPlanCardDto = {
   id: string;
-  /** 如 "Plan A" */
+  /** 如 "Plan A · "，与 headline 拼接成稿件标题 */
   planLabel: string;
-  /** 副标题，如 "午后平衡 · 推荐" */
   headline: string;
   recommended?: boolean;
-  /** 右上角综合分文案，如 "综合3.62" */
+  /** Plan A warm / Plan B cool，控制时间轴线与星级主色 */
+  accent?: "warm" | "cool";
+  /** 右上角综合分文案，如 "综合3.62"（稿面为右上角小标签） */
   overallScoreLabel: string;
   activities: PlanActivityDto[];
   memberRatings: PlanMemberRatingDto[];
@@ -667,4 +672,79 @@ export type BudgetPacePreferencesPageDto = {
   paceOptions: BudgetPaceRadioOptionDto[];
   selectedPaceId: string;
   saveButtonLabel: string;
+};
+
+// --- 用户偏好 · 写接口（与 PUT /api/user/preferences/* 对齐）---
+
+/** PUT /api/user/preferences/travel-mode */
+export type SaveTravelModePreferencesBody = {
+  selectedMethodId: TravelModeMethodOptionId;
+  selectedRadiusKm: number;
+  selectedDurationId: string;
+};
+
+/** PUT /api/user/preferences/dietary */
+export type SaveDietaryPreferencesBody = {
+  selectedNeedIds: string[];
+  /** 过敏源等补充说明（有「展开填写」项时） */
+  allergenNote?: string;
+};
+
+/** PUT /api/user/preferences/activity */
+export type SaveActivityPreferencesBody = {
+  selectedTagIds: string[];
+};
+
+/** PUT /api/user/preferences/budget-pace */
+export type SaveBudgetPacePreferencesBody = {
+  selectedBudgetId: string;
+  selectedPaceId: string;
+};
+
+/** 偏好保存通用响应 */
+export type UserPreferenceSaveResponseDto = {
+  ok: boolean;
+  updatedAt?: string;
+};
+
+// --- 行程流 · 写接口（下单/支付等 POST，按需对接网关）---
+
+/** POST /api/travel/:travelId/booking-todos/actions */
+export type BookingTodoActionBody = {
+  planId: string;
+  /** 与 BookingTodos 流里条目的 id 对齐 */
+  itemId: string;
+  action: string;
+  metadata?: Record<string, unknown>;
+};
+
+export type BookingTodoActionResponseDto = {
+  ok: boolean;
+  /** 服务端更新后的整页快照（可选，用于乐观更新失败时重拉） */
+  bookingTodosPageUrl?: string;
+};
+
+/** POST /api/travel/:travelId/payment/orders */
+export type TravelPaymentSubmitBody = {
+  planId: string;
+  paymentMethodId: string;
+  amountCents?: number;
+};
+
+export type TravelPaymentSubmitResponseDto = {
+  ok: boolean;
+  orderId?: string;
+  /** 跳转第三方支付 */
+  paymentUrl?: string;
+};
+
+/** POST /api/travel/:travelId/booking-checkout/confirm */
+export type TravelBookingCheckoutConfirmBody = {
+  planId: string;
+  /** 例如全选核对场地、仅当前分段等 */
+  scope?: string;
+};
+
+export type TravelSimpleOkResponseDto = {
+  ok: boolean;
 };
