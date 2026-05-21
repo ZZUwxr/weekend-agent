@@ -1,0 +1,36 @@
+import type { TripLiveMapPageDto } from "../types";
+import { MOCK_HOME_DASHBOARD } from "./home.mock";
+
+/** 远景底纹（与双方案地图底层一致，可选） */
+const FIGMA_MAP_BACKDROP =
+  "https://www.figma.com/api/mcp/asset/f0839aab-b9ae-4b72-9fce-88fbae753e9c";
+
+/**
+ * Figma「第八屏」node 1:734 · 行程中地图（解锁态）
+ * `public/trip-live-map-1734.png` 为稿面导出；后端可换同尺寸合成图 URL。
+ */
+const TRIP_MAP_UNLOCKED_COMPOSITE = `${import.meta.env.BASE_URL}trip-live-map-1734.png`;
+
+export const MOCK_TRIP_LIVE_MAP_PAGE: Omit<TripLiveMapPageDto, "travelId" | "planId"> = {
+  statusBarImageUrl: MOCK_HOME_DASHBOARD.statusBarImageUrl,
+  mapBackdropImageUrl: FIGMA_MAP_BACKDROP,
+  mapImageUrl: TRIP_MAP_UNLOCKED_COMPOSITE,
+  snapshotCard: {
+    title: "行程快照",
+    timelineText: "14:30 🚗 出发 → 14:45 🎯 农场 → 17:00 🍽️ 晚餐 → 18:10 🌿 散步",
+    footerLeft: "全程约 4 小时",
+    footerEmphasis: "已支付 ¥183",
+  },
+  locationCard: {
+    title: "当前位置与下一站",
+    currentLine: "当前：📍 户外亲子农场 · 剩余 45 分钟",
+    nextStepLine: "下一步：🕒 16:15 叫车前往素然花园",
+  },
+  remindersCard: {
+    title: "内置提醒",
+    reminderLines: ["🔔 16:05 提醒你叫车去餐厅", "🔔 18:35 提醒叫车回家"],
+  },
+  callRideButtonLabel: "叫车",
+  aiBubbleText: "请查看预约信息，是否确认预约",
+  voiceInputIconUrl: MOCK_HOME_DASHBOARD.voiceInputIconUrl,
+};
