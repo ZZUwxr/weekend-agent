@@ -2,6 +2,15 @@
 
 本项目是 **Vite + React** 前端；安卓端为 **Capacitor WebView** 外壳，界面逻辑仍在当前仓库，每次发版：`build` → 把 `dist` 拷贝进原生工程。
 
+克隆或换电脑后：**先 `npm install`，再至少执行一次 `npm run build:android`**，再打开 Android Studio。
+
+## 仓库里的 `android/`（哪些会进 Git）
+
+**会提交的**：Gradle 骨架（含 `gradlew`、`settings.gradle`）、`app` 模块源码与清单等，保证目录完整、能被 Android Studio / Gradle 识别。  
+**不提交的**（模板里已写在 `android/.gitignore`，与仓库根 `.gitignore` 一致兜底）：本机 SDK 配置的 `local.properties`、`build/` 与 `.gradle/` 缓存、以及由 **`cap sync` 从 `dist` 拷贝的** `app/src/main/assets/public` 和部分 `capacitor.*` 配置文件。
+
+因此：**仅 clone 不等于已内置最新前端包**，联调或发版前务必在项目根执行 `npm run build:android`。
+
 ## 组员环境要装什么
 
 1. **Node.js**（与现在开发一致）
