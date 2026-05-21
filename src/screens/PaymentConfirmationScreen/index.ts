@@ -1,1 +1,0 @@
-export { PaymentConfirmationScreen } from "./PaymentConfirmationScreen";

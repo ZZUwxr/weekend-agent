@@ -1,1 +1,0 @@
-export { ActivityPreferencesScreen } from "./ActivityPreferencesScreen";
