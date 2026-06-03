@@ -64,10 +64,18 @@ class HomeDashboardDto(MobileModel):
 # ---------------------------------------------------------------------------
 
 
+class LLMRuntimeConfigBody(MobileModel):
+    provider: Literal["mock", "openai"] = "mock"
+    model: str | None = None
+    base_url: str | None = None
+    api_key: str | None = None
+
+
 class StartTravelSessionBody(MobileModel):
     message: str
     user_id: str | None = None
     companion_ids: list[str] = Field(default_factory=list)
+    llm_config: LLMRuntimeConfigBody | None = None
 
 
 class StartTravelSessionResponse(MobileModel):
@@ -633,6 +641,24 @@ class SaveLLMSettingsBody(MobileModel):
     model: str
     base_url: str
     api_key: str | None = None
+
+
+class TravelClarificationAnswerDto(MobileModel):
+    question_id: str
+    answer: str
+
+
+class TravelClarificationAnswerBody(MobileModel):
+    answers: list[TravelClarificationAnswerDto] = Field(default_factory=list)
+    llm_config: LLMRuntimeConfigBody | None = None
+
+
+class TravelRevisionBody(MobileModel):
+    message: str
+    target_plan_id: str | None = None
+    locked_items: list[dict[str, Any]] = Field(default_factory=list)
+    revision_mode: str = "partial"
+    llm_config: LLMRuntimeConfigBody | None = None
 
 
 

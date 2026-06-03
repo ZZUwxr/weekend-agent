@@ -1,23 +1,26 @@
 import { Bot, Check, KeyRound, Link as LinkIcon } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { AppStatusStrip } from "../../components/AppUi";
 import { UserSettingsChrome, UserSettingsIconWrap, userSettingsCardClass } from "../../components/UserSettingsChrome";
 import { useResolvedTravel } from "../../hooks/useResolvedTravel";
-import { fetchLLMSettings, saveLLMSettings } from "../../lib/api";
+import { fetchLLMSettings } from "../../lib/api";
 import type { LLMSettingsDto } from "../../lib/api/types";
-import { LLM_SETTINGS_PATH, PROFILE_PATH } from "../../routes";
+import {
+  loadLocalLLMSettings,
+  previewLocalApiKey,
+  saveLocalLLMSettings,
+} from "../../lib/llmSettings";
+import { LLM_SETTINGS_PATH } from "../../routes";
 
 type LocationState = { travelId?: string; planId?: string };
 
 export const LLMSettingsScreen = (): JSX.Element => {
   const { state, pathname } = useLocation();
-  const navigate = useNavigate();
   const loc = state as LocationState | null;
   const resolved = useResolvedTravel(loc);
   const travelId = resolved.travelId;
   const planId = resolved.planId;
-  const flow = { travelId, planId };
 
   const [page, setPage] = useState<LLMSettingsDto | null>(null);
   const [provider, setProvider] = useState("openai");
@@ -27,6 +30,11 @@ export const LLMSettingsScreen = (): JSX.Element => {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [apiKeyConfigured, setApiKeyConfigured] = useState(false);
+  const [apiKeyPreview, setApiKeyPreview] = useState<string | null>(null);
+  const didLoadRef = useRef(false);
+  const lastSavedSignatureRef = useRef("");
 
   useEffect(() => {
     const prev = document.title;
@@ -40,14 +48,25 @@ export const LLMSettingsScreen = (): JSX.Element => {
 
   useEffect(() => {
     let active = true;
+    const local = loadLocalLLMSettings();
+    setProvider(local.provider);
+    setModel(local.model);
+    setBaseUrl(local.baseUrl);
+    setApiKey(local.apiKey);
+    setApiKeyConfigured(Boolean(local.apiKey.trim()));
+    setApiKeyPreview(previewLocalApiKey(local.apiKey));
+    lastSavedSignatureRef.current = buildSaveSignature(
+      local.provider,
+      local.model,
+      local.baseUrl,
+      local.apiKey,
+    );
+    didLoadRef.current = true;
     setLoadError(null);
     fetchLLMSettings()
       .then((data) => {
         if (!active) return;
         setPage(data);
-        setProvider(data.provider === "openai" ? "openai" : "mock");
-        setModel(data.model);
-        setBaseUrl(data.baseUrl);
       })
       .catch((e: unknown) => {
         if (active) setLoadError(e instanceof Error ? e.message : "加载失败");
@@ -57,26 +76,68 @@ export const LLMSettingsScreen = (): JSX.Element => {
     };
   }, []);
 
-  const onSave = async (): Promise<void> => {
-    if (provider === "openai" && (!model.trim() || !baseUrl.trim())) {
-      setSaveError("请填写模型和 URL");
-      return;
-    }
-    setSaving(true);
-    setSaveError(null);
-    try {
-      await saveLLMSettings({
-        provider,
-        model: model.trim(),
-        baseUrl: baseUrl.trim(),
-        apiKey: apiKey.trim() || null,
-      });
-      navigate(PROFILE_PATH, { state: flow });
-    } catch (e: unknown) {
-      setSaveError(e instanceof Error ? e.message : "保存失败");
-    } finally {
-      setSaving(false);
-    }
+  const canAutoSave = useMemo(() => {
+    if (provider === "mock") return true;
+    return Boolean(model.trim() && baseUrl.trim() && apiKey.trim());
+  }, [apiKey, baseUrl, model, provider]);
+
+  useEffect(() => {
+    if (!didLoadRef.current || !canAutoSave) return;
+
+    const signature = buildSaveSignature(provider, model, baseUrl, apiKey);
+    if (signature === lastSavedSignatureRef.current) return;
+
+    const timer = window.setTimeout(() => {
+      setSaving(true);
+      setSaveError(null);
+      try {
+        saveLocalLLMSettings({
+          provider: provider === "mock" ? "mock" : "openai",
+          model,
+          baseUrl,
+          apiKey,
+        });
+        lastSavedSignatureRef.current = signature;
+        setSavedAt(new Date().toISOString());
+        setApiKeyConfigured(Boolean(apiKey.trim()));
+        setApiKeyPreview(previewLocalApiKey(apiKey));
+      } catch (e: unknown) {
+        setSaveError(e instanceof Error ? e.message : "保存失败");
+      } finally {
+        setSaving(false);
+      }
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [apiKey, baseUrl, canAutoSave, model, provider]);
+
+  const statusDetail = (() => {
+    if (loadError) return "设置页样式加载失败，但本机配置仍可编辑保存。";
+    if (!canAutoSave) return "请填写模型、URL 和 API Key，填完整后会自动保存到本机。";
+    if (saving) return "正在自动保存到本机...";
+    if (saveError) return saveError;
+    if (savedAt) return "已自动保存到本机。";
+    if (apiKeyConfigured) return `API Key：${apiKeyPreview ?? "已保存"}`;
+    return "填写完整后会自动保存到本机，任务请求时临时发送给后端使用。";
+  })();
+
+  const savePill = (() => {
+    if (saving) return "保存中";
+    if (!canAutoSave) return "待填写";
+    if (saveError) return "保存失败";
+    return "本机自动保存";
+  })();
+
+  const savePillClass = (() => {
+    if (saveError) return "bg-red-50 text-red-700";
+    if (!canAutoSave) return "bg-[#f8fafc] text-[#64748b]";
+    return "bg-[#edf5ff] text-[#2456a6]";
+  })();
+
+  const onApiKeyChange = (value: string): void => {
+    setApiKey(value);
+    setApiKeyConfigured(Boolean(value.trim()));
+    setApiKeyPreview(previewLocalApiKey(value));
   };
 
   return (
@@ -87,24 +148,18 @@ export const LLMSettingsScreen = (): JSX.Element => {
       backLabel={page?.backLabel ?? "返回"}
       statusBarSrc={page?.statusBarImageUrl}
       footer={
-        <button
-          type="button"
-          onClick={() => void onSave()}
-          disabled={saving}
-          className="mt-2 w-full shrink-0 rounded-[14px] bg-[#ffd100] py-3.5 text-[15px] font-bold text-[#343d43] shadow-[0px_4px_16px_rgba(245,200,20,0.38)] transition active:scale-[0.99] disabled:opacity-60"
-        >
-          {saving ? "保存中..." : page?.saveButtonLabel ?? "保存设置"}
-        </button>
+        <div className={`mt-2 w-full shrink-0 rounded-[14px] px-4 py-3 text-center text-[13px] font-bold ${savePillClass}`}>
+          {savePill}
+        </div>
       }
     >
       <div className="space-y-3 pb-2">
-        {loadError ? <p className="text-center text-[13px] text-red-600">{loadError}</p> : null}
         {saveError ? <p className="rounded-lg bg-red-50 px-3 py-2 text-center text-[13px] text-red-600">{saveError}</p> : null}
 
         <AppStatusStrip
           Icon={Bot}
-          title={provider === "openai" ? "真实 Agent API" : "本地 Mock 模式"}
-          detail={page?.apiKeyConfigured ? `API Key：${page.apiKeyPreview ?? "已配置"}` : "保存 API Key 后，首页任务会使用这组配置。"}
+          title={provider === "openai" ? "真实 Agent API" : "Mock 模式"}
+          detail={statusDetail}
         />
 
         <div className={userSettingsCardClass}>
@@ -159,8 +214,8 @@ export const LLMSettingsScreen = (): JSX.Element => {
               icon={<KeyRound className="h-4 w-4" strokeWidth={1.9} />}
               label="API Key"
               value={apiKey}
-              placeholder={page?.apiKeyConfigured ? "留空表示继续使用已保存的 key" : "填写 API Key"}
-              onChange={setApiKey}
+              placeholder={apiKeyConfigured ? "已保存，输入新 key 会覆盖" : "填写 API Key"}
+              onChange={onApiKeyChange}
               type="password"
             />
           </div>
@@ -169,6 +224,20 @@ export const LLMSettingsScreen = (): JSX.Element => {
     </UserSettingsChrome>
   );
 };
+
+function buildSaveSignature(
+  provider: string,
+  model: string,
+  baseUrl: string,
+  apiKey: string,
+): string {
+  return JSON.stringify({
+    provider,
+    model: model.trim(),
+    baseUrl: baseUrl.trim(),
+    apiKey: apiKey.trim(),
+  });
+}
 
 function SettingsInput({
   icon,

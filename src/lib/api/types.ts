@@ -41,10 +41,18 @@ export type HomeDashboardDto = {
   history: HomeHistoryItemDto[];
 };
 
+export type LLMRuntimeConfig = {
+  provider: "mock" | "openai";
+  model?: string | null;
+  baseUrl?: string | null;
+  apiKey?: string | null;
+};
+
 export type StartTravelSessionBody = {
   message: string;
   userId?: string;
   companionIds?: string[];
+  llmConfig?: LLMRuntimeConfig | null;
 };
 
 /** POST /travel/sessions */
@@ -865,6 +873,7 @@ export type TravelClarificationAnswerDto = {
 
 export type TravelClarificationAnswerBody = {
   answers: TravelClarificationAnswerDto[];
+  llmConfig?: LLMRuntimeConfig | null;
 };
 
 export type PlanPatchDto = {
@@ -882,6 +891,7 @@ export type TravelRevisionBody = {
   targetPlanId?: string;
   lockedItems?: Record<string, unknown>[];
   revisionMode?: "partial" | "full";
+  llmConfig?: LLMRuntimeConfig | null;
 };
 
 export type MobileRevisionResponse = {

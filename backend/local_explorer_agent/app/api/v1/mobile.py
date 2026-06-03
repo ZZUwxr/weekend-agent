@@ -34,6 +34,7 @@ from local_explorer_agent.app.api.deps import (
     get_weather_tool,
 )
 from local_explorer_agent.app.agent.llm.json_runner import JSONPromptRunner
+from local_explorer_agent.app.agent.llm.mock_client import MockLLMClient
 from local_explorer_agent.app.agent.llm.openai_client import OpenAICompatibleLLMClient
 from local_explorer_agent.app.agent.react.factory import build_react_agent_runtime
 from local_explorer_agent.app.agent.react.llm_decider import LLMReActDecider
@@ -76,6 +77,7 @@ from local_explorer_agent.app.mobile.schemas import (
     ItineraryHubHistoryItemDto,
     ItineraryHubPageDto,
     ItineraryTimelinePageDto,
+    LLMRuntimeConfigBody,
     LLMSettingsDto,
     MobileExecutionTaskDto,
     MobilePlanActionResponseDto,
@@ -88,9 +90,11 @@ from local_explorer_agent.app.mobile.schemas import (
     SaveLLMSettingsBody,
     StartTravelSessionBody,
     StartTravelSessionResponse,
+    TravelClarificationAnswerBody,
     TravelConversationPageDto,
     TravelModeSettingsPageDto,
     TravelPaymentSubmitResponseDto,
+    TravelRevisionBody,
     TravelSimpleOkResponseDto,
     UserPreferenceSaveResponseDto,
     TripLiveMapPageDto,
@@ -404,7 +408,7 @@ def start_session(
     user_id: Annotated[str, Depends(_mobile_user_id)],
 ) -> StartTravelSessionResponse:
     request = _build_preview_request(body, user_id)
-    service = _plan_service_for_user_llm_config(state_repo, user_id) or service
+    service = _mobile_plan_service(body.llm_config, service)
     plan = service.preview_plan(request)
     state_repo.record_plan(user_id, plan, plan_id=plan.recommended_plan_id)
     return StartTravelSessionResponse(travel_id=plan.session_id)
@@ -418,7 +422,7 @@ async def start_session_stream(
     user_id: Annotated[str, Depends(_mobile_user_id)],
 ) -> StreamingResponse:
     request = _build_preview_request(body, user_id)
-    runtime_service = _plan_service_for_user_llm_config(state_repo, user_id) or service
+    runtime_service = _mobile_plan_service(body.llm_config, service)
 
     def run(emit: Callable[[PlanPreviewStreamEvent], None]) -> None:
         plan = runtime_service.preview_plan(request, event_callback=emit)
@@ -672,7 +676,7 @@ def get_active_travel(
 )
 def answer_clarifications(
     session_id: str,
-    body: dict,
+    body: TravelClarificationAnswerBody,
     service: Annotated[PlanService, Depends(get_plan_service)],
     state_repo: Annotated[MobileStateRepository, Depends(get_mobile_state_repository)],
     user_id: Annotated[str, Depends(_mobile_user_id)],
@@ -682,12 +686,13 @@ def answer_clarifications(
         ClarificationAnswerRequest,
     )
 
-    raw_answers = body.get("answers", [])
+    service = _mobile_plan_service(body.llm_config, service)
+    raw_answers = body.answers
     request = ClarificationAnswerRequest(
         answers=[
             ClarificationAnswer(
-                question_id=_dict_value(a, "question_id", "questionId"),
-                answer=a["answer"],
+                question_id=a.question_id,
+                answer=a.answer,
             )
             for a in raw_answers
         ]
@@ -717,19 +722,20 @@ def answer_clarifications(
 )
 def revise_plan(
     session_id: str,
-    body: dict,
+    body: TravelRevisionBody,
     service: Annotated[PlanService, Depends(get_plan_service)],
     state_repo: Annotated[MobileStateRepository, Depends(get_mobile_state_repository)],
     user_id: Annotated[str, Depends(_mobile_user_id)],
 ) -> MobileRevisionResponse:
     from local_explorer_agent.app.domain.schemas import PlanRevisionRequest
 
+    service = _mobile_plan_service(body.llm_config, service)
     plan = service.get_plan(session_id)
-    target_plan_id = _dict_value(body, "target_plan_id", "targetPlanId")
+    target_plan_id = body.target_plan_id
     normalized_target_plan_id = _norm_plan_id(target_plan_id)
 
     if plan.state not in {PlanState.PREVIEW, PlanState.REVISING}:
-        message = str(body.get("message", "")).strip() or "用户补充了行程偏好"
+        message = body.message.strip() or "用户补充了行程偏好"
         event = PlanEvent(
             session_id=session_id,
             event_type=EventType.USER_PREFERENCE_CHANGE,
@@ -753,10 +759,10 @@ def revise_plan(
         )
 
     request = PlanRevisionRequest(
-        message=body.get("message", ""),
+        message=body.message,
         target_plan_id=target_plan_id,
-        locked_items=_dict_value(body, "locked_items", "lockedItems", default=[]),
-        revision_mode=_dict_value(body, "revision_mode", "revisionMode", default="partial"),
+        locked_items=body.locked_items,
+        revision_mode=body.revision_mode,
     )
     try:
         result = service.revise_plan(session_id, request)
@@ -1039,16 +1045,13 @@ def get_llm_settings(
     state_repo: Annotated[MobileStateRepository, Depends(get_mobile_state_repository)],
     user_id: Annotated[str, Depends(_mobile_user_id)],
 ) -> LLMSettingsDto:
-    settings = get_settings()
-    saved = state_repo.get_preference(user_id, "llm")
-    api_key = str(saved.get("api_key") or "").strip()
     return LLMSettingsDto(
         status_bar_image_url=PROFILE_PAGE.status_bar_image_url,
-        provider=str(saved.get("provider") or settings.llm_provider),
-        model=str(saved.get("model") or settings.llm_model),
-        base_url=str(saved.get("base_url") or settings.llm_base_url),
-        api_key_configured=bool(api_key or settings.effective_llm_api_key),
-        api_key_preview=_api_key_preview(api_key or settings.effective_llm_api_key),
+        provider="openai",
+        model="",
+        base_url="",
+        api_key_configured=False,
+        api_key_preview=None,
     )
 
 
@@ -1058,20 +1061,7 @@ def save_llm_settings(
     state_repo: Annotated[MobileStateRepository, Depends(get_mobile_state_repository)],
     user_id: Annotated[str, Depends(_mobile_user_id)],
 ) -> UserPreferenceSaveResponseDto:
-    provider = "openai" if body.provider == "openai" else "mock"
-    existing = state_repo.get_preference(user_id, "llm")
-    api_key = (body.api_key or "").strip()
-    payload = {
-        "provider": provider,
-        "model": body.model.strip(),
-        "base_url": body.base_url.strip(),
-    }
-    if api_key:
-        payload["api_key"] = api_key
-    elif existing.get("api_key"):
-        payload["api_key"] = existing.get("api_key")
-    updated_at = state_repo.save_preference(user_id, "llm", payload)
-    return _ok_with_timestamp(updated_at)
+    return _ok_with_timestamp()
 
 
 @router.get("/user/preferences/travel-mode", response_model=TravelModeSettingsPageDto)
@@ -1320,19 +1310,17 @@ def _mobile_revision_response(
     )
 
 
-def _plan_service_for_user_llm_config(
-    state_repo: MobileStateRepository,
-    user_id: str,
+def _plan_service_for_request_llm_config(
+    llm_config: LLMRuntimeConfigBody | None,
+    default_service: PlanService,
 ) -> PlanService | None:
-    saved = state_repo.get_preference(user_id, "llm")
-    provider = str(saved.get("provider") or "").strip()
-    if provider != "openai":
+    if llm_config is None or llm_config.provider != "openai":
         return None
 
     settings = get_settings()
-    api_key = str(saved.get("api_key") or settings.effective_llm_api_key or "").strip()
-    base_url = str(saved.get("base_url") or "").strip()
-    model = str(saved.get("model") or "").strip()
+    api_key = str(llm_config.api_key or "").strip()
+    base_url = str(llm_config.base_url or "").strip()
+    model = str(llm_config.model or "").strip()
     if not (api_key and base_url and model):
         return None
 
@@ -1370,9 +1358,45 @@ def _plan_service_for_user_llm_config(
         ),
     )
     return PlanService(
-        session_store=get_session_store(),
+        session_store=getattr(default_service, "session_store", get_session_store()),
         react_runtime=runtime,
-        feedback_followup_service=None,
+        feedback_followup_service=getattr(default_service, "feedback_followup_service", None),
+    )
+
+
+def _mobile_plan_service(
+    llm_config: LLMRuntimeConfigBody | None,
+    default_service: PlanService,
+) -> PlanService:
+    return (
+        _plan_service_for_request_llm_config(llm_config, default_service)
+        or _mock_mobile_plan_service(default_service)
+    )
+
+
+def _mock_mobile_plan_service(default_service: PlanService) -> PlanService:
+    settings = get_settings()
+    llm_client = MockLLMClient()
+    prompt_runner = JSONPromptRunner(
+        prompt_dir=Path(__file__).resolve().parents[2] / "agent" / "prompts",
+        llm_client=llm_client,
+        max_retries=settings.llm_max_retries,
+        allow_rule_based_fallback=True,
+    )
+    runtime = build_react_agent_runtime(
+        prompt_runner=prompt_runner,
+        poi_query_tool=get_poi_query_tool(),
+        poi_tool=get_poi_tool(),
+        queue_tool=get_queue_tool(),
+        weather_tool=get_weather_tool(),
+        route_tool=get_route_tool(),
+        user_memory_repository=get_user_memory_repository(),
+        decider=MockReActDecider(),
+    )
+    return PlanService(
+        session_store=getattr(default_service, "session_store", get_session_store()),
+        react_runtime=runtime,
+        feedback_followup_service=getattr(default_service, "feedback_followup_service", None),
     )
 
 

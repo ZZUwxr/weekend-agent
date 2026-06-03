@@ -1,6 +1,7 @@
 import { getApiBaseUrl } from "./config";
 import { ApiNotImplementedError, apiRequest, normalizeNetworkError, parseApiError } from "./client";
 import { getDeviceUserId } from "./device-user";
+import { localLLMSettingsToRuntimeConfig } from "../llmSettings";
 import type {
   ActiveTravelDto,
   MobileRevisionResponse,
@@ -22,7 +23,7 @@ export async function startTravelSession(
 ): Promise<StartTravelSessionResponse> {
   return apiRequest<StartTravelSessionResponse>("/travel/sessions", {
     method: "POST",
-    body: JSON.stringify(body),
+    body: JSON.stringify(withLocalLLMConfig(body)),
   });
 }
 
@@ -47,7 +48,7 @@ export async function streamTravelSession(
         "Content-Type": "application/json",
         "X-Device-User-Id": getDeviceUserId(),
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(withLocalLLMConfig(body)),
     });
   } catch (error) {
     throw normalizeNetworkError(error);
@@ -137,7 +138,7 @@ export async function answerTravelClarifications(
     `/travel/${encodeURIComponent(travelId)}/clarifications`,
     {
       method: "POST",
-      body: JSON.stringify(body),
+      body: JSON.stringify(withLocalLLMConfig(body)),
     },
   );
 }
@@ -152,9 +153,15 @@ export async function reviseTravelPlan(
     `/travel/${encodeURIComponent(travelId)}/revise`,
     {
       method: "POST",
-      body: JSON.stringify(body),
+      body: JSON.stringify(withLocalLLMConfig(body)),
     },
   );
+}
+
+function withLocalLLMConfig<T extends { llmConfig?: unknown }>(body: T): T {
+  if (body.llmConfig) return body;
+  const llmConfig = localLLMSettingsToRuntimeConfig();
+  return llmConfig ? { ...body, llmConfig } : body;
 }
 
 function assertTravelId(travelId: string): void {

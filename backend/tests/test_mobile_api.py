@@ -46,7 +46,7 @@ def _clear_all_deps_caches() -> None:
             "get_share_tool",
             "get_execution_service",
             "get_feedback_service",
-            "_plan_service_for_user_llm_config",
+            "_plan_service_for_request_llm_config",
         ):
         fn = getattr(deps, fn_name, None)
         if fn is not None and hasattr(fn, "cache_clear"):
@@ -604,7 +604,7 @@ def test_mobile_start_session_uses_selected_companion_memory(monkeypatch, tmp_pa
         _clear_all_deps_caches()
 
 
-def test_mobile_llm_settings_save_does_not_echo_api_key(monkeypatch, tmp_path) -> None:
+def test_mobile_llm_settings_are_not_persisted_on_server(monkeypatch, tmp_path) -> None:
     monkeypatch.setenv("LLM_PROVIDER", "mock")
     monkeypatch.setenv("AGENT_RUNTIME", "react")
     monkeypatch.setenv("DATA_DIR", str(tmp_path))
@@ -631,15 +631,18 @@ def test_mobile_llm_settings_save_does_not_echo_api_key(monkeypatch, tmp_path) -
         settings = client.get("/api/v1/mobile/user/settings/llm", headers=headers)
         assert settings.status_code == 200
         settings_json = settings.json()
-        assert settings_json["model"] == "mimo-v2.5-pro"
-        assert settings_json["baseUrl"] == "https://token-plan-cn.xiaomimimo.com/v1"
-        assert settings_json["apiKeyConfigured"] is True
+        assert settings_json["model"] == ""
+        assert settings_json["baseUrl"] == ""
+        assert settings_json["apiKeyConfigured"] is False
         assert "tp-secret-test-key" not in settings.text
+        saved_state = tmp_path / "runtime" / "mobile_users" / "llm_settings_user.json"
+        if saved_state.exists():
+            assert "tp-secret-test-key" not in saved_state.read_text(encoding="utf-8")
     finally:
         _clear_all_deps_caches()
 
 
-def test_mobile_start_session_uses_saved_llm_config_service(monkeypatch, tmp_path) -> None:
+def test_mobile_start_session_uses_request_llm_config_service(monkeypatch, tmp_path) -> None:
     monkeypatch.setenv("LLM_PROVIDER", "mock")
     monkeypatch.setenv("AGENT_RUNTIME", "react")
     monkeypatch.setenv("DATA_DIR", str(tmp_path))
@@ -657,29 +660,52 @@ def test_mobile_start_session_uses_saved_llm_config_service(monkeypatch, tmp_pat
 
     monkeypatch.setattr(
         mobile_api,
-        "_plan_service_for_user_llm_config",
-        lambda state_repo, user_id: _ConfiguredPlanService(),
+        "_plan_service_for_request_llm_config",
+        lambda llm_config, default_service: _ConfiguredPlanService(),
     )
 
     try:
-        save = client.put(
-            "/api/v1/mobile/user/settings/llm",
-            json={
-                "provider": "openai",
-                "model": "mimo-v2.5-pro",
-                "baseUrl": "https://token-plan-cn.xiaomimimo.com/v1",
-                "apiKey": "tp-secret-test-key",
-            },
-            headers=headers,
-        )
-        assert save.status_code == 200
         resp = client.post(
             "/api/v1/mobile/travel/sessions",
-            json={"message": "今晚想吃烧烤"},
+            json={
+                "message": "今晚想吃烧烤",
+                "llmConfig": {
+                    "provider": "openai",
+                    "model": "mimo-v2.5-pro",
+                    "baseUrl": "https://token-plan-cn.xiaomimimo.com/v1",
+                    "apiKey": "tp-secret-test-key",
+                },
+            },
             headers=headers,
         )
         assert resp.status_code == 503
         assert resp.json()["code"] == "llm_rate_limited"
+    finally:
+        _clear_all_deps_caches()
+
+
+def test_mobile_llm_settings_ignore_server_env(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("LLM_PROVIDER", "openai")
+    monkeypatch.setenv("LLM_API_KEY", "tp-server-env-secret")
+    monkeypatch.setenv("LLM_MODEL", "server-env-model")
+    monkeypatch.setenv("LLM_BASE_URL", "https://server-env.example/v1")
+    monkeypatch.setenv("AGENT_RUNTIME", "react")
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    _copy_data_fixtures(tmp_path)
+    _clear_all_deps_caches()
+    client = TestClient(app)
+    try:
+        settings = client.get(
+            "/api/v1/mobile/user/settings/llm",
+            headers={"X-Device-User-Id": "env_isolation_user"},
+        )
+        assert settings.status_code == 200
+        data = settings.json()
+        assert data["model"] == ""
+        assert data["baseUrl"] == ""
+        assert data["apiKeyConfigured"] is False
+        assert "tp-server-env-secret" not in settings.text
+        assert "server-env-model" not in settings.text
     finally:
         _clear_all_deps_caches()
 
@@ -1057,9 +1083,26 @@ def test_mobile_llm_rate_limit_returns_normalized_error(monkeypatch) -> None:
             raise LLMError("OpenAI-compatible chat completion failed: 429 Too Many Requests")
 
     client = _setup(monkeypatch)
-    app.dependency_overrides[deps.get_plan_service] = lambda: _RateLimitedPlanService()
+    import local_explorer_agent.app.api.v1.mobile as mobile_api
+
+    monkeypatch.setattr(
+        mobile_api,
+        "_plan_service_for_request_llm_config",
+        lambda llm_config, default_service: _RateLimitedPlanService(),
+    )
     try:
-        resp = client.post("/api/v1/mobile/travel/sessions", json={"message": "今晚想吃烧烤"})
+        resp = client.post(
+            "/api/v1/mobile/travel/sessions",
+            json={
+                "message": "今晚想吃烧烤",
+                "llmConfig": {
+                    "provider": "openai",
+                    "model": "mimo-v2.5-pro",
+                    "baseUrl": "https://token-plan-cn.xiaomimimo.com/v1",
+                    "apiKey": "tp-secret-test-key",
+                },
+            },
+        )
 
         assert resp.status_code == 503
         data = resp.json()
@@ -1069,7 +1112,6 @@ def test_mobile_llm_rate_limit_returns_normalized_error(monkeypatch) -> None:
             "details": {"provider": "openai_compatible"},
         }
     finally:
-        app.dependency_overrides.clear()
         _clear_all_deps_caches()
 
 
