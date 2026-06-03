@@ -1,25 +1,23 @@
 import type { TripLiveMapPageDto } from "./types";
-import { getApiBaseUrl } from "./config";
-import { MOCK_TRIP_LIVE_MAP_PAGE } from "./mock/trip-live-map.mock";
+import { apiRequest } from "./client";
 
 /**
  * 第八屏 · 行程进行中地图与信息卡（Figma 1:734）
  *
- * **后端契约:** `GET /api/travel/:travelId/trip-live-map?planId=...`
+ * **后端契约:** `GET /travel/:travelId/trip-live-map?planId=...`
  * 文档：`ENDPOINTS.md` §11.
  */
 export async function fetchTripLiveMapPage(
   travelId: string,
   planId: string,
 ): Promise<TripLiveMapPageDto> {
-  const base = getApiBaseUrl();
-  if (!base) {
-    await new Promise((r) => setTimeout(r, 120));
-    return { ...MOCK_TRIP_LIVE_MAP_PAGE, travelId, planId };
-  }
-  const { apiRequest } = await import("./client");
+  assertTravelId(travelId);
   const q = new URLSearchParams({ planId });
   return apiRequest<TripLiveMapPageDto>(
-    `/api/travel/${encodeURIComponent(travelId)}/trip-live-map?${q.toString()}`,
+    `/travel/${encodeURIComponent(travelId)}/trip-live-map?${q.toString()}`,
   );
+}
+
+function assertTravelId(travelId: string): void {
+  if (!travelId?.trim()) throw new Error("缺少当前行程，请先从首页创建一条行程。");
 }

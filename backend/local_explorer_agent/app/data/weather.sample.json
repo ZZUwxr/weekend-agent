@@ -1,0 +1,10 @@
+[
+  {
+    "city": "深圳",
+    "condition": "晴天",
+    "temperature": 28,
+    "outdoor_fit": true,
+    "rain_probability": 0.15,
+    "suggestion": "户外可作为备选，但亲子主计划优先保留室内可控点。"
+  }
+]

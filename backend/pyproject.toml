@@ -1,0 +1,36 @@
+[project]
+name = "weekend-agent"
+version = "0.1.0"
+description = "Local exploration and weekend activity planning agent backend."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.29.0",
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",
+    "pytest>=8.0.0",
+    "httpx[socks]>=0.27.0",
+    "openai>=1.0.0",
+    "python-dotenv>=1.0.0",
+    "ruff>=0.4.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["local_explorer_agent*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["database", "data_process"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

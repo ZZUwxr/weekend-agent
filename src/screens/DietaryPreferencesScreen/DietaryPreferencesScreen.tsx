@@ -1,11 +1,11 @@
 import { Check, ChevronRight, Utensils, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ContentFitZoom } from "../../components/ContentFitZoom";
 import { UserSettingsChrome, UserSettingsIconWrap, userSettingsCardClass } from "../../components/UserSettingsChrome";
+import { AppPill, AppStatusStrip } from "../../components/AppUi";
 import { fetchDietaryPreferencesPage, saveDietaryPreferences } from "../../lib/api";
 import { FIGMA_USER_SETTINGS_114 } from "../../lib/api/mock/figma-user-settings-114-assets";
-import { MOCK_TRAVEL_ID } from "../../lib/api/mock/travel.mock";
+import { useResolvedTravel } from "../../hooks/useResolvedTravel";
 import type { DietaryNeedOptionDto, DietaryPreferencesPageDto } from "../../lib/api/types";
 import { DIETARY_PREFERENCES_PATH, PROFILE_PATH } from "../../routes";
 
@@ -15,8 +15,9 @@ export const DietaryPreferencesScreen = (): JSX.Element => {
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const loc = state as SettingsLocationState | null;
-  const travelId = loc?.travelId ?? MOCK_TRAVEL_ID;
-  const planId = loc?.planId ?? "plan-a";
+  const resolved = useResolvedTravel(loc);
+  const travelId = resolved.travelId;
+  const planId = resolved.planId;
   const flow = { travelId, planId };
 
   const [page, setPage] = useState<DietaryPreferencesPageDto | null>(null);
@@ -114,7 +115,7 @@ export const DietaryPreferencesScreen = (): JSX.Element => {
         ) : null
       }
     >
-      <ContentFitZoom className="space-y-3 pb-2" recalcKey={selectedIds.join(",")}>
+      <div className="space-y-3 pb-2">
         {saveError ? (
           <p className="rounded-lg bg-red-50 px-3 py-2 text-center text-[13px] text-red-600">{saveError}</p>
         ) : null}
@@ -124,13 +125,26 @@ export const DietaryPreferencesScreen = (): JSX.Element => {
           <p className="py-8 text-center text-[13px] text-[#64748b]">加载中…</p>
         ) : (
           <>
+            <AppStatusStrip
+              Icon={Utensils}
+              title={selectedIds.length > 0 ? `已选择 ${selectedIds.length} 项饮食需求` : "暂未选择特殊饮食需求"}
+              detail={
+                selectedIds.length > 0
+                  ? page.needOptions
+                      .filter((opt) => selectedIds.includes(opt.id))
+                      .map((opt) => opt.label)
+                      .join("、")
+                  : "如果没有禁忌，可以选择无特殊需求。"
+              }
+            />
+
             <div className={userSettingsCardClass}>
               <div className="p-0">
-                <div className="flex items-center gap-2 border-b border-[#faf2ac]/90 px-3 py-2.5">
+                <div className="flex items-center gap-2 border-b border-[#e5e7eb] px-3 py-3">
                   <UserSettingsIconWrap>
                     <Utensils className="h-4 w-4" strokeWidth={1.75} />
                   </UserSettingsIconWrap>
-                  <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[14px] font-bold text-[#1e293b]">
+                  <span className="text-[15px] font-bold text-[#111827]">
                     {page.specialNeedsSectionTitle}
                   </span>
                 </div>
@@ -141,34 +155,37 @@ export const DietaryPreferencesScreen = (): JSX.Element => {
                       <button
                         type="button"
                         onClick={() => toggleNeed(opt, page.needOptions)}
-                        className={`flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-[#fffef8] ${
+                        aria-pressed={checked}
+                        className={`flex min-h-[58px] w-full items-center gap-3 px-3 py-3 text-left transition active:scale-[0.995] ${
+                          checked ? "bg-[#f1f6ff]" : "bg-white hover:bg-[#f8fafc]"
+                        } ${
                           i < page.needOptions.length - 1 || (checked && opt.expandWhenChecked)
-                            ? "border-b border-[#faf2ac]/50"
+                            ? "border-b border-[#e5e7eb]"
                             : ""
                         }`}
                       >
                         <span
-                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 ${
+                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[10px] ${
                             checked
-                              ? "border-[#eab308] bg-[#eab308] text-white"
-                              : "border-[#d1d5db] bg-white"
+                              ? "bg-[#2456a6] text-white"
+                              : "border border-[#d1d5db] bg-white"
                           }`}
                           aria-hidden
                         >
-                          {checked ? <Check className="h-3 w-3" strokeWidth={3} /> : null}
+                          {checked ? <Check className="h-4 w-4" strokeWidth={2.6} /> : null}
                         </span>
-                        <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[13px] font-semibold text-[#374151]">
+                        <span className="text-[14px] font-bold text-[#374151]">
                           {opt.label}
                         </span>
                       </button>
                       {checked && opt.expandWhenChecked ? (
-                        <div className="border-b border-[#faf2ac]/50 px-3 pb-3 pl-11">
+                        <div className="border-b border-[#e5e7eb] bg-[#f8fafc] px-3 pb-3 pl-12">
                           <textarea
                             value={allergenNote}
                             onChange={(e) => setAllergenNote(e.target.value)}
                             placeholder="请填写过敏源信息…"
                             rows={3}
-                            className="w-full resize-none rounded-xl border-[0.76px] border-[#faf2ac] bg-[#fffef8] px-3 py-2 [font-family:'HYQiHei-Regular',Helvetica] text-[12px] text-[#374151] outline-none placeholder:text-[#9ca3af]"
+                            className="w-full resize-none rounded-[12px] border border-[#dbe3ee] bg-white px-3 py-2 text-[13px] text-[#374151] outline-none placeholder:text-[#9ca3af]"
                           />
                         </div>
                       ) : null}
@@ -180,11 +197,11 @@ export const DietaryPreferencesScreen = (): JSX.Element => {
 
             <div className={userSettingsCardClass}>
               <div className="p-0">
-                <div className="flex items-center gap-2 border-b border-[#faf2ac]/90 px-3 py-2.5">
+                <div className="flex items-center gap-2 border-b border-[#e5e7eb] px-3 py-3">
                   <UserSettingsIconWrap>
                     <Users className="h-4 w-4" strokeWidth={1.75} />
                   </UserSettingsIconWrap>
-                  <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[14px] font-bold text-[#1e293b]">
+                  <span className="text-[15px] font-bold text-[#111827]">
                     {page.familySectionTitle}
                   </span>
                 </div>
@@ -192,8 +209,8 @@ export const DietaryPreferencesScreen = (): JSX.Element => {
                   <button
                     key={m.id}
                     type="button"
-                    className={`flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-[#fffef8] ${
-                      i < page.familyMembers.length - 1 ? "border-b border-[#faf2ac]/50" : ""
+                    className={`flex min-h-[72px] w-full items-center gap-3 px-3 py-3 text-left hover:bg-[#f8fafc] ${
+                      i < page.familyMembers.length - 1 ? "border-b border-[#e5e7eb]" : ""
                     }`}
                   >
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#fffbeb] text-xl ring-1 ring-[#fef3c7]">
@@ -204,10 +221,10 @@ export const DietaryPreferencesScreen = (): JSX.Element => {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="[font-family:'HYQiHei-Regular',Helvetica] text-[13px] font-bold text-[#1e293b]">
+                      <p className="text-[14px] font-bold text-[#111827]">
                         {m.name}
                       </p>
-                      <p className="mt-0.5 [font-family:'HYQiHei-Regular',Helvetica] text-[11px] font-medium text-[#6b7280]">
+                      <p className="mt-0.5 text-[12px] font-medium leading-5 text-[#64748b]">
                         {m.summaryLine}
                       </p>
                     </div>
@@ -216,9 +233,19 @@ export const DietaryPreferencesScreen = (): JSX.Element => {
                 ))}
               </div>
             </div>
+
+            <div className="flex flex-wrap gap-2">
+              {page.needOptions
+                .filter((opt) => selectedIds.includes(opt.id))
+                .map((opt) => (
+                  <AppPill key={opt.id} className="bg-[#edf5ff] text-[#2456a6]">
+                    {opt.label}
+                  </AppPill>
+                ))}
+            </div>
           </>
         )}
-      </ContentFitZoom>
+      </div>
     </UserSettingsChrome>
   );
 };

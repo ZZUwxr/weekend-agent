@@ -5,6 +5,11 @@ import { FIGMA_CHAT_177 } from "../../../../lib/api/mock/figma-chat-177-assets";
 export type TravelIntentPromptSectionProps = {
   data: ClarificationCardDto;
   onSkipPress?: () => void;
+  selectedByFieldId?: Record<string, string>;
+  pending?: boolean;
+  onOptionPress?: (fieldId: string, answer: string) => void;
+  onContinuePress?: () => void;
+  continueLabel?: string;
 };
 
 /** Figma node 1:117 · 「想确认一下」卡片渐变标题 */
@@ -15,6 +20,11 @@ function clarifyTitleGradientClass(): string {
 export const TravelIntentPromptSection = ({
   data,
   onSkipPress,
+  selectedByFieldId,
+  pending = false,
+  onOptionPress,
+  onContinuePress,
+  continueLabel = "继续生成方案",
 }: TravelIntentPromptSectionProps): JSX.Element => {
   return (
     <section className="w-full">
@@ -49,9 +59,10 @@ export const TravelIntentPromptSection = ({
               type="button"
               variant="ghost"
               className="h-auto shrink-0 rounded-[10.027px] border-[0.836px] border-[#fdffea] bg-gradient-to-b from-[#b1d4f7] to-[#fffce6] to-[54.808%] px-[17px] py-[6px] [font-family:'HYQiHei-Regular',Helvetica] text-[10.505px] font-normal leading-[20px] tracking-[0] text-[#343d43] shadow-[0px_2px_4px_rgba(0,0,0,0.25)]"
+              disabled={pending}
               onClick={onSkipPress}
             >
-              {data.skipLabel}
+              {pending ? "处理中…" : data.skipLabel}
             </Button>
           </header>
           <div className="space-y-[17px]">
@@ -63,14 +74,19 @@ export const TravelIntentPromptSection = ({
                 {field.kind === "chips" && field.options ? (
                   <div className="flex flex-wrap gap-x-2 gap-y-2">
                     {field.options.map((option) => {
-                      const selected = field.selectedOptionIds?.includes(option.id) ?? false;
+                      const selected =
+                        selectedByFieldId?.[field.id] === option.id ||
+                        (!selectedByFieldId?.[field.id] && field.selectedOptionIds?.includes(option.id)) ||
+                        false;
                       const borderCls = selected ? "border-[#ffd100]" : "border-[#d8d8d8]";
                       return (
                         <Button
                           key={option.id}
                           type="button"
                           variant="outline"
-                          className={`h-auto min-h-[26px] rounded-[10.027px] border-[0.836px] bg-[linear-gradient(rgba(225,240,255,0.44)_23.58%,rgba(255,255,255,0.44)_100%)] px-[10px] py-[6px] [font-family:'HYQiHei-Regular',Helvetica] text-[10.505px] font-normal leading-[20.322px] text-[#343d43] shadow-[0px_1px_2px_0px_#d1e8ff] ${borderCls} hover:bg-[linear-gradient(rgba(225,240,255,0.44)_23.58%,rgba(255,255,255,0.44)_100%)]`}
+                          disabled={pending}
+                          onClick={() => onOptionPress?.(field.id, option.id)}
+                          className={`h-auto min-h-11 rounded-[10.027px] border-[0.836px] bg-[linear-gradient(rgba(225,240,255,0.44)_23.58%,rgba(255,255,255,0.44)_100%)] px-[10px] py-[6px] [font-family:'HYQiHei-Regular',Helvetica] text-[10.505px] font-normal leading-[20.322px] text-[#343d43] shadow-[0px_1px_2px_0px_#d1e8ff] ${borderCls} hover:bg-[linear-gradient(rgba(225,240,255,0.44)_23.58%,rgba(255,255,255,0.44)_100%)]`}
                         >
                           {option.label}
                         </Button>
@@ -81,7 +97,9 @@ export const TravelIntentPromptSection = ({
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-auto min-h-[26px] rounded-[10.027px] border-[0.836px] border-[#d8d8d8] bg-[linear-gradient(rgba(225,240,255,0.44)_23.58%,rgba(255,255,255,0.44)_100%)] px-[10px] py-[6px] [font-family:'HYQiHei-Regular',Helvetica] text-[10.505px] font-normal leading-[20.322px] text-[#343d43]/[0.28] shadow-[0px_1px_2px_0px_#d1e8ff] hover:bg-[linear-gradient(rgba(225,240,255,0.44)_23.58%,rgba(255,255,255,0.44)_100%)]"
+                    disabled={pending}
+                    onClick={() => onOptionPress?.(field.id, field.placeholder ?? "按默认继续")}
+                    className="h-auto min-h-11 rounded-[10.027px] border-[0.836px] border-[#d8d8d8] bg-[linear-gradient(rgba(225,240,255,0.44)_23.58%,rgba(255,255,255,0.44)_100%)] px-[10px] py-[6px] [font-family:'HYQiHei-Regular',Helvetica] text-[10.505px] font-normal leading-[20.322px] text-[#343d43]/[0.28] shadow-[0px_1px_2px_0px_#d1e8ff] hover:bg-[linear-gradient(rgba(225,240,255,0.44)_23.58%,rgba(255,255,255,0.44)_100%)]"
                   >
                     {field.placeholder ?? "补充一下..."}
                   </Button>
@@ -89,6 +107,16 @@ export const TravelIntentPromptSection = ({
               </div>
             ))}
           </div>
+          {onContinuePress ? (
+            <Button
+              type="button"
+              disabled={pending}
+              onClick={onContinuePress}
+              className="mt-5 min-h-11 w-full rounded-[13px] bg-[#251e1e] px-4 py-2 [font-family:'HYQiHei-Regular',Helvetica] text-[12px] font-semibold text-white shadow-[0px_2px_8px_rgba(0,0,0,0.18)] hover:bg-[#251e1e]/90"
+            >
+              {pending ? "处理中…" : continueLabel}
+            </Button>
+          ) : null}
         </div>
       </div>
     </section>

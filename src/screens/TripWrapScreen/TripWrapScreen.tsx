@@ -1,60 +1,52 @@
-import type { ReactNode } from "react";
-import { ChevronRight, ChevronDown } from "lucide-react";
+import { CalendarPlus, CheckCircle2, MessageSquareText, Share2, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AppBottomNav } from "../../components/AppBottomNav";
-import { tabScreenComposerDockMtAutoClass } from "../../lib/tabScreenDockLayout";
-import { ContentFitZoom } from "../../components/ContentFitZoom";
-import { EmbeddedStatusBarImage } from "../../components/EmbeddedStatusBar";
 import { AppScreenShell } from "../../components/AppScreenShell";
-import { FIGMA_TRIP_WRAP_159 } from "../../lib/api/mock/figma-trip-wrap-159-assets";
-import { MOCK_TRAVEL_ID } from "../../lib/api/mock/travel.mock";
+import { AppToast, useAppToast } from "../../components/AppToast";
+import {
+  AppActionButton,
+  AppBackdrop,
+  AppCard,
+  AppErrorState,
+  AppIconButton,
+  AppLoadingState,
+  AppPageHeader,
+  AppStatusStrip,
+} from "../../components/AppUi";
+import { EmbeddedStatusBarPlaceholder } from "../../components/EmbeddedStatusBar";
+import { executeTravelPlan, fetchItineraryHubPage } from "../../lib/api";
+import type { ItineraryHubTimelineNodeDto } from "../../lib/api/types";
+import {
+  tabScreenComposerDockClass,
+  tabScreenPrimaryColumnPaddingXClass,
+} from "../../lib/tabScreenDockLayout";
+import { useResolvedTravel } from "../../hooks/useResolvedTravel";
 import { ITINERARY_HUB_PATH, TRIP_FEEDBACK_PATH, TRIP_WRAP_PATH } from "../../routes";
 
 type TripWrapLocationState = { travelId?: string; planId?: string };
 
-function titleGradientClass(): string {
-  return "bg-[linear-gradient(24.482deg,rgb(95,115,128)_16.391%,rgb(62,82,101)_73.16%,rgb(42,114,176)_96.32%)] bg-clip-text text-transparent [-webkit-background-clip:text]";
+function summarizeNodes(nodes: ItineraryHubTimelineNodeDto[]): { title: string; detail: string }[] {
+  return nodes.slice(0, 5).map((node) => ({
+    title: `${node.time} ${node.title}`,
+    detail: node.subtitle ?? "已按当前方案完成安排。",
+  }));
 }
 
-function TripGlowCardFrame({ children }: { children: ReactNode }): JSX.Element {
-  return (
-    <div className="relative overflow-hidden rounded-[15px] border border-[#50a9fe] bg-white shadow-[0px_4px_20px_0px_#d0def8]">
-      <img
-        src={FIGMA_TRIP_WRAP_159.cardGlow1}
-        alt=""
-        className="pointer-events-none absolute left-[114px] top-[33px] z-0 h-[242px] w-[293px] max-w-none object-cover opacity-[0.32]"
-      />
-      <img
-        src={FIGMA_TRIP_WRAP_159.cardGlow2}
-        alt=""
-        className="pointer-events-none absolute -left-[110px] -top-[147px] z-0 h-[220px] w-[271px] max-w-none object-cover opacity-[0.32]"
-      />
-      <div className="relative z-[2] isolate">{children}</div>
-    </div>
-  );
-}
-
-function ActionChip({ label }: { label: string }): JSX.Element {
-  return (
-    <button
-      type="button"
-      className="min-h-[35px] flex-1 rounded-[7px] border-[0.5px] border-[#faf2ac] bg-[radial-gradient(ellipse_at_center,rgba(250,242,171,0.65)_0%,rgba(255,255,255,0.95)_100%)] px-1 py-2 shadow-[0px_0.7px_1.4px_0px_#d1e8ff] transition-opacity hover:opacity-90"
-    >
-      <span className="[font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[10px] font-semibold leading-tight text-[#343d43]">{label}</span>
-    </button>
-  );
-}
-
-/** 第十屏 · 与 Figma node 159:6179（iPhone 16 & 17 Pro - 35）对齐 */
 export const TripWrapScreen = (): JSX.Element => {
   const { state, pathname } = useLocation();
+  const navigate = useNavigate();
   const loc = state as TripWrapLocationState | null;
-  const travelId = loc?.travelId ?? MOCK_TRAVEL_ID;
-  const planId = loc?.planId ?? "plan-a";
+  const resolved = useResolvedTravel(loc);
+  const travelId = resolved.travelId;
+  const planId = resolved.planId;
+  const resolvingTravel = resolved.loading && !loc?.travelId;
   const flow = { travelId, planId };
-
-  const [input, setInput] = useState("");
+  const { toastMessage, showToast } = useAppToast();
+  const [actionPending, setActionPending] = useState(false);
+  const [summaryItems, setSummaryItems] = useState<{ title: string; detail: string }[]>([]);
+  const [overview, setOverview] = useState("正在整理本次行程摘要。");
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     const prev = document.title;
@@ -66,137 +58,137 @@ export const TripWrapScreen = (): JSX.Element => {
     };
   }, [pathname]);
 
-  const summaryCopy =
-    "总结一下：我们下午 2 点半出发，先去农场让孩子撒欢，傍晚在素然花园靠窗位，吃顿好的，饭后江边散步消食。\n\n老婆的缓冲时间和健康推荐都安排好了，孩子也尽兴。祝一家人玩得开心～ ";
+  useEffect(() => {
+    if (!travelId) return;
+    let active = true;
+    setLoadError(null);
+    fetchItineraryHubPage(travelId, planId)
+      .then((page) => {
+        if (!active) return;
+        setSummaryItems(summarizeNodes(page.timelineNodes));
+        setOverview(`${page.overviewTimeRange} · ${page.overviewFooterLine}`);
+      })
+      .catch((e: unknown) => {
+        if (active) setLoadError(e instanceof Error ? e.message : "加载行程摘要失败");
+      });
+    return () => {
+      active = false;
+    };
+  }, [travelId, planId]);
+
+  async function recordProviderAction(action: string, label: string): Promise<void> {
+    setActionPending(true);
+    try {
+      const result = await executeTravelPlan(travelId, {
+        planId,
+        action,
+        metadata: { source: "trip_wrap", label },
+      });
+      showToast(result.message || "外部服务暂未接入，已记录待处理任务");
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "记录外部服务任务失败");
+    } finally {
+      setActionPending(false);
+    }
+  }
 
   return (
-    <AppScreenShell frameClassName="bg-white">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <img
-            src={FIGMA_TRIP_WRAP_159.bgBlobA}
-            alt=""
-            className="absolute -left-[551px] -top-[321px] h-[795px] w-[1293px] max-w-none opacity-95"
-          />
-          <img
-            src={FIGMA_TRIP_WRAP_159.bgBlobB}
-            alt=""
-            className="absolute -left-[122px] top-[100px] h-[1046px] w-[1507px] max-w-none opacity-[0.93]"
-          />
-        </div>
+    <AppScreenShell frameClassName="bg-[#f8fafc]">
+      <AppBackdrop />
+      <AppToast message={toastMessage} />
+      <EmbeddedStatusBarPlaceholder className="relative z-20 bg-white/50" />
 
-        <EmbeddedStatusBarImage
-          src={FIGMA_TRIP_WRAP_159.statusBar}
-          className="relative z-[1]"
-          height={61}
-          width={402}
+      <div className={`relative z-10 flex min-h-0 flex-1 flex-col pb-2 pt-2 ${tabScreenPrimaryColumnPaddingXClass}`}>
+        <AppPageHeader
+          eyebrow={`${planId.toUpperCase()} · 行程收尾`}
+          title="这趟行程可以结束了"
+          subtitle="我已经把今天的关键安排整理好，确认后会进入简短反馈。"
+          action={
+            <AppIconButton label="行程主页" to={ITINERARY_HUB_PATH} state={flow}>
+              <CheckCircle2 className="h-5 w-5" strokeWidth={2.1} />
+            </AppIconButton>
+          }
         />
 
-        <div className="relative z-[1] flex min-h-0 flex-1 flex-col px-[27px] pb-3 pt-3">
-          <ContentFitZoom className="space-y-[18px] pb-8" recalcKey="trip-wrap">
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-[12px] border border-[#93c5fd] bg-white/95 px-3 py-2.5 shadow-[0px_2px_8px_rgba(37,99,235,0.08)] backdrop-blur-sm">
-              <span className="max-w-[210px] [font-family:'PingFang_SC',sans-serif] text-[11px] font-medium leading-snug text-[#475569]">
-                <span className="text-[#0f172a]">简短体验反馈</span>
-                （不影响结束行程）
-              </span>
-              <Link
-                to={TRIP_FEEDBACK_PATH}
-                state={flow}
-                aria-label="填写行程反馈"
-                className="shrink-0 rounded-lg bg-[#ffd100] px-3 py-1.5 [font-family:'HYQiHei-Regular',Helvetica] text-[12px] font-bold text-[#343d43] shadow-sm transition-opacity hover:opacity-95"
-              >
-                去填写
-              </Link>
-            </div>
-
-            <TripGlowCardFrame>
-              <div className="px-[10px] pb-3 pt-[14px]">
-                <header className="relative mb-[11px] flex items-start gap-2 pr-7">
-                  <img src={FIGMA_TRIP_WRAP_159.sparkle} alt="" width={24} height={24} className="h-6 w-6 shrink-0 object-contain" />
-                  <h2
-                    className={`min-w-0 flex-1 py-0.5 [font-family:'HYQiHei-Regular',Helvetica] text-[15px] font-semibold leading-[20px] ${titleGradientClass()}`}
-                  >
-                    还能帮你
-                  </h2>
-                  <ChevronDown className="absolute right-1 top-2 h-[11px] w-[9px] shrink-0 text-[#9ca3af]" strokeWidth={2} aria-hidden />
-                </header>
-                <div className="flex gap-2">
-                  <ActionChip label="分享行程" />
-                  <ActionChip label="添加到日历" />
-                  <ActionChip label="出发提醒" />
-                </div>
-              </div>
-            </TripGlowCardFrame>
-
-            <div className="max-w-[298px] rounded-bl-[11.525px] rounded-br-[11.525px] rounded-tr-[11.525px] bg-white px-[13px] pb-4 pt-6 shadow-[0px_2.881px_7.203px_rgba(0,0,0,0.03)]">
-              <p className="whitespace-pre-wrap [font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[12px] font-semibold leading-[20px] text-[#626262]">
-                {summaryCopy.trim()}
-              </p>
-            </div>
-
-            <TripGlowCardFrame>
-              <div className="px-3 pb-5 pt-4">
-                <header className="relative mb-2 flex items-start gap-2 pr-7">
-                  <img src={FIGMA_TRIP_WRAP_159.sparkle} alt="" width={24} height={24} className="h-6 w-6 shrink-0 object-contain" />
-                  <h2
-                    className={`min-w-0 flex-1 py-0.5 [font-family:'HYQiHei-Regular',Helvetica] text-[15px] font-semibold leading-[20px] ${titleGradientClass()}`}
-                  >
-                    这趟行程结束了吗？
-                  </h2>
-                  <ChevronDown className="absolute right-1 top-2 h-[11px] w-[9px] shrink-0 text-[#9ca3af]" strokeWidth={2} aria-hidden />
-                </header>
-                <p className="relative z-[3] mt-2 pr-6 [font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[12.5px] font-normal leading-[20px] text-[#626262]">
-                  已经到达预定结束时间，是否确认结束行程
+        <div className="mt-4 min-h-0 flex-1 overflow-y-auto pb-3">
+          <div className="space-y-3">
+            <AppCard className="overflow-hidden p-0">
+              <div className="bg-[#111827] px-4 py-5 text-white">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/12 text-[#ffd95a]">
+                  <Sparkles className="h-6 w-6" strokeWidth={2.1} />
+                </span>
+                <h2 className="mt-4 text-[22px] font-bold leading-7">今日安排已完成</h2>
+                <p className="mt-2 text-[13px] font-medium leading-5 text-white/72">
+                  {overview}
                 </p>
               </div>
-            </TripGlowCardFrame>
-
-            <div className="flex justify-end pr-3">
-              <Link
-                to={TRIP_FEEDBACK_PATH}
-                state={flow}
-                className="inline-flex min-w-[72px] items-center justify-center rounded-bl-[15.417px] rounded-br-[15.417px] rounded-tl-[15.417px] bg-[#ffd100] px-[27px] py-[2px] shadow-[0px_2.675px_0.964px_rgba(0,0,0,0.05)] transition-opacity hover:opacity-95 active:opacity-90"
-              >
-                <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[12px] font-semibold leading-[26px] text-[#343d43]">
-                  确认
-                </span>
-              </Link>
-            </div>
-
-            <div className="max-w-[298px] rounded-bl-[11.525px] rounded-br-[11.525px] rounded-tr-[11.525px] bg-white px-2.5 py-4 shadow-[0px_2.881px_7.203px_rgba(0,0,0,0.03)]">
-              <p className="whitespace-pre-wrap [font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[12px] font-semibold leading-[20px] text-[#626262]">
-                好的，本次行程已结束，可在历史行程中再次查看～
-              </p>
-            </div>
-          </ContentFitZoom>
-
-          <div className={tabScreenComposerDockMtAutoClass}>
-            <div className="flex items-center gap-2">
-              <div className="relative flex min-h-[41px] flex-1 items-center rounded-[30px] border-[0.5px] border-[#50a9fe] bg-white pl-3 pr-[46px] shadow-[0px_2px_8px_rgba(0,0,0,0.06)]">
-                <img
-                  src={FIGMA_TRIP_WRAP_159.voiceChip}
-                  alt=""
-                  className="absolute right-3 top-1/2 z-[2] h-7 w-[34px] -translate-y-1/2 select-none object-contain"
-                />
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder=""
-                  className="min-w-0 flex-1 bg-transparent py-2 pr-2 [font-family:'HYQiHei-Regular',Helvetica] text-[13px] text-[#333c43] outline-none placeholder:text-[#343d4380]"
-                />
+              <div className="space-y-2 px-4 py-4">
+                {loadError ? <AppErrorState message={loadError} /> : null}
+                {resolvingTravel ? <AppLoadingState label="正在同步当前行程…" /> : null}
+                {!resolvingTravel && !loadError && !summaryItems.length ? <AppLoadingState label="正在加载行程摘要…" /> : null}
+                {summaryItems.map((item) => (
+                  <div key={item.title} className="rounded-[14px] bg-[#f8fafc] px-3 py-3">
+                    <p className="text-[14px] font-bold leading-5 text-[#111827]">{item.title}</p>
+                    <p className="mt-0.5 text-[12px] font-medium leading-5 text-[#64748b]">{item.detail}</p>
+                  </div>
+                ))}
               </div>
-              <Link
-                to={ITINERARY_HUB_PATH}
-                state={flow}
-                aria-label="进入行程主页"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#251e1e] text-white shadow-[0px_2px_8px_rgba(0,0,0,0.18)] transition-opacity hover:opacity-90"
-              >
-                <ChevronRight className="h-5 w-5" strokeWidth={2} aria-hidden />
-              </Link>
-            </div>
-            <AppBottomNav active="首页" journeyFlow={{ travelId, planId }} />
+            </AppCard>
+
+            <AppCard>
+              <h2 className="text-[17px] font-bold text-[#111827]">还能帮你</h2>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  disabled={actionPending}
+                  onClick={() => void recordProviderAction("share_itinerary", "分享行程")}
+                  className="flex min-h-[76px] flex-col items-center justify-center gap-2 rounded-[14px] bg-[#f8fafc] px-2 text-[11px] font-bold text-[#334155]"
+                >
+                  <Share2 className="h-5 w-5 text-[#2456a6]" strokeWidth={2.1} />
+                  分享行程
+                </button>
+                <button
+                  type="button"
+                  disabled={actionPending}
+                  onClick={() => void recordProviderAction("calendar_reminder", "加入日历")}
+                  className="flex min-h-[76px] flex-col items-center justify-center gap-2 rounded-[14px] bg-[#f8fafc] px-2 text-[11px] font-bold text-[#334155]"
+                >
+                  <CalendarPlus className="h-5 w-5 text-[#0f766e]" strokeWidth={2.1} />
+                  加入日历
+                </button>
+                <button
+                  type="button"
+                  onClick={() => showToast("可以在反馈里补充体验细节")}
+                  className="flex min-h-[76px] flex-col items-center justify-center gap-2 rounded-[14px] bg-[#f8fafc] px-2 text-[11px] font-bold text-[#334155]"
+                >
+                  <MessageSquareText className="h-5 w-5 text-[#8a5a00]" strokeWidth={2.1} />
+                  补充感受
+                </button>
+              </div>
+            </AppCard>
+
+            <AppStatusStrip
+              Icon={CheckCircle2}
+              title="确认结束后不会删除行程"
+              detail="你仍然可以在行程主页查看历史记录，也可以再次使用这个计划。"
+            />
           </div>
         </div>
+
+        <div className={tabScreenComposerDockClass}>
+          <AppActionButton tone="blue" onClick={() => navigate(TRIP_FEEDBACK_PATH, { state: flow })}>
+            确认结束，填写反馈
+          </AppActionButton>
+          <Link
+            to={ITINERARY_HUB_PATH}
+            state={flow}
+            className="flex min-h-11 items-center justify-center rounded-[12px] bg-white text-[13px] font-bold text-[#475569] shadow-[0_6px_18px_rgba(15,23,42,0.06)]"
+          >
+            稍后再评价
+          </Link>
+          <AppBottomNav active="行程" journeyFlow={flow} variant="journey" />
+        </div>
+      </div>
     </AppScreenShell>
   );
 };

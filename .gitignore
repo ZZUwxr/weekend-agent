@@ -11,6 +11,29 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+backend/.env
+.backend-runtime/
+.frontend-runtime/
+.test-runtime/
+backend/local_explorer_agent/app/data/runtime/
+/local_explorer_agent/
+
+# Python cache/build artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Local verification screenshots/evidence
+docs/android-*.png
+docs/android-*.xml
+docs/android-*.txt
+docs/latest-*.png
+docs/phone-current-screen.png
+docs/api-evidence/
+docs/android-ux-audit-assets/
+docs/ANDROID_UX_AUDIT_*.md
 
 # Editor directories and files
 .vscode/*

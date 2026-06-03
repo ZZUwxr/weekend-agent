@@ -1,13 +1,30 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
-/** 原生壳配置：web 资源来自 Vite 的 `npm run build` 输出目录 */
+const isDev = process.env.NODE_ENV === "development";
+
 const config: CapacitorConfig = {
   appId: "com.anima.travelassistant",
   appName: "出行助手",
   webDir: "dist",
-  /** 若要真机在开发时直连电脑上的 Vite，可改成你的局域网 IP（仅调试用）
-   * server: { url: "http://192.168.1.xx:5187", cleartext: true },
-   */
+  android: {
+    backgroundColor: "#ffffffff",
+    allowMixedContent: true,
+  },
+  plugins: {
+    StatusBar: {
+      overlaysWebView: true,
+    },
+  },
+  server: isDev
+    ? {
+        url: "http://10.0.2.2:5187",
+        cleartext: true,
+        androidScheme: "http",
+      }
+    : {
+        cleartext: true,
+        androidScheme: "http",
+      },
 };
 
 export default config;

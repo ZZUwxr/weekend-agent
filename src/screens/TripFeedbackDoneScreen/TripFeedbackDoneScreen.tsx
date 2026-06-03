@@ -1,35 +1,38 @@
-import { ChevronRight } from "lucide-react";
+import { CheckCircle2, Home, History, Sparkles } from "lucide-react";
 import { useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AppBottomNav } from "../../components/AppBottomNav";
-import { tabScreenComposerDockMtAutoClass } from "../../lib/tabScreenDockLayout";
 import { AppScreenShell } from "../../components/AppScreenShell";
-import { EmbeddedStatusBarImage } from "../../components/EmbeddedStatusBar";
-import { ContentFitZoom } from "../../components/ContentFitZoom";
-import { FIGMA_TRIP_FEEDBACK_DONE_211 } from "../../lib/api/mock/figma-trip-post-feedback-assets";
-import { FIGMA_HOME_4737 } from "../../lib/api/mock/figma-home-4737-assets";
-import { MOCK_TRAVEL_ID } from "../../lib/api/mock/travel.mock";
-import { CHAT_PATH, HOME_PATH, ITINERARY_HUB_PATH, TRIP_FEEDBACK_PATH } from "../../routes";
+import {
+  AppActionButton,
+  AppBackdrop,
+  AppCard,
+  AppIconButton,
+  AppPageHeader,
+  AppStatusStrip,
+} from "../../components/AppUi";
+import { EmbeddedStatusBarPlaceholder } from "../../components/EmbeddedStatusBar";
+import {
+  tabScreenComposerDockClass,
+  tabScreenPrimaryColumnPaddingXClass,
+} from "../../lib/tabScreenDockLayout";
+import { useResolvedTravel } from "../../hooks/useResolvedTravel";
+import { HOME_PATH, ITINERARY_HUB_PATH, TRIP_FEEDBACK_DONE_PATH, TRIP_FEEDBACK_PATH } from "../../routes";
 
 type FlowState = { travelId?: string; planId?: string };
 
-function titleGradientClass(): string {
-  return "bg-[linear-gradient(24.482deg,rgb(95,115,128)_16.391%,rgb(62,82,101)_73.16%,rgb(42,114,176)_96.32%)] bg-clip-text text-transparent [-webkit-background-clip:text]";
-}
-
-/**
- * Figma node 211:344 · 行程反馈完成感谢页（接在 187:568 后）
- */
 export const TripFeedbackDoneScreen = (): JSX.Element => {
   const { state, pathname } = useLocation();
+  const navigate = useNavigate();
   const loc = state as FlowState | null;
-  const travelId = loc?.travelId ?? MOCK_TRAVEL_ID;
-  const planId = loc?.planId ?? "plan-a";
+  const resolved = useResolvedTravel(loc);
+  const travelId = resolved.travelId;
+  const planId = resolved.planId;
   const flow = { travelId, planId };
 
   useEffect(() => {
     const prev = document.title;
-    if (pathname.includes("trip-feedback-done")) {
+    if (pathname === TRIP_FEEDBACK_DONE_PATH) {
       document.title = "感谢反馈 · 出行助手";
     }
     return () => {
@@ -38,89 +41,65 @@ export const TripFeedbackDoneScreen = (): JSX.Element => {
   }, [pathname]);
 
   return (
-    <AppScreenShell frameClassName="bg-white">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <img
-          src={FIGMA_TRIP_FEEDBACK_DONE_211.bgBlobA}
-          alt=""
-          className="absolute -left-[551px] -top-[321px] h-[795px] w-[1293px] max-w-none opacity-95"
+    <AppScreenShell frameClassName="bg-[#f8fafc]">
+      <AppBackdrop />
+      <EmbeddedStatusBarPlaceholder className="relative z-20 bg-white/50" />
+
+      <div className={`relative z-10 flex min-h-0 flex-1 flex-col pb-2 pt-2 ${tabScreenPrimaryColumnPaddingXClass}`}>
+        <AppPageHeader
+          eyebrow="反馈已记录"
+          title="谢谢你的反馈"
+          subtitle="这次体验会成为下一次规划的偏好记忆。"
+          action={<AppIconButton label="返回反馈" to={TRIP_FEEDBACK_PATH} state={flow} />}
         />
-        <img
-          src={FIGMA_TRIP_FEEDBACK_DONE_211.bgBlobB}
-          alt=""
-          className="absolute -left-[122px] top-[100px] h-[1046px] w-[1507px] max-w-none opacity-[0.93]"
-        />
-      </div>
 
-      <EmbeddedStatusBarImage src={FIGMA_TRIP_FEEDBACK_DONE_211.statusBar} className="relative z-[1]" height={61} width={402} />
+        <div className="mt-4 min-h-0 flex-1 overflow-y-auto pb-3">
+          <div className="space-y-3">
+            <AppCard className="overflow-hidden p-0 text-center">
+              <div className="bg-[#111827] px-5 py-7 text-white">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#0f766e] text-white shadow-[0_10px_24px_rgba(15,118,110,0.25)]">
+                  <CheckCircle2 className="h-8 w-8" strokeWidth={2.2} />
+                </div>
+                <h2 className="mt-5 text-[24px] font-bold leading-8">已更新你的出行记忆</h2>
+                <p className="mt-2 text-[13px] font-medium leading-5 text-white/72">
+                  下次推荐时，我会更关注你刚才提到的节奏、路线和活动偏好。
+                </p>
+              </div>
+              <div className="px-4 py-4">
+                <AppStatusStrip
+                  Icon={Sparkles}
+                  title="历史行程已保留"
+                  detail="你可以随时回到行程页查看这次安排，或基于它再生成一次。"
+                />
+              </div>
+            </AppCard>
 
-        <div className="relative z-[1] flex min-h-0 flex-1 flex-col px-[27px] pb-3 pt-3">
-        <ContentFitZoom className="pb-8 pt-4" recalcKey="feedback-done">
-          <Link
-            to={TRIP_FEEDBACK_PATH}
-            state={flow}
-            className="mb-6 inline-block text-[12px] font-medium text-[#64748b] underline-offset-2 hover:text-[#2563eb] hover:underline"
-          >
-            ← 返回反馈
-          </Link>
-
-          <div className="relative mx-auto flex max-w-[298px] flex-col items-center rounded-[15px] border border-[#50a9fe] bg-white px-5 pb-6 pt-8 shadow-[0px_4px_20px_#d0def8]">
-            <img src={FIGMA_TRIP_FEEDBACK_DONE_211.sparkle} alt="" width={40} height={40} className="mb-4 h-10 w-10 object-contain" />
-            <h1
-              className={`mb-2 text-center [font-family:'HYQiHei-Regular',Helvetica] text-[17px] font-semibold leading-snug ${titleGradientClass()}`}
-            >
-              感谢你的反馈
-            </h1>
-            <p className="mb-8 text-center [font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[12px] font-medium leading-relaxed text-[#626262]">
-              你的每一条建议我们都在认真记录，
-              <br />
-              下次会为你和家人安排得更贴心～
-            </p>
-
-            <div className="relative mx-auto mb-8 flex h-[120px] w-full max-w-[220px] items-end justify-center">
-              <img
-                src={FIGMA_HOME_4737.historyEmptyBg}
-                alt=""
-                className="pointer-events-none absolute inset-x-0 bottom-0 top-2 mx-auto w-[92%] object-contain object-bottom opacity-90"
-              />
-              <img
-                src={FIGMA_HOME_4737.historyEmptyFigure}
-                alt=""
-                className="relative z-[1] h-[100px] w-auto max-w-[90%] object-contain object-bottom"
-              />
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                to={ITINERARY_HUB_PATH}
+                state={flow}
+                className="flex min-h-[92px] flex-col justify-between rounded-[16px] border border-[#e5e7eb] bg-white p-3 shadow-[0_8px_20px_rgba(15,23,42,0.05)]"
+              >
+                <History className="h-5 w-5 text-[#2456a6]" strokeWidth={2.1} />
+                <span className="text-[13px] font-bold leading-5 text-[#111827]">查看历史行程</span>
+              </Link>
+              <Link
+                to={HOME_PATH}
+                state={flow}
+                className="flex min-h-[92px] flex-col justify-between rounded-[16px] border border-[#e5e7eb] bg-white p-3 shadow-[0_8px_20px_rgba(15,23,42,0.05)]"
+              >
+                <Home className="h-5 w-5 text-[#0f766e]" strokeWidth={2.1} />
+                <span className="text-[13px] font-bold leading-5 text-[#111827]">回到首页</span>
+              </Link>
             </div>
-
-            <Link
-              to={HOME_PATH}
-              state={flow}
-              className="mb-4 w-full rounded-[14px] bg-[#ffd100] px-6 py-3 text-center shadow-[0px_4px_16px_rgba(245,200,20,0.38)] transition-opacity hover:opacity-95 active:opacity-90"
-            >
-              <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[14px] font-bold text-[#343d43]">返回首页</span>
-            </Link>
-            <Link
-              to={ITINERARY_HUB_PATH}
-              state={flow}
-              className="text-center [font-family:'HYQiHei-Regular',Helvetica] text-[12px] font-semibold text-[#2563eb] underline-offset-4 hover:underline"
-            >
-              查看历史行程
-            </Link>
           </div>
-        </ContentFitZoom>
+        </div>
 
-        <div className={tabScreenComposerDockMtAutoClass}>
-          <div className="flex items-center gap-2">
-            <Link
-              to={CHAT_PATH}
-              state={{ message: "关于刚才的反馈我还想补充几句", travelId }}
-              className="flex flex-1 items-center justify-between rounded-[30px] border-[0.5px] border-[#50a9fe] bg-white px-4 py-3 shadow-[0px_2px_8px_rgba(0,0,0,0.06)] transition-opacity hover:opacity-95"
-            >
-              <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[13px] text-[#94a3b8]">
-                还有想说的？进对话继续说
-              </span>
-              <ChevronRight className="h-5 w-5 shrink-0 text-[#343d43]" strokeWidth={2} aria-hidden />
-            </Link>
-          </div>
-          <AppBottomNav active="首页" journeyFlow={{ travelId, planId }} />
+        <div className={tabScreenComposerDockClass}>
+          <AppActionButton tone="blue" onClick={() => navigate(ITINERARY_HUB_PATH, { state: flow })}>
+            查看行程主页
+          </AppActionButton>
+          <AppBottomNav active="行程" journeyFlow={flow} variant="journey" />
         </div>
       </div>
     </AppScreenShell>

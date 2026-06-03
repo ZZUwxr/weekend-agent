@@ -1,0 +1,7 @@
+[
+  {"poi_id": "poi_family_play_001", "queue_minutes": 8, "risk": "low", "mock_scenario": "normal"},
+  {"poi_id": "poi_healthy_dining_001", "queue_minutes": 12, "risk": "low", "mock_scenario": "normal"},
+  {"poi_id": "poi_bookstore_001", "queue_minutes": 0, "risk": "low", "mock_scenario": "normal"},
+  {"poi_id": "poi_park_001", "queue_minutes": 0, "risk": "low", "mock_scenario": "normal"},
+  {"poi_id": "poi_cafe_001", "queue_minutes": 18, "risk": "medium", "mock_scenario": "normal"}
+]

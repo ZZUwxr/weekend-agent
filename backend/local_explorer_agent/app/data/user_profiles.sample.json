@@ -1,0 +1,87 @@
+[
+  {
+    "user_id": "user_001",
+    "name": "松弛独处型",
+    "explicit_preferences": {
+      "likes": [
+        "咖啡",
+        "书店",
+        "安静",
+        "松弛",
+        "低步行",
+        "室内"
+      ],
+      "dislikes": [
+        "排队",
+        "太吵",
+        "太贵",
+        "高强度运动"
+      ],
+      "budget_preference": "medium",
+      "max_walking_minutes_per_segment": 15
+    },
+    "learned_weights": {
+      "咖啡": 1.3,
+      "书店": 1.4,
+      "安静": 1.5,
+      "松弛": 1.4,
+      "低步行": 1.6,
+      "热闹": 0.7
+    }
+  },
+  {
+    "user_id": "user_002",
+    "name": "朋友社交型",
+    "explicit_preferences": {
+      "likes": [
+        "桌游",
+        "手作体验",
+        "甜品",
+        "互动",
+        "新鲜"
+      ],
+      "dislikes": [
+        "太安静",
+        "无聊",
+        "独处"
+      ],
+      "budget_preference": "medium",
+      "max_walking_minutes_per_segment": 20
+    },
+    "learned_weights": {
+      "桌游": 1.4,
+      "手作体验": 1.5,
+      "互动": 1.4,
+      "新鲜": 1.3,
+      "安静": 0.8
+    }
+  },
+  {
+    "user_id": "user_003",
+    "name": "约会拍照型",
+    "explicit_preferences": {
+      "likes": [
+        "展览",
+        "甜品",
+        "茶馆",
+        "拍照",
+        "约会",
+        "氛围感"
+      ],
+      "dislikes": [
+        "太吵",
+        "太挤",
+        "停车困难"
+      ],
+      "budget_preference": "high",
+      "max_walking_minutes_per_segment": 18
+    },
+    "learned_weights": {
+      "展览": 1.4,
+      "甜品": 1.2,
+      "拍照": 1.6,
+      "约会": 1.5,
+      "拥挤": 0.6
+    }
+  }
+]

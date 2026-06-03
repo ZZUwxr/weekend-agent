@@ -1,245 +1,174 @@
-import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import {
+  CalendarCheck2,
+  ChevronDown,
+  ChevronLeft,
+  Clock3,
+  MapPin,
+  Route,
+  Sparkles,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AppBottomNav } from "../../components/AppBottomNav";
-import { tabScreenComposerDockMtAutoClass } from "../../lib/tabScreenDockLayout";
-import { EmbeddedStatusBarImage } from "../../components/EmbeddedStatusBar";
 import { AppScreenShell } from "../../components/AppScreenShell";
-import { ContentFitZoom } from "../../components/ContentFitZoom";
-import { fetchItineraryTimelinePage } from "../../lib/api";
+import { AppToast, useAppToast } from "../../components/AppToast";
+import { RevisionNotice, type RevisionNoticeState } from "../../components/RevisionNotice";
+import { EmbeddedStatusBarImage } from "../../components/EmbeddedStatusBar";
+import {
+  AppActionButton,
+  AppBackdrop,
+  AppCard,
+  AppComposer,
+  AppErrorState,
+  AppIconButton,
+  AppLoadingState,
+  AppPageHeader,
+  AppPill,
+  AppStatusStrip,
+} from "../../components/AppUi";
+import { fetchItineraryTimelinePage, reviseTravelPlan } from "../../lib/api";
 import { FIGMA_TIMELINE_465 } from "../../lib/api/mock/figma-timeline-465-assets";
-import { MOCK_TRAVEL_ID } from "../../lib/api/mock/travel.mock";
 import type {
   ItineraryTimelinePageDto,
   ItineraryTimelineSegmentDto,
 } from "../../lib/api/types";
+import { useResolvedTravel } from "../../hooks/useResolvedTravel";
+import { setCurrentTravel } from "../../lib/currentTravel";
+import { tabScreenComposerDockMtAutoClass } from "../../lib/tabScreenDockLayout";
 import { BOOKING_TODOS_PATH, PLANS_PATH, TIMELINE_PATH } from "../../routes";
-import {
-  embeddedBackButtonTopClass,
-  embeddedPlanPillTopClass,
-  embeddedTimelineAiStripMarginTopClass,
-} from "../../lib/embeddedStatusBar";
 import { cn } from "../../lib/utils";
 
 type TimelineLocationState = { travelId?: string; planId?: string };
 
-function cardTitleGradient(): string {
-  return "bg-[linear-gradient(24.482deg,rgb(95,115,128)_16.391%,rgb(62,82,101)_73.16%,rgb(42,114,176)_96.32%)] bg-clip-text text-transparent [-webkit-background-clip:text]";
-}
-
-/** 稿面拆分：两段 Semibold + 省略号（与 node 1:597 / Plan B mock 对齐） */
-function parseTimelineAiStrip(text: string): { a: string; b: string; tail: string } | null {
-  const variants: RegExp[] = [
-    /^(您已确认PLan A，)(正在生成Plan A 的详细时间轴＆路线)(…)$/,
-    /^(您已确认Plan A，)(正在生成Plan A 的详细时间轴＆路线)(…)$/,
-    /^(您已确认Plan B，)(正在生成Plan B 的详细时间轴＆路线)(…)$/,
-  ];
-  for (const re of variants) {
-    const m = text.match(re);
-    if (m) return { a: m[1], b: m[2], tail: m[3] ?? "…" };
-  }
-  return null;
-}
-
-function parseCardHeadline(cardTitle: string): { core: string; tail: string } | null {
-  const fixed = "时间轴＆路线";
-  if (!cardTitle.startsWith(fixed)) return null;
-  const tail = cardTitle.slice(fixed.length);
-  if (tail !== "…" && tail !== "..." && tail !== "⋯") return null;
-  return { core: fixed, tail: tail === "..." ? "…" : tail };
-}
-
-function TimelineAiCollapsedStrip({ text }: { text: string }): JSX.Element {
-  const parsed = parseTimelineAiStrip(text);
-  return (
-    <div className="flex h-[52px] w-full shrink-0 items-center rounded-bl-[11.525px] rounded-br-[11.525px] rounded-tr-[11.525px] bg-white px-3 shadow-[0px_2.881px_7.203px_rgba(0,0,0,0.03)]">
-      <img src={FIGMA_TIMELINE_465.topStripMagnifier} alt="" className="h-[10px] w-[10px] shrink-0 object-contain" />
-      <div className="min-w-0 flex-1 pl-3 pr-5">
-        {parsed ? (
-          <p className="[font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[12px] leading-[17.288px] text-[#626262]">
-            <span className="font-semibold text-[#626262]">{parsed.a}</span>
-            <span className="font-semibold text-[#626262]">{parsed.b}</span>
-            <span className="font-normal">{parsed.tail}</span>
-          </p>
-        ) : (
-          <p className="line-clamp-2 font-semibold [font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[12px] leading-[17px] text-[#626262]">
-            {text}
-          </p>
-        )}
-      </div>
-      <img src={FIGMA_TIMELINE_465.topStripChevron} alt="" className="mr-px h-[6px] w-[9px] shrink-0 object-contain opacity-80" />
-    </div>
-  );
-}
-
-function RowDivider(): JSX.Element {
-  return (
-    <div className="flex min-h-[0.5px] justify-center px-px">
-      <img src={FIGMA_TIMELINE_465.rowDivider} alt="" className="h-[0.5px] w-[309px] max-w-full object-cover" />
-    </div>
-  );
-}
-
-/** 与稿面节点一致的圆环 + 实心点（竖线高度随段落 flex 铺满，避免 Spine 贴图固定 388px 截断） */
-function TimelineSegmentNodeDot(): JSX.Element {
-  return (
-    <div className="relative z-[3] flex h-[10px] w-[10px] shrink-0 items-center justify-center rounded-full border-[1.75px] border-[#ffd100] bg-white">
-      <div className="h-[4px] w-[4px] rounded-full bg-[#ffd100]" />
-    </div>
-  );
-}
-
-function TimelineSegmentBlock({
+function TimelineRow({
   seg,
-  dividerAfter,
   index,
-  total,
+  isLast,
 }: {
   seg: ItineraryTimelineSegmentDto;
-  dividerAfter: boolean;
   index: number;
-  total: number;
+  isLast: boolean;
 }): JSX.Element {
-  const isFirst = index === 0;
-  const isLast = index === total - 1;
-  const spineBarClass = "w-[2px] flex-1 min-h-[2px] shrink-0 bg-[#ffd100]";
-
   return (
-    <>
-      <div className="flex gap-x-1 pr-1 pt-1">
-        <div className="flex w-[20px] shrink-0 flex-col items-center pt-2">
-          {/* 左轨：线与节点随右侧内容等高，整段连成一条 */}
-          {isFirst ? <div className="h-[6px] shrink-0" aria-hidden /> : <div className={spineBarClass} />}
-          <TimelineSegmentNodeDot />
-          {!isLast ? <div className={spineBarClass} /> : <div className="h-[6px] shrink-0" aria-hidden />}
-        </div>
-        <div className="grid min-w-0 flex-1 grid-cols-[42px_minmax(0,1fr)_52px] gap-x-1">
-          <div className="flex flex-col pl-1 pt-0.5">
-            <p className="[font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[10px] font-normal leading-[17.288px] text-[#493f00]">
-              {seg.scheduleLabel}
-            </p>
-            {seg.scheduleNote ? (
-              <p className="mt-0.5 [font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[8.5px] font-normal leading-[17.288px] text-[#626262]">
-                {seg.scheduleNote}
-              </p>
-            ) : null}
-          </div>
-          <div className="min-w-0 pt-0.5">
-            <p className="[font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[10px] font-semibold leading-[17.288px] text-[#626262]">
-              {seg.title}
-            </p>
-            {seg.metaLines.map((line, i) => (
-              <p
-                key={`${seg.id}-m-${i}`}
-                className="mt-[2px] max-w-[210px] [font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[7.5px] font-normal leading-[17.288px] text-[#626262]"
-              >
-                {line}
-              </p>
-            ))}
-            {seg.detailLines?.map((line, i) => (
-              <p
-                key={`${seg.id}-d-${i}`}
-                className="mt-[2px] max-w-[210px] [font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[7.5px] font-normal leading-[10px] text-[#626262]"
-              >
-                {line}
-              </p>
-            ))}
-          </div>
-          <div className="flex flex-col items-center justify-start pb-2 pt-[2px] text-center text-[#626262]">
-            {seg.transport ? (
-              <>
-                <span className="text-[15px] leading-none">{seg.transport.emoji}</span>
-                <p className="mt-0.5 [font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[9px] leading-[17.288px]">
-                  {seg.transport.label}
-                </p>
-              </>
-            ) : null}
-          </div>
-        </div>
+    <div className="grid grid-cols-[44px_1fr] gap-3">
+      <div className="flex flex-col items-center">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#ffd95a] text-[13px] font-bold text-[#3f3421] shadow-[0_6px_16px_rgba(234,179,8,0.18)]">
+          {index + 1}
+        </span>
+        {!isLast ? <span className="mt-2 h-full min-h-6 w-px bg-[#d9dee7]" /> : null}
       </div>
-      {dividerAfter ? <RowDivider /> : null}
-    </>
+      <div className={cn("min-w-0", !isLast && "pb-4")}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[14px] font-bold leading-5 text-[#111827]">{seg.title}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#f1f5f9] px-2 py-1 text-[10px] font-semibold text-[#64748b]">
+                <Clock3 className="h-3 w-3" strokeWidth={2} />
+                {seg.scheduleLabel}
+              </span>
+              {seg.scheduleNote ? (
+                <span className="rounded-full bg-[#f8fafc] px-2 py-1 text-[10px] font-semibold text-[#64748b]">
+                  {seg.scheduleNote}
+                </span>
+              ) : null}
+            </div>
+          </div>
+          {seg.transport ? (
+            <span className="shrink-0 rounded-full bg-[#e8f1ff] px-2.5 py-1 text-[11px] font-semibold text-[#2456a6]">
+              {seg.transport.emoji} {seg.transport.label}
+            </span>
+          ) : null}
+        </div>
+
+        {seg.metaLines.length > 0 ? (
+          <div className="mt-2 space-y-1">
+            {seg.metaLines.slice(0, 2).map((line, lineIndex) => (
+              <p key={`${seg.id}-m-${lineIndex}`} className="text-[12px] leading-5 text-[#64748b]">
+                {line}
+              </p>
+            ))}
+          </div>
+        ) : null}
+
+        {seg.detailLines?.length ? (
+          <div className="mt-2 rounded-[12px] bg-[#f8fafc] px-3 py-2">
+            {seg.detailLines.slice(0, 2).map((line, lineIndex) => (
+              <p key={`${seg.id}-d-${lineIndex}`} className="text-[11px] leading-5 text-[#64748b]">
+                {line}
+              </p>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
-function ItineraryMainCard({
-  cardTitle,
-  segments,
-  cardFooterSummary,
-}: {
-  cardTitle: string;
-  segments: ItineraryTimelineSegmentDto[];
-  cardFooterSummary: string;
-}): JSX.Element {
-  const titleParts = parseCardHeadline(cardTitle);
+function HeroRouteSummary({ page }: { page: ItineraryTimelinePageDto }): JSX.Element {
+  const first = page.segments[0];
+  const next = page.segments[1];
+  const last = page.segments[page.segments.length - 1];
+
   return (
-    <div className="relative mx-auto min-h-[506px] w-[calc(100%-2px)] max-w-[350px] overflow-hidden rounded-[15px] border border-[#50a9fe] bg-white shadow-[0px_4px_20px_0px_#d0def8]">
-      <img
-        src={FIGMA_TIMELINE_465.cardGlow1}
-        alt=""
-        className="pointer-events-none absolute left-[46px] top-[23px] h-[388px] w-[293px] max-w-none object-cover opacity-95"
-      />
-      <img
-        src={FIGMA_TIMELINE_465.cardGlow2}
-        alt=""
-        className="pointer-events-none absolute -left-[110px] -top-[147px] h-[220px] w-[271px] max-w-none object-cover opacity-[0.93]"
-      />
-      <div className="relative z-[2] flex flex-col pb-0 pl-[10px] pr-[10px] pt-[13px]">
-        <header className="relative flex items-start gap-2 pr-3">
-          <img src={FIGMA_TIMELINE_465.sparkleGold} alt="" width={24} height={24} className="h-6 w-6 shrink-0 overflow-hidden rounded-full object-cover" />
-          <div className="min-w-0 flex-1">
-            {titleParts ? (
-              <h2 className={`[font-family:'HYQiHei-Regular',Helvetica] text-[15px] leading-[12.654px] ${cardTitleGradient()}`}>
-                <span className="font-semibold">{titleParts.core}</span>
-                <span className="font-normal">{titleParts.tail}</span>
-              </h2>
-            ) : (
-              <h2 className={`break-words [font-family:'HYQiHei-Regular',Helvetica] text-[15px] leading-[12.654px] ${cardTitleGradient()}`}>
-                {cardTitle}
-              </h2>
-            )}
-          </div>
-          <ChevronDown className="mt-px h-[10px] w-[10px] shrink-0 text-[#626262]" strokeWidth={2} aria-hidden />
-        </header>
-
-        <div className="relative mt-2 pb-10">
-          <div className="relative pr-px pt-px">
-            {segments.map((seg, idx) => (
-              <TimelineSegmentBlock
-                key={seg.id}
-                seg={seg}
-                dividerAfter={idx < segments.length - 1}
-                index={idx}
-                total={segments.length}
-              />
-            ))}
-          </div>
+    <AppCard className="border-[#f1c96d] bg-[linear-gradient(135deg,#fffdf5_0%,#ffffff_58%,#f1f6ff_100%)]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <AppPill className="bg-[#fff4d6] text-[#8a5a00]">{page.planPillLabel} · 已选择</AppPill>
+          <h2 className="mt-3 text-[22px] font-bold leading-[1.18] text-[#111827]">
+            今天按这条路线走
+          </h2>
+          <p className="mt-2 text-[13px] leading-5 text-[#64748b]">{page.pageFooterSummaryParts.highlight}{page.pageFooterSummaryParts.rest}</p>
         </div>
-
-        <div className="-mx-[1px] -mb-px mt-auto bg-[#ffd100] px-3 py-[9px]">
-          <p className="text-center [font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[10px] font-medium leading-[17.288px] text-[#343d43]">
-            {cardFooterSummary}
-          </p>
-        </div>
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#ffd95a] text-[#3f3421] shadow-[0_8px_18px_rgba(234,179,8,0.2)]">
+          <Route className="h-6 w-6" strokeWidth={2.1} />
+        </span>
       </div>
-    </div>
+
+      <div className="mt-4 grid gap-2">
+        {first ? (
+          <div className="rounded-[12px] bg-white/80 px-3 py-3">
+            <p className="text-[11px] font-semibold text-[#94a3b8]">第一站</p>
+            <p className="mt-1 text-[14px] font-bold text-[#111827]">{first.scheduleLabel} · {first.title}</p>
+          </div>
+        ) : null}
+        {next ? (
+          <div className="rounded-[12px] bg-white/80 px-3 py-3">
+            <p className="text-[11px] font-semibold text-[#94a3b8]">下一段重点</p>
+            <p className="mt-1 text-[14px] font-bold text-[#111827]">{next.title}</p>
+          </div>
+        ) : null}
+        {last && last.id !== first?.id ? (
+          <div className="rounded-[12px] bg-white/80 px-3 py-3">
+            <p className="text-[11px] font-semibold text-[#94a3b8]">结束安排</p>
+            <p className="mt-1 text-[14px] font-bold text-[#111827]">{last.scheduleLabel} · {last.title}</p>
+          </div>
+        ) : null}
+      </div>
+    </AppCard>
   );
 }
 
 export const TimelineRouteScreen = (): JSX.Element => {
+  const navigate = useNavigate();
   const { state, pathname } = useLocation();
   const loc = state as TimelineLocationState | null;
-  const travelId = loc?.travelId ?? MOCK_TRAVEL_ID;
-  const planId = loc?.planId ?? "plan-a";
+  const resolved = useResolvedTravel(loc);
+  const travelId = resolved.travelId;
+  const planId = resolved.planId;
+  const resolvingTravel = resolved.loading && !loc?.travelId;
 
   const [page, setPage] = useState<ItineraryTimelinePageDto | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [input, setInput] = useState("");
+  const [submitPending, setSubmitPending] = useState(false);
+  const [revisionNotice, setRevisionNotice] = useState<RevisionNoticeState>(null);
+  const [showAll, setShowAll] = useState(false);
+  const { toastMessage, showToast } = useAppToast();
 
   useEffect(() => {
     const prev = document.title;
     if (pathname === TIMELINE_PATH) {
-      document.title = "行程时间轴 · 出行助手";
+      document.title = "路线时间轴 · 出行助手";
     }
     return () => {
       document.title = prev;
@@ -247,6 +176,7 @@ export const TimelineRouteScreen = (): JSX.Element => {
   }, [pathname]);
 
   useEffect(() => {
+    if (!travelId) return;
     let active = true;
     setLoadError(null);
     setPage(null);
@@ -264,108 +194,146 @@ export const TimelineRouteScreen = (): JSX.Element => {
     };
   }, [travelId, planId]);
 
-  const plansBackState = { travelId };
   const bookingTodosState = { travelId, planId };
-  const voiceFallback = FIGMA_TIMELINE_465.voiceChip;
+  const visibleSegments = useMemo(() => {
+    if (!page) return [];
+    return showAll ? page.segments : page.segments.slice(0, 3);
+  }, [page, showAll]);
+
+  async function handleComposerSubmit(): Promise<void> {
+    const text = input.trim();
+    if (!text) {
+      showToast("请输入想调整的路线要求，继续请点下方主按钮");
+      return;
+    }
+
+    setSubmitPending(true);
+    setLoadError(null);
+    setRevisionNotice(null);
+    try {
+      const revised = await reviseTravelPlan(travelId, {
+        message: text,
+        targetPlanId: planId,
+        revisionMode: "partial",
+      });
+      setPage(revised.updatedTimeline ?? await fetchItineraryTimelinePage(travelId, planId));
+      setRevisionNotice({ summary: revised.revisionSummary, warnings: revised.warnings });
+      showToast("时间轴已更新");
+      setInput("");
+    } catch (e: unknown) {
+      setLoadError(e instanceof Error ? e.message : "修改时间轴失败");
+    } finally {
+      setSubmitPending(false);
+    }
+  }
+
+  function continueToBooking(): void {
+    setCurrentTravel({ travelId, planId });
+    navigate(BOOKING_TODOS_PATH, { state: bookingTodosState });
+  }
 
   return (
-    <AppScreenShell>
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <img
-            src={FIGMA_TIMELINE_465.bgBlobA}
-            alt=""
-            className="absolute -left-[551px] -top-[321px] h-[795px] w-[1293px] max-w-none opacity-95"
-          />
-          <img
-            src={FIGMA_TIMELINE_465.bgBlobB}
-            alt=""
-            className="absolute -left-[122px] top-[100px] h-[1046px] w-[1507px] max-w-none opacity-[0.93]"
-          />
-        </div>
+    <AppScreenShell frameClassName="bg-[#f6f7fb]">
+      <AppToast message={toastMessage} />
+      <AppBackdrop />
+      <AppIconButton
+        to={PLANS_PATH}
+        state={{ travelId }}
+        label="返回方案"
+        className="absolute left-3 top-[61px] z-20"
+      >
+        <ChevronLeft className="h-5 w-5" strokeWidth={2.1} />
+      </AppIconButton>
 
-        <Link
-          to={PLANS_PATH}
-          state={plansBackState}
-          className={cn(
-            "absolute left-[10px] z-20 flex h-10 w-10 items-center justify-center rounded-full text-[#251e1e] hover:bg-black/[0.04]",
-            embeddedBackButtonTopClass(),
-          )}
-          aria-label="返回方案对比"
-        >
-          <ChevronLeft className="h-6 w-6" strokeWidth={1.75} />
-        </Link>
+      <div className="relative z-[1] flex min-h-0 flex-1 flex-col overflow-hidden">
+        <EmbeddedStatusBarImage src={page?.statusBarImageUrl ?? FIGMA_TIMELINE_465.statusBar} />
 
-        {page ? (
-          <div
-            className={cn(
-              "absolute right-[37px] z-20 rounded-bl-[15.417px] rounded-br-[15.417px] rounded-tl-[15.417px] bg-[#ffd100] px-[14px] py-[5px] shadow-[0px_2.675px_0.964px_rgba(0,0,0,0.05)]",
-              embeddedPlanPillTopClass(),
-            )}
-          >
-            <p className="[font-family:'HYQiHei-Regular',Helvetica] text-[12px] font-semibold leading-[26px] text-[#343d43]">
-              {page.planPillLabel}
-            </p>
-          </div>
-        ) : null}
+        {resolvingTravel ? (
+          <AppLoadingState label="正在同步当前行程..." />
+        ) : loadError && !page ? (
+          <AppErrorState message={loadError} />
+        ) : !page ? (
+          <AppLoadingState />
+        ) : (
+          <div className="flex min-h-0 flex-1 flex-col px-[14px] pb-3 pt-2">
+            <div className="min-h-0 flex-1 overflow-y-auto pb-5">
+              <AppPageHeader
+                className="pb-4 pl-12"
+                eyebrow={page.aiStatusMessage}
+                title="路线时间轴"
+                subtitle="先看关键节点，完整细节可以展开。"
+                action={<AppPill className="mt-1 shrink-0 bg-[#fff4d6] text-[#8a5a00]">{page.planPillLabel}</AppPill>}
+              />
 
-        <div className="relative z-[1] flex min-h-0 flex-1 flex-col overflow-x-hidden">
-          <EmbeddedStatusBarImage src={page?.statusBarImageUrl ?? FIGMA_TIMELINE_465.statusBar} />
-          <div className="flex min-h-0 flex-1 flex-col px-[29px] pb-3 pt-[10px]">
-            {loadError && !page ? (
-              <p className="py-24 text-center text-[13px] text-red-600">{loadError}</p>
-            ) : null}
-            {!page && !loadError ? (
-              <p className="py-24 text-center text-[13px] text-[#6b7280]">加载中…</p>
-            ) : null}
-            {page ? (
-              <>
-                <div className={cn("mb-[9px]", embeddedTimelineAiStripMarginTopClass())}>
-                  <TimelineAiCollapsedStrip text={page.aiStatusMessage} />
-                </div>
+              <div className="space-y-4">
+                <RevisionNotice notice={revisionNotice} />
+                <HeroRouteSummary page={page} />
 
-                <ContentFitZoom
-                  className="pb-2"
-                  recalcKey={page ? `${page.segments.length}:${page.cardTitle}` : ""}
-                >
-                  <ItineraryMainCard
-                    cardTitle={page.cardTitle}
-                    segments={page.segments}
-                    cardFooterSummary={page.cardFooterSummary}
-                  />
-                </ContentFitZoom>
+                <AppStatusStrip
+                  Icon={Sparkles}
+                  title="AI 已把路线按转场和停留时间排好"
+                  detail={page.cardFooterSummary}
+                />
 
-                <div className={tabScreenComposerDockMtAutoClass}>
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex min-h-[46px] flex-1 items-center rounded-[30px] border-[0.5px] border-[#50a9fe] bg-white pl-3 pr-[46px] shadow-[0px_2px_8px_rgba(0,0,0,0.06)]">
-                      <img
-                        src={page.voiceInputIconUrl || voiceFallback}
-                        alt=""
-                        className="absolute right-4 top-1/2 z-[2] h-7 w-[34px] -translate-y-1/2 select-none object-contain"
-                      />
-                      <input
-                        type="text"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="继续说说你的想法…"
-                        className="min-w-0 flex-1 bg-transparent py-2 pr-14 [font-family:'HYQiHei-Regular',Helvetica] text-[13px] text-[#333c43] outline-none placeholder:text-[#343d4380]"
-                      />
+                <AppCard>
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e8f1ff] text-[#2456a6]">
+                        <MapPin className="h-5 w-5" strokeWidth={2.1} />
+                      </span>
+                      <div>
+                        <h2 className="text-[17px] font-bold text-[#111827]">关键节点</h2>
+                        <p className="mt-0.5 text-[12px] text-[#64748b]">
+                          {showAll ? `全部 ${page.segments.length} 个节点` : "默认展示前三个重点"}
+                        </p>
+                      </div>
                     </div>
-                    <Link
-                      to={BOOKING_TODOS_PATH}
-                      state={bookingTodosState}
-                      aria-label="进入行程预约"
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#251e1e] text-white shadow-[0px_2px_8px_rgba(0,0,0,0.18)] transition-opacity hover:opacity-90"
+                    <button
+                      type="button"
+                      onClick={() => setShowAll((value) => !value)}
+                      className="inline-flex min-h-10 items-center gap-1 rounded-full bg-[#f1f5f9] px-3 text-[12px] font-semibold text-[#475569]"
                     >
-                      <ChevronRight className="h-5 w-5" strokeWidth={2} aria-hidden />
-                    </Link>
+                      {showAll ? "收起" : "展开全部"}
+                      <ChevronDown className={cn("h-4 w-4 transition", showAll && "rotate-180")} strokeWidth={2} />
+                    </button>
                   </div>
 
-                  <AppBottomNav active="首页" journeyFlow={{ travelId, planId }} />
-                </div>
-              </>
-            ) : null}
+                  <div>
+                    {visibleSegments.map((seg, index) => (
+                      <TimelineRow
+                        key={seg.id}
+                        seg={seg}
+                        index={index}
+                        isLast={index === visibleSegments.length - 1}
+                      />
+                    ))}
+                  </div>
+                </AppCard>
+
+                {loadError ? (
+                  <div className="rounded-[14px] border border-red-100 bg-white px-4 py-3 text-[12px] font-semibold leading-5 text-red-700">
+                    {loadError}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            <div className={tabScreenComposerDockMtAutoClass}>
+              <AppActionButton Icon={CalendarCheck2} onClick={continueToBooking} tone="blue">
+                确认路线，进入预约
+              </AppActionButton>
+              <AppComposer
+                value={input}
+                onChange={setInput}
+                onSubmit={() => void handleComposerSubmit()}
+                pending={submitPending}
+                placeholder={submitPending ? "正在修改路线…" : "想调整哪里，例如少走路、提前吃饭..."}
+              />
+              <AppBottomNav active="首页" journeyFlow={{ travelId, planId }} />
+            </div>
           </div>
-        </div>
+        )}
+      </div>
     </AppScreenShell>
   );
 };

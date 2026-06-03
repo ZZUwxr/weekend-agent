@@ -1,11 +1,11 @@
-import { Car, Clock, MapPin } from "lucide-react";
+import { Car, Check, Clock, MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ContentFitZoom } from "../../components/ContentFitZoom";
 import { UserSettingsChrome, UserSettingsIconWrap, userSettingsCardClass } from "../../components/UserSettingsChrome";
+import { AppStatusStrip } from "../../components/AppUi";
 import { fetchTravelModeSettingsPage, saveTravelModePreferences } from "../../lib/api";
 import { FIGMA_USER_SETTINGS_114 } from "../../lib/api/mock/figma-user-settings-114-assets";
-import { MOCK_TRAVEL_ID } from "../../lib/api/mock/travel.mock";
+import { useResolvedTravel } from "../../hooks/useResolvedTravel";
 import type { TravelModeMethodOptionId, TravelModeSettingsPageDto } from "../../lib/api/types";
 import { PROFILE_PATH, TRAVEL_MODE_SETTINGS_PATH } from "../../routes";
 
@@ -19,8 +19,9 @@ export const TravelModeSettingsScreen = (): JSX.Element => {
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const loc = state as SettingsLocationState | null;
-  const travelId = loc?.travelId ?? MOCK_TRAVEL_ID;
-  const planId = loc?.planId ?? "plan-a";
+  const resolved = useResolvedTravel(loc);
+  const travelId = resolved.travelId;
+  const planId = resolved.planId;
   const flow = { travelId, planId };
 
   const [page, setPage] = useState<TravelModeSettingsPageDto | null>(null);
@@ -105,7 +106,7 @@ export const TravelModeSettingsScreen = (): JSX.Element => {
         ) : null
       }
     >
-      <ContentFitZoom className="space-y-3 pb-2" recalcKey={methodId ?? ""}>
+      <div className="space-y-3 pb-2">
         {saveError ? (
           <p className="rounded-lg bg-red-50 px-3 py-2 text-center text-[13px] text-red-600">{saveError}</p>
         ) : null}
@@ -115,13 +116,19 @@ export const TravelModeSettingsScreen = (): JSX.Element => {
           <p className="py-8 text-center text-[13px] text-[#64748b]">加载中…</p>
         ) : (
           <>
+            <AppStatusStrip
+              Icon={Car}
+              title="当前偏好"
+              detail={`${page.methodOptions.find((opt) => opt.id === methodId)?.label ?? "未选择"} · ${formatRadiusKm(page.radiusValueFormat, radiusKm)} · ${page.durationOptions.find((opt) => opt.id === durationId)?.label ?? "未选择"}`}
+            />
+
             <div className={userSettingsCardClass}>
               <div className="p-0">
-                <div className="flex items-center gap-2 border-b border-[#faf2ac]/90 px-3 py-2.5">
+                <div className="flex items-center gap-2 border-b border-[#e5e7eb] px-3 py-3">
                   <UserSettingsIconWrap>
                     <Car className="h-4 w-4" strokeWidth={1.75} />
                   </UserSettingsIconWrap>
-                  <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[14px] font-bold text-[#1e293b]">
+                  <span className="text-[15px] font-bold text-[#111827]">
                     {page.methodSectionTitle}
                   </span>
                 </div>
@@ -132,20 +139,21 @@ export const TravelModeSettingsScreen = (): JSX.Element => {
                       key={opt.id}
                       type="button"
                       onClick={() => setMethodId(opt.id)}
-                      className={`flex w-full items-center justify-between px-3 py-3 text-left hover:bg-[#fffef8] ${
-                        i < page.methodOptions.length - 1 ? "border-b border-[#faf2ac]/50" : ""
-                      }`}
+                      aria-pressed={selected}
+                      className={`flex min-h-[58px] w-full items-center justify-between px-3 py-3 text-left transition active:scale-[0.995] ${
+                        selected ? "bg-[#f1f6ff]" : "bg-white hover:bg-[#f8fafc]"
+                      } ${i < page.methodOptions.length - 1 ? "border-b border-[#e5e7eb]" : ""}`}
                     >
-                      <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[13px] font-semibold text-[#374151]">
+                      <span className="text-[14px] font-bold text-[#374151]">
                         {opt.label}
                       </span>
                       <span
-                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                          selected ? "border-[#eab308] bg-[#eab308]" : "border-[#d1d5db] bg-white"
-                        }`}
+                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
+                          selected ? "bg-[#2456a6] text-white" : "border border-[#d1d5db] bg-white"
+                      }`}
                         aria-hidden
                       >
-                        {selected ? <span className="block h-2 w-2 rounded-full bg-white" /> : null}
+                        {selected ? <Check className="h-4 w-4" strokeWidth={2.5} /> : null}
                       </span>
                     </button>
                   );
@@ -159,11 +167,11 @@ export const TravelModeSettingsScreen = (): JSX.Element => {
                   <UserSettingsIconWrap>
                     <MapPin className="h-4 w-4" strokeWidth={1.75} />
                   </UserSettingsIconWrap>
-                  <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[14px] font-bold text-[#1e293b]">
+                  <span className="text-[15px] font-bold text-[#111827]">
                     {page.radiusSectionTitle}
                   </span>
                 </div>
-                <p className="mb-3 text-center [font-family:'HYQiHei-Regular',Helvetica] text-[22px] font-bold text-[#ca8a04]">
+                <p className="mb-3 text-center text-[28px] font-bold text-[#2456a6]">
                   {formatRadiusKm(page.radiusValueFormat, radiusKm)}
                 </p>
                 <input
@@ -173,7 +181,7 @@ export const TravelModeSettingsScreen = (): JSX.Element => {
                   step={page.radiusSliderStepKm}
                   value={radiusKm}
                   onChange={(e) => setRadiusKm(Number(e.target.value))}
-                  className="mb-1 h-2 w-full cursor-pointer appearance-none rounded-full bg-[#fef3c7] accent-[#eab308]"
+                  className="mb-1 h-2 w-full cursor-pointer appearance-none rounded-full bg-[#dbeafe] accent-[#2456a6]"
                 />
                 <div className="mt-3 flex gap-2">
                   {page.radiusPresets.map((p) => {
@@ -183,9 +191,9 @@ export const TravelModeSettingsScreen = (): JSX.Element => {
                         key={p.id}
                         type="button"
                         onClick={() => setRadiusKm(p.valueKm)}
-                        className={`flex-1 rounded-full border py-2 [font-family:'HYQiHei-Regular',Helvetica] text-[12px] font-semibold transition-colors ${
+                        className={`min-h-11 flex-1 rounded-[12px] border py-2 text-[12px] font-bold transition-colors ${
                           active
-                            ? "border-[#eab308] bg-[#fffbeb] text-[#a16207]"
+                            ? "border-[#2456a6] bg-[#edf5ff] text-[#2456a6]"
                             : "border-[#e5e7eb] bg-white text-[#6b7280]"
                         }`}
                       >
@@ -199,11 +207,11 @@ export const TravelModeSettingsScreen = (): JSX.Element => {
 
             <div className={userSettingsCardClass}>
               <div className="p-0">
-                <div className="flex items-center gap-2 border-b border-[#faf2ac]/90 px-3 py-2.5">
+                <div className="flex items-center gap-2 border-b border-[#e5e7eb] px-3 py-3">
                   <UserSettingsIconWrap>
                     <Clock className="h-4 w-4" strokeWidth={1.75} />
                   </UserSettingsIconWrap>
-                  <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[14px] font-bold text-[#1e293b]">
+                  <span className="text-[15px] font-bold text-[#111827]">
                     {page.durationSectionTitle}
                   </span>
                 </div>
@@ -214,20 +222,21 @@ export const TravelModeSettingsScreen = (): JSX.Element => {
                       key={opt.id}
                       type="button"
                       onClick={() => setDurationId(opt.id)}
-                      className={`flex w-full items-center justify-between px-3 py-3 text-left hover:bg-[#fffef8] ${
-                        i < page.durationOptions.length - 1 ? "border-b border-[#faf2ac]/50" : ""
-                      }`}
+                      aria-pressed={selected}
+                      className={`flex min-h-[58px] w-full items-center justify-between px-3 py-3 text-left transition active:scale-[0.995] ${
+                        selected ? "bg-[#f1f6ff]" : "bg-white hover:bg-[#f8fafc]"
+                      } ${i < page.durationOptions.length - 1 ? "border-b border-[#e5e7eb]" : ""}`}
                     >
-                      <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[12px] font-semibold text-[#374151]">
+                      <span className="text-[14px] font-bold text-[#374151]">
                         {opt.label}
                       </span>
                       <span
-                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                          selected ? "border-[#eab308] bg-[#eab308]" : "border-[#d1d5db] bg-white"
-                        }`}
+                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
+                          selected ? "bg-[#2456a6] text-white" : "border border-[#d1d5db] bg-white"
+                      }`}
                         aria-hidden
                       >
-                        {selected ? <span className="block h-2 w-2 rounded-full bg-white" /> : null}
+                        {selected ? <Check className="h-4 w-4" strokeWidth={2.5} /> : null}
                       </span>
                     </button>
                   );
@@ -236,7 +245,7 @@ export const TravelModeSettingsScreen = (): JSX.Element => {
             </div>
           </>
         )}
-      </ContentFitZoom>
+      </div>
     </UserSettingsChrome>
   );
 };

@@ -1,0 +1,86 @@
+[
+  {
+    "poi_id": "intent_supplement_kaorou_001",
+    "queue_minutes": 15,
+    "risk": "medium",
+    "mock_scenario": "intent_supplement"
+  },
+  {
+    "poi_id": "intent_supplement_kaorou_002",
+    "queue_minutes": 18,
+    "risk": "medium",
+    "mock_scenario": "intent_supplement"
+  },
+  {
+    "poi_id": "intent_supplement_kaorou_003",
+    "queue_minutes": 16,
+    "risk": "medium",
+    "mock_scenario": "intent_supplement"
+  },
+  {
+    "poi_id": "intent_supplement_escape_001",
+    "queue_minutes": 12,
+    "risk": "medium",
+    "mock_scenario": "intent_supplement"
+  },
+  {
+    "poi_id": "intent_supplement_escape_002",
+    "queue_minutes": 8,
+    "risk": "low",
+    "mock_scenario": "intent_supplement"
+  },
+  {
+    "poi_id": "intent_supplement_escape_003",
+    "queue_minutes": 6,
+    "risk": "low",
+    "mock_scenario": "intent_supplement"
+  },
+  {
+    "poi_id": "intent_supplement_theater_001",
+    "queue_minutes": 8,
+    "risk": "low",
+    "mock_scenario": "intent_supplement"
+  },
+  {
+    "poi_id": "intent_supplement_theater_002",
+    "queue_minutes": 8,
+    "risk": "low",
+    "mock_scenario": "intent_supplement"
+  },
+  {
+    "poi_id": "intent_supplement_theater_003",
+    "queue_minutes": 14,
+    "risk": "medium",
+    "mock_scenario": "intent_supplement"
+  },
+  {
+    "poi_id": "intent_supplement_theater_004",
+    "queue_minutes": 6,
+    "risk": "low",
+    "mock_scenario": "intent_supplement"
+  },
+  {
+    "poi_id": "intent_supplement_child_001",
+    "queue_minutes": 6,
+    "risk": "low",
+    "mock_scenario": "intent_supplement"
+  },
+  {
+    "poi_id": "intent_supplement_child_002",
+    "queue_minutes": 8,
+    "risk": "low",
+    "mock_scenario": "intent_supplement"
+  },
+  {
+    "poi_id": "intent_supplement_park_001",
+    "queue_minutes": 14,
+    "risk": "medium",
+    "mock_scenario": "intent_supplement"
+  },
+  {
+    "poi_id": "intent_supplement_park_002",
+    "queue_minutes": 8,
+    "risk": "low",
+    "mock_scenario": "intent_supplement"
+  }
+]

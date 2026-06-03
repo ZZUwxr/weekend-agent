@@ -1,39 +1,27 @@
-import type { ReactNode } from "react";
-import { ChevronDown, ChevronRight, Star } from "lucide-react";
+import { Check, MessageSquareText, Star } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AppBottomNav } from "../../components/AppBottomNav";
-import { tabScreenComposerDockMtAutoClass } from "../../lib/tabScreenDockLayout";
 import { AppScreenShell } from "../../components/AppScreenShell";
-import { EmbeddedStatusBarImage } from "../../components/EmbeddedStatusBar";
-import { ContentFitZoom } from "../../components/ContentFitZoom";
-import { FIGMA_TRIP_FEEDBACK_187 } from "../../lib/api/mock/figma-trip-post-feedback-assets";
-import { MOCK_TRAVEL_ID } from "../../lib/api/mock/travel.mock";
-import { CHAT_PATH, TRIP_FEEDBACK_DONE_PATH, TRIP_WRAP_PATH } from "../../routes";
+import {
+  AppActionButton,
+  AppBackdrop,
+  AppCard,
+  AppErrorState,
+  AppIconButton,
+  AppPageHeader,
+  AppStatusStrip,
+} from "../../components/AppUi";
+import { EmbeddedStatusBarPlaceholder } from "../../components/EmbeddedStatusBar";
+import {
+  tabScreenComposerDockClass,
+  tabScreenPrimaryColumnPaddingXClass,
+} from "../../lib/tabScreenDockLayout";
+import { useResolvedTravel } from "../../hooks/useResolvedTravel";
+import { submitTravelFeedback } from "../../lib/api";
+import { TRIP_FEEDBACK_DONE_PATH, TRIP_FEEDBACK_PATH, TRIP_WRAP_PATH } from "../../routes";
 
 type FlowState = { travelId?: string; planId?: string };
-
-function titleGradientClass(): string {
-  return "bg-[linear-gradient(24.482deg,rgb(95,115,128)_16.391%,rgb(62,82,101)_73.16%,rgb(42,114,176)_96.32%)] bg-clip-text text-transparent [-webkit-background-clip:text]";
-}
-
-function TripGlowCardFrame({ children }: { children: ReactNode }): JSX.Element {
-  return (
-    <div className="relative overflow-hidden rounded-[15px] border border-[#50a9fe] bg-white shadow-[0px_4px_20px_0px_#d0def8]">
-      <img
-        src={FIGMA_TRIP_FEEDBACK_187.cardGlow1}
-        alt=""
-        className="pointer-events-none absolute left-[114px] top-[33px] z-0 h-[242px] w-[293px] max-w-none object-cover opacity-[0.32]"
-      />
-      <img
-        src={FIGMA_TRIP_FEEDBACK_187.cardGlow2}
-        alt=""
-        className="pointer-events-none absolute -left-[110px] -top-[147px] z-0 h-[220px] w-[271px] max-w-none object-cover opacity-[0.32]"
-      />
-      <div className="relative z-[2] isolate">{children}</div>
-    </div>
-  );
-}
 
 const TAG_OPTIONS = [
   { id: "route", label: "路线安排合理" },
@@ -43,25 +31,25 @@ const TAG_OPTIONS = [
   { id: "more", label: "还有可提升空间" },
 ] as const;
 
-/**
- * Figma node 187:568 · 行程收尾后体验反馈（接在 trip-wrap 后）
- * 资源与 159:6179 同系；若稿面有单拆导出可替换 `figma-trip-post-feedback-assets`。
- */
 export const TripFeedbackScreen = (): JSX.Element => {
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const loc = state as FlowState | null;
-  const travelId = loc?.travelId ?? MOCK_TRAVEL_ID;
-  const planId = loc?.planId ?? "plan-a";
+  const resolved = useResolvedTravel(loc);
+  const travelId = resolved.travelId;
+  const planId = resolved.planId;
+  const resolvingTravel = resolved.loading && !loc?.travelId;
   const flow = { travelId, planId };
 
   const [rating, setRating] = useState(0);
   const [tags, setTags] = useState<Set<string>>(() => new Set());
   const [input, setInput] = useState("");
+  const [submitPending, setSubmitPending] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     const prev = document.title;
-    if (pathname.includes("trip-feedback") && !pathname.includes("done")) {
+    if (pathname === TRIP_FEEDBACK_PATH) {
       document.title = "行程反馈 · 出行助手";
     }
     return () => {
@@ -78,60 +66,54 @@ export const TripFeedbackScreen = (): JSX.Element => {
     });
   };
 
-  const goDone = (): void => {
-    navigate(TRIP_FEEDBACK_DONE_PATH, { state: { ...flow, rating, tagIds: [...tags] } });
+  const goDone = async (skip = false): Promise<void> => {
+    if (!travelId) {
+      setSubmitError(resolvingTravel ? "正在同步当前行程，请稍后再试。" : "没有当前行程，请先创建行程。");
+      return;
+    }
+    setSubmitPending(true);
+    setSubmitError(null);
+    const tagIds = [...tags];
+    try {
+      await submitTravelFeedback(travelId, {
+        rating: skip || rating === 0 ? null : rating,
+        rawFeedback: input.trim(),
+        tags: skip ? ["skipped"] : tagIds,
+        payload: {
+          planId,
+          tagLabels: tagIds.map((id) => TAG_OPTIONS.find((tag) => tag.id === id)?.label ?? id),
+          skipped: skip,
+        },
+      });
+      navigate(TRIP_FEEDBACK_DONE_PATH, { state: { ...flow, rating, tagIds, skipped: skip } });
+    } catch (e: unknown) {
+      setSubmitError(e instanceof Error ? e.message : "提交反馈失败");
+    } finally {
+      setSubmitPending(false);
+    }
   };
 
   return (
-    <AppScreenShell frameClassName="bg-white">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <img
-          src={FIGMA_TRIP_FEEDBACK_187.bgBlobA}
-          alt=""
-          className="absolute -left-[551px] -top-[321px] h-[795px] w-[1293px] max-w-none opacity-95"
+    <AppScreenShell frameClassName="bg-[#f8fafc]">
+      <AppBackdrop />
+      <EmbeddedStatusBarPlaceholder className="relative z-20 bg-white/50" />
+
+      <div className={`relative z-10 flex min-h-0 flex-1 flex-col pb-2 pt-2 ${tabScreenPrimaryColumnPaddingXClass}`}>
+        <AppPageHeader
+          eyebrow={`${planId.toUpperCase()} · 体验反馈`}
+          title="这次安排怎么样？"
+          subtitle="只需要十几秒，你的选择会影响下次推荐的排序和避坑。"
+          action={<AppIconButton label="返回" to={TRIP_WRAP_PATH} state={flow} />}
         />
-        <img
-          src={FIGMA_TRIP_FEEDBACK_187.bgBlobB}
-          alt=""
-          className="absolute -left-[122px] top-[100px] h-[1046px] w-[1507px] max-w-none opacity-[0.93]"
-        />
-      </div>
 
-      <EmbeddedStatusBarImage
-        src={FIGMA_TRIP_FEEDBACK_187.statusBar}
-        className="relative z-[1]"
-        height={61}
-        width={402}
-      />
+        <div className="mt-4 min-h-0 flex-1 overflow-y-auto pb-3">
+          <div className="space-y-3">
+            {submitError ? <AppErrorState message={submitError} /> : null}
 
-        <div className="relative z-[1] flex min-h-0 flex-1 flex-col px-[27px] pb-3 pt-3">
-        <ContentFitZoom
-          className="space-y-[18px] pb-8"
-          recalcKey={`${rating}:${[...tags].sort().join(",")}`}
-        >
-          <Link
-            to={TRIP_WRAP_PATH}
-            state={flow}
-            className="inline-block text-[12px] font-medium text-[#64748b] underline-offset-2 hover:text-[#2563eb] hover:underline"
-          >
-            ← 返回上一屏
-          </Link>
-
-          <TripGlowCardFrame>
-            <div className="px-[10px] pb-4 pt-[14px]">
-              <header className="relative mb-3 flex items-start gap-2 pr-7">
-                <img src={FIGMA_TRIP_FEEDBACK_187.sparkle} alt="" width={24} height={24} className="h-6 w-6 shrink-0 object-contain" />
-                <h2
-                  className={`min-w-0 flex-1 py-0.5 [font-family:'HYQiHei-Regular',Helvetica] text-[15px] font-semibold leading-[20px] ${titleGradientClass()}`}
-                >
-                  觉得这次安排怎么样？
-                </h2>
-                <ChevronDown className="absolute right-1 top-2 h-[11px] w-[9px] shrink-0 text-[#9ca3af]" strokeWidth={2} aria-hidden />
-              </header>
-              <p className="relative z-[3] mb-4 pr-6 [font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[12.5px] font-normal leading-[20px] text-[#626262]">
-                你的感受会帮我们更好地规划下一段出行～
-              </p>
-              <div className="flex justify-center gap-2 pb-2" role="group" aria-label="星级评分">
+            <AppCard>
+              <h2 className="text-[17px] font-bold text-[#111827]">整体评分</h2>
+              <p className="mt-1 text-[12px] font-medium leading-5 text-[#64748b]">点击星星即可选择，触控区域已经放大。</p>
+              <div className="mt-4 flex justify-between gap-1" role="group" aria-label="星级评分">
                 {[1, 2, 3, 4, 5].map((n) => {
                   const on = rating >= n;
                   return (
@@ -141,104 +123,87 @@ export const TripFeedbackScreen = (): JSX.Element => {
                       aria-label={`${n} 星`}
                       aria-pressed={on}
                       onClick={() => setRating(n)}
-                      className="rounded-lg p-1 transition-transform active:scale-95"
+                      className="flex h-14 flex-1 items-center justify-center rounded-[14px] bg-[#f8fafc] transition active:scale-95"
                     >
                       <Star
-                        className={`h-[26px] w-[26px] ${on ? "fill-[#fcd34d] text-[#eab308]" : "fill-transparent text-[#d1d5db]"}`}
-                        strokeWidth={1.75}
+                        className={`h-8 w-8 ${on ? "fill-[#ffd95a] text-[#8a5a00]" : "fill-transparent text-[#cbd5e1]"}`}
+                        strokeWidth={1.8}
                       />
                     </button>
                   );
                 })}
               </div>
-            </div>
-          </TripGlowCardFrame>
+            </AppCard>
 
-          <TripGlowCardFrame>
-            <div className="px-3 pb-5 pt-4">
-              <header className="relative mb-2 flex items-start gap-2 pr-7">
-                <img src={FIGMA_TRIP_FEEDBACK_187.sparkle} alt="" width={24} height={24} className="h-6 w-6 shrink-0 object-contain" />
-                <h2
-                  className={`min-w-0 flex-1 py-0.5 [font-family:'HYQiHei-Regular',Helvetica] text-[15px] font-semibold leading-[20px] ${titleGradientClass()}`}
-                >
-                  哪些点让你印象深刻？
-                </h2>
-                <ChevronDown className="absolute right-1 top-2 h-[11px] w-[9px] shrink-0 text-[#9ca3af]" strokeWidth={2} aria-hidden />
-              </header>
-              <p className="relative z-[3] mb-3 [font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[11px] font-normal leading-[18px] text-[#626262]">
-                可多选
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {TAG_OPTIONS.map((t) => {
-                  const sel = tags.has(t.id);
+            <AppCard>
+              <h2 className="text-[17px] font-bold text-[#111827]">印象最深的点</h2>
+              <p className="mt-1 text-[12px] font-medium leading-5 text-[#64748b]">可多选，选中后会有明确高亮。</p>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                {TAG_OPTIONS.map((tag) => {
+                  const selected = tags.has(tag.id);
                   return (
                     <button
-                      key={t.id}
+                      key={tag.id}
                       type="button"
-                      aria-pressed={sel}
-                      onClick={() => toggleTag(t.id)}
-                      className={`min-h-[35px] rounded-[7px] border-[0.5px] px-2.5 py-2 shadow-[0px_0.7px_1.4px_0px_#d1e8ff] transition-opacity hover:opacity-90 ${
-                        sel
-                          ? "border-[#eab308] bg-[radial-gradient(ellipse_at_center,rgba(250,242,171,0.85)_0%,rgba(255,255,255,0.95)_100%)]"
-                          : "border-[#faf2ac] bg-[radial-gradient(ellipse_at_center,rgba(250,242,171,0.45)_0%,rgba(255,255,255,0.95)_100%)]"
+                      aria-pressed={selected}
+                      onClick={() => toggleTag(tag.id)}
+                      className={`flex min-h-[58px] items-center gap-2 rounded-[14px] border px-3 py-2 text-left transition active:scale-[0.98] ${
+                        selected
+                          ? "border-[#2456a6] bg-[#edf5ff] text-[#2456a6]"
+                          : "border-[#e5e7eb] bg-white text-[#374151]"
                       }`}
                     >
-                      <span className="[font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[10px] font-semibold leading-tight text-[#343d43]">
-                        {t.label}
+                      <span
+                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[10px] ${
+                          selected ? "bg-[#2456a6] text-white" : "bg-[#f1f5f9] text-[#94a3b8]"
+                        }`}
+                        aria-hidden
+                      >
+                        {selected ? <Check className="h-4 w-4" strokeWidth={2.6} /> : null}
                       </span>
+                      <span className="text-[13px] font-bold leading-5">{tag.label}</span>
                     </button>
                   );
                 })}
               </div>
-            </div>
-          </TripGlowCardFrame>
+            </AppCard>
 
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={goDone}
-              className="min-w-[120px] rounded-bl-[15.417px] rounded-br-[15.417px] rounded-tl-[15.417px] rounded-tr-[15.417px] bg-[#ffd100] px-6 py-2 shadow-[0px_2.675px_0.964px_rgba(0,0,0,0.05)] transition-opacity hover:opacity-95"
-            >
-              <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[12px] font-semibold leading-[22px] text-[#343d43]">
-                提交反馈
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={goDone}
-              className="[font-family:'HYQiHei-Regular',Helvetica] text-[11px] font-medium text-[#94a3b8] underline-offset-4 hover:text-[#64748b] hover:underline"
-            >
-              暂不评价
-            </button>
-          </div>
-        </ContentFitZoom>
-
-        <div className={tabScreenComposerDockMtAutoClass}>
-          <div className="flex items-center gap-2">
-            <div className="relative flex min-h-[41px] flex-1 items-center rounded-[30px] border-[0.5px] border-[#50a9fe] bg-white pl-3 pr-[46px] shadow-[0px_2px_8px_rgba(0,0,0,0.06)]">
-              <img
-                src={FIGMA_TRIP_FEEDBACK_187.voiceChip}
-                alt=""
-                className="absolute right-3 top-1/2 z-[2] h-7 w-[34px] -translate-y-1/2 select-none object-contain"
-              />
-              <input
-                type="text"
+            <AppCard>
+              <h2 className="text-[17px] font-bold text-[#111827]">补充一句</h2>
+              <textarea
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="补充想说的…"
-                className="min-w-0 flex-1 bg-transparent py-2 pr-2 [font-family:'HYQiHei-Regular',Helvetica] text-[13px] text-[#333c43] outline-none placeholder:text-[#343d4380]"
+                onChange={(event) => setInput(event.target.value)}
+                rows={5}
+                placeholder="例如：餐厅不错，但下一次希望少走路..."
+                className="mt-3 w-full resize-none rounded-[14px] border border-[#dbe3ee] bg-[#f8fafc] px-3 py-3 text-[14px] leading-6 text-[#111827] outline-none placeholder:text-[#94a3b8] focus:border-[#2456a6]"
               />
-            </div>
-            <Link
-              to={CHAT_PATH}
-              state={{ message: input.trim() || "我想聊聊这次行程的体验", travelId }}
-              aria-label="进入对话"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#251e1e] text-white shadow-[0px_2px_8px_rgba(0,0,0,0.18)] transition-opacity hover:opacity-90"
-            >
-              <ChevronRight className="h-5 w-5" strokeWidth={2} aria-hidden />
-            </Link>
+            </AppCard>
+
+            <AppStatusStrip
+              Icon={MessageSquareText}
+              title="反馈会写入你的偏好"
+              detail="下次生成路线时，会自动参考这次评价中的活动、节奏和避坑点。"
+            />
           </div>
-          <AppBottomNav active="首页" journeyFlow={{ travelId, planId }} />
+        </div>
+
+        <div className={tabScreenComposerDockClass}>
+          <AppActionButton
+            tone="blue"
+            disabled={submitPending || resolvingTravel || !travelId}
+            onClick={() => void goDone(false)}
+          >
+            {resolvingTravel ? "同步行程中..." : submitPending ? "提交中..." : "提交反馈"}
+          </AppActionButton>
+          <button
+            type="button"
+            disabled={submitPending}
+            onClick={() => void goDone(true)}
+            className="min-h-11 rounded-[12px] bg-white text-[13px] font-bold text-[#64748b] shadow-[0_6px_18px_rgba(15,23,42,0.06)] disabled:opacity-60"
+          >
+            暂不评价
+          </button>
+          <AppBottomNav active="行程" journeyFlow={flow} variant="journey" />
         </div>
       </div>
     </AppScreenShell>

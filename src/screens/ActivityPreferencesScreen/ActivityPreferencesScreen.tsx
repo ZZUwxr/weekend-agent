@@ -1,11 +1,11 @@
 import { Check, ChevronRight, Target, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ContentFitZoom } from "../../components/ContentFitZoom";
 import { UserSettingsChrome, UserSettingsIconWrap, userSettingsCardClass } from "../../components/UserSettingsChrome";
+import { AppStatusStrip } from "../../components/AppUi";
 import { fetchActivityPreferencesPage, saveActivityPreferences } from "../../lib/api";
 import { FIGMA_USER_SETTINGS_114 } from "../../lib/api/mock/figma-user-settings-114-assets";
-import { MOCK_TRAVEL_ID } from "../../lib/api/mock/travel.mock";
+import { useResolvedTravel } from "../../hooks/useResolvedTravel";
 import type { ActivityPreferencesPageDto } from "../../lib/api/types";
 import { ACTIVITY_PREFERENCES_PATH, PROFILE_PATH } from "../../routes";
 
@@ -15,8 +15,9 @@ export const ActivityPreferencesScreen = (): JSX.Element => {
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const loc = state as SettingsLocationState | null;
-  const travelId = loc?.travelId ?? MOCK_TRAVEL_ID;
-  const planId = loc?.planId ?? "plan-a";
+  const resolved = useResolvedTravel(loc);
+  const travelId = resolved.travelId;
+  const planId = resolved.planId;
   const flow = { travelId, planId };
 
   const [page, setPage] = useState<ActivityPreferencesPageDto | null>(null);
@@ -100,7 +101,7 @@ export const ActivityPreferencesScreen = (): JSX.Element => {
         ) : null
       }
     >
-      <ContentFitZoom className="space-y-3 pb-2" recalcKey={selectedTags.join(",")}>
+      <div className="space-y-3 pb-2">
         {saveError ? (
           <p className="rounded-lg bg-red-50 px-3 py-2 text-center text-[13px] text-red-600">{saveError}</p>
         ) : null}
@@ -110,53 +111,67 @@ export const ActivityPreferencesScreen = (): JSX.Element => {
           <p className="py-8 text-center text-[13px] text-[#64748b]">加载中…</p>
         ) : (
           <>
+            <AppStatusStrip
+              Icon={Target}
+              title={selectedTags.length > 0 ? `已选择 ${selectedTags.length} 个活动偏好` : "选择你更想要的活动类型"}
+              detail={
+                selectedTags.length > 0
+                  ? page.tagOptions
+                      .filter((opt) => selectedTags.includes(opt.id))
+                      .map((opt) => opt.label)
+                      .join("、")
+                  : "可多选，AI 会用它筛掉不合适的安排。"
+              }
+            />
+
             <div className={userSettingsCardClass}>
               <div className="p-0">
-                <div className="flex items-center gap-2 border-b border-[#faf2ac]/90 px-3 py-2.5">
+                <div className="flex items-center gap-2 border-b border-[#e5e7eb] px-3 py-3">
                   <UserSettingsIconWrap>
                     <Target className="h-4 w-4" strokeWidth={1.75} />
                   </UserSettingsIconWrap>
-                  <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[14px] font-bold text-[#1e293b]">
+                  <span className="text-[15px] font-bold text-[#111827]">
                     {page.tagsSectionTitle}
                   </span>
                 </div>
-                {page.tagOptions.map((opt, i) => {
-                  const checked = selectedTags.includes(opt.id);
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => toggleTag(opt.id)}
-                      className={`flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-[#fffef8] ${
-                        i < page.tagOptions.length - 1 ? "border-b border-[#faf2ac]/50" : ""
-                      }`}
-                    >
-                      <span
-                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 ${
+                <div className="grid grid-cols-2 gap-2 p-3">
+                  {page.tagOptions.map((opt) => {
+                    const checked = selectedTags.includes(opt.id);
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => toggleTag(opt.id)}
+                        aria-pressed={checked}
+                        className={`flex min-h-[58px] items-center gap-2 rounded-[14px] border px-3 py-2 text-left transition active:scale-[0.98] ${
                           checked
-                            ? "border-[#eab308] bg-[#eab308] text-white"
-                            : "border-[#d1d5db] bg-white"
+                            ? "border-[#2456a6] bg-[#edf5ff] text-[#2456a6]"
+                            : "border-[#e5e7eb] bg-white text-[#374151]"
                         }`}
-                        aria-hidden
                       >
-                        {checked ? <Check className="h-3 w-3" strokeWidth={3} /> : null}
-                      </span>
-                      <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[13px] font-semibold text-[#374151]">
-                        {opt.label}
-                      </span>
-                    </button>
-                  );
-                })}
+                        <span
+                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[10px] ${
+                            checked ? "bg-[#2456a6] text-white" : "bg-[#f1f5f9] text-[#94a3b8]"
+                          }`}
+                          aria-hidden
+                        >
+                          {checked ? <Check className="h-4 w-4" strokeWidth={2.6} /> : null}
+                        </span>
+                        <span className="text-[13px] font-bold leading-5">{opt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
             <div className={userSettingsCardClass}>
               <div className="p-0">
-                <div className="flex items-center gap-2 border-b border-[#faf2ac]/90 px-3 py-2.5">
+                <div className="flex items-center gap-2 border-b border-[#e5e7eb] px-3 py-3">
                   <UserSettingsIconWrap>
                     <Users className="h-4 w-4" strokeWidth={1.75} />
                   </UserSettingsIconWrap>
-                  <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[14px] font-bold text-[#1e293b]">
+                  <span className="text-[15px] font-bold text-[#111827]">
                     {page.familySectionTitle}
                   </span>
                 </div>
@@ -164,8 +179,8 @@ export const ActivityPreferencesScreen = (): JSX.Element => {
                   <button
                     key={m.id}
                     type="button"
-                    className={`flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-[#fffef8] ${
-                      i < page.familyMembers.length - 1 ? "border-b border-[#faf2ac]/50" : ""
+                    className={`flex min-h-[72px] w-full items-center gap-3 px-3 py-3 text-left hover:bg-[#f8fafc] ${
+                      i < page.familyMembers.length - 1 ? "border-b border-[#e5e7eb]" : ""
                     }`}
                   >
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#fffbeb] text-xl ring-1 ring-[#fef3c7]">
@@ -176,10 +191,10 @@ export const ActivityPreferencesScreen = (): JSX.Element => {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="[font-family:'HYQiHei-Regular',Helvetica] text-[13px] font-bold text-[#1e293b]">
+                      <p className="text-[14px] font-bold text-[#111827]">
                         {m.name}
                       </p>
-                      <p className="mt-0.5 [font-family:'HYQiHei-Regular',Helvetica] text-[11px] font-medium text-[#6b7280]">
+                      <p className="mt-0.5 text-[12px] font-medium leading-5 text-[#64748b]">
                         {m.summaryLine}
                       </p>
                     </div>
@@ -190,7 +205,7 @@ export const ActivityPreferencesScreen = (): JSX.Element => {
             </div>
           </>
         )}
-      </ContentFitZoom>
+      </div>
     </UserSettingsChrome>
   );
 };

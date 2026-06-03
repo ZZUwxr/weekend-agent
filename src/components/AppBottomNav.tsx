@@ -6,7 +6,7 @@ import {
   PROFILE_PATH,
   TRIP_LIVE_MAP_PATH,
 } from "../routes";
-import { MOCK_TRAVEL_ID } from "../lib/api/mock/travel.mock";
+import { resolveCurrentTravel } from "../lib/currentTravel";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
 
@@ -29,9 +29,7 @@ export type AppBottomNavVariant = "default" | "journey";
 type AppBottomNavProps = {
   /** 高亮底栏项；`null` 表示四项均为弱态（少用；对话等与首页同构时一般用「首页」）。 */
   active: ItemLabel | null;
-  /**
-   * 与 `JourneyBottomNav` 一致。未传时使用默认 mock 行程，便于从首页直达地图、行程、我的。
-   */
+  /** 与 `JourneyBottomNav` 一致；未传时从当前后端 active travel 的本地快照解析。 */
   journeyFlow?: AppJourneyFlowState;
   variant?: AppBottomNavVariant;
 };
@@ -41,7 +39,7 @@ export function AppBottomNav({
   journeyFlow,
   variant = "default",
 }: AppBottomNavProps): JSX.Element {
-  const flow = journeyFlow ?? { travelId: MOCK_TRAVEL_ID, planId: "plan-a" };
+  const flow = resolveCurrentTravel(journeyFlow);
 
   const activeIcon = variant === "journey" ? "text-[#2563eb]" : "text-black";
   const inactiveIcon = "text-[#9ca3af]";
@@ -51,7 +49,7 @@ export function AppBottomNav({
   return (
     <div className="w-full shrink-0 pb-[env(safe-area-inset-bottom,0px)]">
       {/* items-center：避免图标描边粗细 / 字重变化时 items-end 造成列底对齐漂移 */}
-      <nav aria-label="底部导航" className="grid w-full grid-cols-4 items-center pb-px">
+      <nav aria-label="底部导航" className="grid w-full grid-cols-4 items-center rounded-[18px] bg-white/78 px-1 py-1 shadow-[0_8px_24px_rgba(15,23,42,0.07)] backdrop-blur">
         {items.map((item) => {
           const isActive = active != null && item.label === active;
           const inner = (
@@ -63,7 +61,7 @@ export function AppBottomNav({
               />
               <span
                 className={cn(
-                  "[font-family:'Pacifico',Helvetica] text-[6px] leading-[16.5px] tracking-[0]",
+                  "text-[11px] leading-[16px] tracking-[0]",
                   isActive ? activeLabel : inactiveLabel,
                 )}
               >
@@ -77,9 +75,12 @@ export function AppBottomNav({
               asChild
               type="button"
               variant="ghost"
-              className="h-auto flex-col gap-1 rounded-none px-0 py-0 hover:bg-transparent"
+              className={cn(
+                "min-h-12 flex-col gap-1 rounded-[14px] px-0 py-0 hover:bg-transparent",
+                isActive && "bg-[#f1f5f9]",
+              )}
             >
-              <Link to={item.to} state={flow} className="flex flex-col items-center gap-1">
+              <Link to={item.to} state={flow} className="flex min-h-12 flex-col items-center justify-center gap-1">
                 {inner}
               </Link>
             </Button>

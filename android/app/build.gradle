@@ -44,6 +44,20 @@ dependencies {
 
 apply from: 'capacitor.build.gradle'
 
+def startBackendScript = rootProject.file('../scripts/start-backend.ps1')
+
+tasks.register('startLocalBackend', Exec) {
+    group = 'weekend-agent'
+    description = 'Starts the local FastAPI backend used by the Android debug app.'
+    onlyIf { startBackendScript.exists() }
+    workingDir rootProject.file('..')
+    commandLine 'powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', startBackendScript.absolutePath
+}
+
+tasks.matching { task -> task.name == 'installDebug' }.configureEach {
+    dependsOn tasks.named('startLocalBackend')
+}
+
 try {
     def servicesJSON = file('google-services.json')
     if (servicesJSON.text) {

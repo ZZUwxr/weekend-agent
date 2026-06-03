@@ -1,145 +1,31 @@
-import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { ArrowRight, CalendarDays, Check, ChevronLeft, ChevronRight, History, MapPin, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AppBottomNav } from "../../components/AppBottomNav";
 import { AppScreenShell } from "../../components/AppScreenShell";
-import { ContentFitZoom } from "../../components/ContentFitZoom";
+import { AppToast, useAppToast } from "../../components/AppToast";
+import {
+  AppActionButton,
+  AppBackdrop,
+  AppCard,
+  AppComposer,
+  AppErrorState,
+  AppLoadingState,
+  AppPageHeader,
+  AppPill,
+  AppStatusStrip,
+} from "../../components/AppUi";
 import { EmbeddedStatusBarImage, EmbeddedStatusBarPlaceholder } from "../../components/EmbeddedStatusBar";
-import { useTripContentUnlocked } from "../../hooks/useTripContentUnlocked";
-import { fetchHomeDashboard, startTravelSession } from "../../lib/api";
-import type { HomeDashboardDto, HomeSceneCardDto, HomeSceneVariant } from "../../lib/api/types";
+import { useCurrentTravel } from "../../hooks/useCurrentTravel";
+import { fetchHomeDashboard } from "../../lib/api";
+import type { HomeDashboardDto, HomeHistoryItemDto, HomeSceneCardDto, HomeSceneVariant } from "../../lib/api/types";
 import {
   tabScreenComposerDockClass,
   tabScreenPrimaryColumnPaddingXClass,
 } from "../../lib/tabScreenDockLayout";
-import { MOCK_TRAVEL_ID } from "../../lib/api/mock/travel.mock";
-import { CHAT_PATH, HOME_PATH, HOME_PATH_ALT, ITINERARY_HUB_PATH } from "../../routes";
-import { FIGMA_HOME_4737 } from "../../lib/api/mock/figma-home-4737-assets";
+import { AI_TASK_PATH, HOME_PATH, HOME_PATH_ALT, ITINERARY_HUB_PATH } from "../../routes";
 
 const DEFAULT_CHAT_MESSAGE = "我和家人想在今天下午出门放松放松";
-
-/** Figma node 127:4737 · 分区标题渐变 */
-function titleGradientClass(): string {
-  return "bg-[linear-gradient(48deg,rgba(95,115,128,1)_16%,rgba(62,82,101,1)_73%,rgba(42,114,176,1)_100%)] bg-clip-text text-transparent [-webkit-background-clip:text]";
-}
-
-/** Figma node 127:4737 · HI 区渐变字 */
-function greetingGradientClass(): string {
-  return "bg-[linear-gradient(58.9deg,rgb(0,0,0)_16%,rgb(62,82,101)_73%,rgb(42,114,176)_96%)] bg-clip-text text-transparent [-webkit-background-clip:text]";
-}
-
-function SectionHeading({
-  title,
-  chevronSrc,
-}: {
-  title: string;
-  chevronSrc?: string;
-}): JSX.Element {
-  return (
-    <div className="mb-3 flex items-center gap-2 pr-1">
-      <div className="h-4 w-[5px] shrink-0 rounded-[5px] bg-gradient-to-b from-[#1a1a1a] from-[70%] to-[#ffd927]" />
-      <h2
-        className={`flex-1 [font-family:'HYQiHei-Regular',Helvetica] text-[16px] font-normal leading-tight tracking-[0.02em] ${titleGradientClass()}`}
-      >
-        {title}
-      </h2>
-      {chevronSrc ? (
-        <img src={chevronSrc} alt="" className="h-[6px] w-2 shrink-0 object-contain opacity-70" />
-      ) : (
-        <ChevronDown className="h-4 w-4 shrink-0 text-[#6b7280]" strokeWidth={2} />
-      )}
-    </div>
-  );
-}
-
-type SceneDeckSlot = "left" | "center" | "right";
-
-/** 三卡叠放占位：略大于卡片，避免并排时被裁切（Figma 127:4737 · 直立卡片无 rotation） */
-const SCENE_SHELL: Record<SceneDeckSlot, string> = {
-  left: "relative z-[1] flex h-[178px] w-[152px] shrink-0 items-end justify-center pb-1 pr-px -mr-[64px]",
-  center: "relative z-[3] flex h-[178px] w-[172px] shrink-0 items-end justify-center pb-1",
-  right: "relative z-[2] flex h-[178px] w-[152px] shrink-0 items-end justify-center pb-1 pl-px -ml-[64px]",
-};
-
-const sceneCarouselBtnCls =
-  "rounded-lg border-0 bg-transparent p-0 outline-none hover:opacity-95 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#50a9fe] focus-visible:ring-offset-2";
-
-/** 外侧箭头轮换场景（移动端约 44×44 触点） */
-const sceneArrowBtnCls =
-  "flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#50a9fe]/50 bg-white/95 text-[#3d6280] shadow-[0_1px_4px_rgba(80,169,254,0.15)] outline-none transition-colors hover:bg-white active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-[#50a9fe] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-35 touch-manipulation";
-
-const SCENE_STYLES: Record<
-  HomeSceneVariant,
-  { card: string; gradient: string; subtitleCls: string; badge: string }
-> = {
-  couple: {
-    card: "rounded-[22px] border-[0.76px] border-[#beb8b7] bg-white shadow-[0px_4px_20px_rgba(0,0,0,0.07)]",
-    gradient: "from-pink-50 via-rose-50/98 to-white",
-    subtitleCls: "text-[#94a3b8]",
-    badge:
-      "rounded-[10px] border border-rose-200/70 bg-white/95 px-2 py-1 [font-family:'HYQiHei-Regular',Helvetica] text-[7px] font-medium text-[#861043] shadow-sm",
-  },
-  friends: {
-    card: "rounded-[22px] border border-[#50a9fe] bg-white shadow-[0px_4px_20px_#d0def8]",
-    gradient: "from-[#e8f4ff] via-white to-[#fff9e6]",
-    subtitleCls: "text-[#88a2b4]",
-    badge:
-      "rounded-[10px] border border-[#a0d5fa]/60 bg-white/95 px-2 py-1 [font-family:'HYQiHei-Regular',Helvetica] text-[7px] font-medium text-[#4a5e70] shadow-sm",
-  },
-  family: {
-    card: "rounded-[22px] border-[0.77px] border-[#eab308] bg-white shadow-[0px_4px_20px_rgba(251,191,36,0.22)]",
-    gradient: "from-amber-50 via-yellow-50/95 to-white",
-    subtitleCls: "text-[#a88a06]",
-    badge:
-      "rounded-[10px] border border-[#fcd34d]/70 bg-white/95 px-2 py-1 [font-family:'HYQiHei-Regular',Helvetica] text-[7px] font-medium text-[#713f12] shadow-sm",
-  },
-  solo: {
-    card: "rounded-[22px] border border-[#2dd4bf]/75 bg-white shadow-[0px_4px_20px_rgba(45,212,191,0.22)]",
-    gradient: "from-teal-50 via-emerald-50/92 to-white",
-    subtitleCls: "text-[#5b8780]",
-    badge:
-      "rounded-[10px] border border-teal-200/80 bg-white/95 px-2 py-1 [font-family:'HYQiHei-Regular',Helvetica] text-[7px] font-medium text-[#115e59] shadow-sm",
-  },
-};
-
-/** 场景快选：四品类统一直立排版（对齐 187:219 / 127:4737） */
-function SceneFaceCard({
-  scene,
-  size,
-}: {
-  scene: HomeSceneCardDto;
-  size: "side" | "center";
-}): JSX.Element {
-  const skin = SCENE_STYLES[scene.variant];
-  const box = size === "center" ? "h-[172px] w-[172px]" : "h-[156px] w-[156px]";
-  const pt = size === "center" ? "pt-6" : "pt-5";
-  const px = size === "center" ? "px-4" : "px-3.5";
-  const titleSz = size === "center" ? "text-[15px]" : "text-[13px]";
-  const subtitleSz = size === "center" ? "text-[10px]" : "text-[9px]";
-
-  return (
-    <div className={`relative ${box} overflow-hidden ${skin.card}`}>
-      <div className={`absolute inset-0 bg-gradient-to-br ${skin.gradient}`} />
-      <div className={`relative z-[1] ${pt} ${px} pb-4`}>
-        <p
-          className={`[font-family:'HYQiHei-Regular',Helvetica] font-medium leading-snug ${titleSz} ${titleGradientClass()}`}
-        >
-          {scene.title}
-        </p>
-        <p
-          className={`mt-1 [font-family:'HYQiHei-Regular',Helvetica] leading-relaxed ${subtitleSz} ${skin.subtitleCls}`}
-        >
-          {scene.subtitle}
-        </p>
-      </div>
-      <span className={`absolute bottom-3 left-3 z-[1] ${skin.badge}`}>{scene.tag}</span>
-    </div>
-  );
-}
 
 const SCENE_CHAT_PROMPTS: Record<HomeSceneVariant, string> = {
   couple: "我们想安排一次情侣约会，帮我看看最近适合去哪、怎么安排",
@@ -148,110 +34,77 @@ const SCENE_CHAT_PROMPTS: Record<HomeSceneVariant, string> = {
   solo: "我想一个人出门转转，帮我规划一下行程",
 };
 
-function FilterChip({ label, emphasis }: { label: string; emphasis: "first" | "mid" | "last" }): JSX.Element {
-  const borderCls =
-    emphasis === "first"
-      ? "border-[0.84px] border-white"
-      : "border-[0.84px] border-[#fdffea]";
-  const gradientCls =
-    emphasis === "first"
-      ? "bg-gradient-to-b from-[#b1d4f7] to-white"
-      : emphasis === "mid"
-        ? "bg-gradient-to-b from-[#d1e8ff] to-white"
-        : "bg-gradient-to-b from-[#b1d4f7] to-[#fffce6]";
+const sceneTone: Record<HomeSceneVariant, { bg: string; icon: string; label: string }> = {
+  couple: { bg: "bg-[#fff1f2]", icon: "text-[#be123c]", label: "约会" },
+  friends: { bg: "bg-[#edf5ff]", icon: "text-[#2456a6]", label: "朋友" },
+  family: { bg: "bg-[#fff7df]", icon: "text-[#8a5a00]", label: "亲子" },
+  solo: { bg: "bg-[#eefcf6]", icon: "text-[#047857]", label: "独处" },
+};
+
+function SceneCard({
+  scene,
+  selected,
+  onClick,
+}: {
+  scene: HomeSceneCardDto;
+  selected: boolean;
+  onClick: () => void;
+}): JSX.Element {
+  const tone = sceneTone[scene.variant];
   return (
     <button
       type="button"
-      className={`flex h-[30px] w-full min-w-0 items-center justify-center rounded-[10px] px-1.5 shadow-[0px_2px_2px_rgba(0,0,0,0.25)] ${borderCls} ${gradientCls} transition-opacity hover:opacity-95`}
+      onClick={onClick}
+      aria-pressed={selected}
+      className={`flex min-h-[146px] w-full flex-col justify-between rounded-[18px] border p-4 text-left shadow-[0_8px_22px_rgba(15,23,42,0.06)] transition active:scale-[0.99] ${
+        selected ? "border-[#2456a6] bg-white" : "border-[#e5e7eb] bg-white/92"
+      }`}
     >
-      <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[10.5px] font-semibold leading-none text-[#343d43]">
-        {label}
-      </span>
+      <div className="flex items-start justify-between gap-3">
+        <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] ${tone.bg}`}>
+          <Sparkles className={`h-5 w-5 ${tone.icon}`} strokeWidth={2.1} />
+        </span>
+        {selected ? (
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2456a6] text-white">
+            <Check className="h-4 w-4" strokeWidth={2.6} />
+          </span>
+        ) : null}
+      </div>
+      <div>
+        <div className="mb-2 flex flex-wrap gap-2">
+          <AppPill className={selected ? "bg-[#edf5ff] text-[#2456a6]" : "bg-[#f1f5f9] text-[#64748b]"}>
+            {tone.label}
+          </AppPill>
+          <AppPill className="bg-[#f8fafc] text-[#64748b]">{scene.tag}</AppPill>
+        </div>
+        <h2 className="text-[17px] font-bold leading-6 text-[#111827]">{scene.title}</h2>
+        <p className="mt-1 line-clamp-2 text-[12px] font-medium leading-5 text-[#64748b]">{scene.subtitle}</p>
+      </div>
     </button>
   );
 }
 
-const FILTER_EMPHASIS: Array<"first" | "mid" | "last"> = ["first", "mid", "last", "last"];
-
-/** 三联场景卡（中为主态）；左右小卡点前一张 / 下一张（另有关闭左右箭头轮转） */
-function SceneTripleDeck({
-  scenes,
-  centerIndex,
-  onTapCenterScene,
-  onStepScene,
+function HistoryItem({
+  item,
 }: {
-  scenes: HomeSceneCardDto[];
-  centerIndex: number;
-  onTapCenterScene: (scene: HomeSceneCardDto) => void;
-  onStepScene: (delta: 1 | -1) => void;
-}): JSX.Element | null {
-  const n = scenes.length;
-  if (n === 0) return null;
-
-  const ci = ((centerIndex % n) + n) % n;
-  const leftScene = scenes[(ci - 1 + n) % n];
-  const centerScene = scenes[ci];
-  const rightScene = scenes[(ci + 1) % n];
-  const canSpin = n >= 2;
-
+  item: HomeHistoryItemDto;
+}): JSX.Element {
+  const flow = { travelId: item.id, planId: item.planId || "plan-a" };
   return (
-    <div className="flex items-end justify-center">
-      <button
-        type="button"
-        className={`${SCENE_SHELL.left} ${sceneCarouselBtnCls} cursor-pointer touch-manipulation ${!canSpin ? "pointer-events-none" : ""}`}
-        aria-label={`上一场景：${leftScene.title}`}
-        onClick={() => onStepScene(-1)}
-      >
-        <SceneFaceCard scene={leftScene} size="side" />
-      </button>
-      <button
-        type="button"
-        className={`${SCENE_SHELL.center} ${sceneCarouselBtnCls} cursor-pointer touch-manipulation active:scale-[0.99]`}
-        aria-label={`${centerScene.title}：进入对话`}
-        onClick={() => onTapCenterScene(centerScene)}
-      >
-        <SceneFaceCard scene={centerScene} size="center" />
-      </button>
-      <button
-        type="button"
-        className={`${SCENE_SHELL.right} ${sceneCarouselBtnCls} cursor-pointer touch-manipulation ${!canSpin ? "pointer-events-none" : ""}`}
-        aria-label={`下一场景：${rightScene.title}`}
-        onClick={() => onStepScene(1)}
-      >
-        <SceneFaceCard scene={rightScene} size="side" />
-      </button>
-    </div>
-  );
-}
-
-/** Figma 127:4737 · 历史安排空状态 ~326×131 */
-function HistoryEmptyCard(): JSX.Element {
-  return (
-    <div className="relative mx-auto box-border h-[131px] w-full max-w-[326px] overflow-hidden rounded-[15px] border border-[#50a9fe] bg-[linear-gradient(135deg,#f8fbff_0%,#ffffff_55%,#fffdf6_100%)] shadow-[0px_4px_20px_#d0def8]">
-      <img
-        src={FIGMA_HOME_4737.historyEmptyBg}
-        alt=""
-        className="pointer-events-none absolute inset-y-0 right-0 h-full w-[52%] max-w-[170px] object-cover object-right opacity-90"
-      />
-      <img
-        src={FIGMA_HOME_4737.historyEmptyCorner}
-        alt=""
-        className="pointer-events-none absolute bottom-0 right-[6%] h-[68px] w-[68px] object-contain opacity-95"
-      />
-      <img
-        src={FIGMA_HOME_4737.historyEmptyFigure}
-        alt=""
-        className="pointer-events-none absolute bottom-1 right-[8%] h-[82px] w-[82px] max-h-[calc(100%-8px)] max-w-[42%] object-contain object-bottom"
-      />
-      <div className="relative z-[1] flex h-full min-w-0 flex-col justify-center px-3.5 py-3 pr-[46%]">
-        <p className={`[font-family:'HYQiHei-Regular',Helvetica] text-[13px] font-semibold leading-snug ${titleGradientClass()}`}>
-          你还没有历史安排
-        </p>
-        <p className="mt-1 max-w-[168px] [font-family:'HYQiHei-Regular',Helvetica] text-[10px] leading-relaxed text-[#586b79]">
-          创建第一条行程后，它会出现在这里，方便你随时回看。
-        </p>
+    <Link
+      to={ITINERARY_HUB_PATH}
+      state={flow}
+      className="flex min-h-[72px] items-center gap-3 rounded-[16px] border border-[#e5e7eb] bg-white px-3 py-3 shadow-[0_8px_20px_rgba(15,23,42,0.05)] transition active:scale-[0.99]"
+    >
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#edf5ff] text-[#2456a6]">
+        <CalendarDays className="h-5 w-5" strokeWidth={2.1} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[14px] font-bold leading-5 text-[#111827]">{item.title}</p>
+        <p className="mt-0.5 line-clamp-1 text-[12px] font-medium leading-5 text-[#64748b]">{item.metaLine}</p>
       </div>
-    </div>
+      <ChevronRight className="h-4 w-4 shrink-0 text-[#94a3b8]" strokeWidth={2.1} />
+    </Link>
   );
 }
 
@@ -259,12 +112,15 @@ export const HomeScreen = (): JSX.Element => {
   const [text, setText] = useState("");
   const [dashboard, setDashboard] = useState<HomeDashboardDto | null>(null);
   const [homeError, setHomeError] = useState<string | null>(null);
-  /** 场景快选：单列三联卡 + 左右箭头轮转 */
-  const [sceneCarouselIndex, setSceneCarouselIndex] = useState(0);
-  const unlocked = useTripContentUnlocked();
+  const [sceneIndex, setSceneIndex] = useState(0);
+  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const [selectedCompanionIds, setSelectedCompanionIds] = useState<string[]>(["self"]);
+  const currentTravel = useCurrentTravel();
+  const hasActiveTravel = Boolean(currentTravel?.travelId);
   const navigate = useNavigate();
   const location = useLocation();
-  const journeyFlow = { travelId: MOCK_TRAVEL_ID, planId: "plan-a" };
+  const journeyFlow = { travelId: currentTravel?.travelId ?? "", planId: currentTravel?.planId ?? "plan-a" };
+  const { toastMessage, showToast } = useAppToast();
 
   useEffect(() => {
     const prev = document.title;
@@ -278,7 +134,7 @@ export const HomeScreen = (): JSX.Element => {
     let active = true;
     setHomeError(null);
     setDashboard(null);
-    fetchHomeDashboard({ tripContentUnlocked: unlocked })
+    fetchHomeDashboard()
       .then((d) => {
         if (active) setDashboard(d);
       })
@@ -288,306 +144,254 @@ export const HomeScreen = (): JSX.Element => {
     return () => {
       active = false;
     };
-  }, [unlocked]);
+  }, [hasActiveTravel]);
 
   useEffect(() => {
-    setSceneCarouselIndex(0);
-  }, [unlocked]);
+    setSceneIndex(0);
+  }, [hasActiveTravel]);
 
-  const sceneCount = dashboard?.scenes.length ?? 0;
-  const isHomeRoute =
-    location.pathname === HOME_PATH || location.pathname === HOME_PATH_ALT;
-
-  const bumpSceneCarousel = useCallback((delta: 1 | -1) => {
-    if (sceneCount < 2) return;
-    setSceneCarouselIndex((x) => (x + delta + sceneCount) % sceneCount);
-  }, [sceneCount]);
-
-  /** 数据源场景数收缩时钳制当前索引，避免索引越界 */
   useEffect(() => {
+    const sceneCount = dashboard?.scenes.length ?? 0;
     if (sceneCount <= 0) return;
-    setSceneCarouselIndex((i) =>
-      Math.max(0, Math.min(sceneCount - 1, i)),
-    );
-  }, [sceneCount]);
+    setSceneIndex((index) => Math.max(0, Math.min(sceneCount - 1, index)));
+  }, [dashboard?.scenes.length]);
 
-  /** 首页下 ← / → 轮换场景（输入框内不拦截） */
   useEffect(() => {
+    const sceneCount = dashboard?.scenes.length ?? 0;
+    const isHomeRoute = location.pathname === HOME_PATH || location.pathname === HOME_PATH_ALT;
     if (!isHomeRoute || sceneCount < 2) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-      const el = e.target as HTMLElement | null;
-      if (
-        el &&
-        (el.tagName === "INPUT" ||
-          el.tagName === "TEXTAREA" ||
-          el.tagName === "SELECT" ||
-          el.isContentEditable)
-      ) {
-        return;
-      }
-      e.preventDefault();
-      bumpSceneCarousel(e.key === "ArrowLeft" ? -1 : 1);
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      const el = event.target as HTMLElement | null;
+      if (el?.tagName === "INPUT" || el?.tagName === "TEXTAREA" || el?.isContentEditable) return;
+      event.preventDefault();
+      setSceneIndex((index) => (index + (event.key === "ArrowLeft" ? -1 : 1) + sceneCount) % sceneCount);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [bumpSceneCarousel, isHomeRoute, sceneCount]);
+  }, [dashboard?.scenes.length, location.pathname]);
 
-  const goToChat = () => {
-    const message = text.trim() || DEFAULT_CHAT_MESSAGE;
-    void (async () => {
-      try {
-        const { travelId } = await startTravelSession({ message });
-        navigate(CHAT_PATH, { state: { message, travelId } });
-      } catch {
-        navigate(CHAT_PATH, { state: { message } });
-      }
-    })();
+  const selectedScene = dashboard?.scenes[sceneIndex];
+  const companionOptions = dashboard?.companionOptions ?? [];
+
+  const goToTask = (message: string): void => {
+    const companionIds = selectedCompanionIds.filter((id) => id !== "self");
+    navigate(AI_TASK_PATH, { state: { message, companionIds } });
   };
 
-  /** 正中场景卡：按所选品类带好默认 prompt 进入对话 */
-  const goToChatFromScene = (scene: HomeSceneCardDto) => {
-    const message = SCENE_CHAT_PROMPTS[scene.variant];
-    void (async () => {
-      try {
-        const { travelId } = await startTravelSession({ message });
-        navigate(CHAT_PATH, { state: { message, travelId } });
-      } catch {
-        navigate(CHAT_PATH, { state: { message } });
-      }
-    })();
+  const buildMessage = (base: string): string => {
+    const suffix = selectedFilter ? `，优先考虑${selectedFilter}` : "";
+    return `${base}${suffix}`;
   };
+
+  const goFromComposer = (): void => {
+    goToTask(buildMessage(text.trim() || DEFAULT_CHAT_MESSAGE));
+  };
+
+  const goFromScene = (scene: HomeSceneCardDto): void => {
+    goToTask(buildMessage(SCENE_CHAT_PROMPTS[scene.variant]));
+  };
+
+  useEffect(() => {
+    if (!dashboard?.companionOptions.length) return;
+    const defaults = dashboard.companionOptions
+      .filter((option) => option.selectedByDefault)
+      .map((option) => option.id);
+    setSelectedCompanionIds(defaults.length ? defaults : ["self"]);
+  }, [dashboard?.companionOptions]);
 
   return (
-    <AppScreenShell>
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <img
-            src={FIGMA_HOME_4737.bgBlobA}
-            alt=""
-            className="absolute -left-[320px] -top-[348px] h-[795px] w-[1293px] max-w-none opacity-[0.95]"
-          />
-          <img
-            src={FIGMA_HOME_4737.bgBlobB}
-            alt=""
-            className="absolute -left-[430px] -top-[94px] h-[795px] w-[1293px] max-w-none opacity-[0.85]"
-          />
-          <img
-            src={FIGMA_HOME_4737.bgBlobC}
-            alt=""
-            className="absolute -left-[200px] top-[280px] h-[1046px] w-[1507px] max-w-none opacity-90"
-          />
-          <img
-            src={FIGMA_HOME_4737.bgBlobD}
-            alt=""
-            className="absolute -left-[80px] top-[80px] h-[1046px] w-[1507px] max-w-none opacity-[0.88]"
-          />
-        </div>
+    <AppScreenShell frameClassName="bg-[#f8fafc]">
+      <AppBackdrop />
+      <AppToast message={toastMessage} />
+      {dashboard ? (
+        <EmbeddedStatusBarImage src={dashboard.statusBarImageUrl} className="relative z-20" height={61} width={402} />
+      ) : (
+        <EmbeddedStatusBarPlaceholder className="relative z-20 bg-white/50" />
+      )}
 
-        <div className="relative z-[1] flex min-h-0 w-full flex-1 flex-col overflow-x-hidden">
-        {dashboard ? (
-          <EmbeddedStatusBarImage src={dashboard.statusBarImageUrl} height={61} width={402} />
-        ) : (
-          <EmbeddedStatusBarPlaceholder className="bg-white/90" />
-        )}
+      <div className={`relative z-10 flex min-h-0 flex-1 flex-col pb-2 pt-2 ${tabScreenPrimaryColumnPaddingXClass}`}>
+        <AppPageHeader
+          eyebrow="Weekend Agent"
+          title={dashboard?.greetingLines.join(" ") ?? "今天有什么安排？"}
+          subtitle="选择一个场景，或直接说出你的想法。我会先展示实时规划进度，再给出可修改的方案。"
+        />
 
-        <div
-          className={`flex min-h-0 min-w-0 flex-1 flex-col pb-2 pt-2 ${tabScreenPrimaryColumnPaddingXClass}`}
-        >
-          <ContentFitZoom
-            className="[touch-action:manipulation]"
-            recalcKey={`${homeError ?? ""}:${dashboard?.history.length ?? 0}`}
-          >
+        <div className="mt-4 min-h-0 flex-1 overflow-y-auto pb-3">
           {homeError ? (
-            <p className="text-center text-[13px] text-red-600">{homeError}</p>
+            <AppErrorState message={homeError} />
           ) : !dashboard ? (
-            <p className="py-16 text-center text-[13px] text-[#64748b]">加载中…</p>
+            <AppLoadingState label="正在加载首页..." />
           ) : (
-            <>
-              <div className="mx-auto box-border w-full max-w-[373px] overflow-hidden rounded-[15px] bg-[rgba(255,255,255,0.72)] px-3 pb-4 pt-3 shadow-[0px_8px_40px_rgba(80,169,254,0.08)] backdrop-blur-[12px] ring-1 ring-white/80">
-                <header className="relative flex min-h-[112px] items-start justify-between gap-2 overflow-x-hidden overflow-y-visible pl-1 pr-0">
-                  <div className="min-w-0 max-w-[min(100%,252px)] shrink pt-2">
-                    <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5">
-                      <p className="[font-family:'HYQiHei-Regular',Helvetica] text-[18px] font-normal leading-[24px] tracking-normal text-black">
-                        {dashboard.greetingLines[0]}
+            <div className="space-y-3">
+              <AppCard className="overflow-hidden p-0">
+                <div className="bg-[#111827] px-4 py-5 text-white">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-semibold leading-5 text-white/72">当前推荐场景</p>
+                      <h2 className="mt-1 text-[24px] font-bold leading-8">{selectedScene?.title ?? "自由规划"}</h2>
+                      <p className="mt-2 line-clamp-2 text-[13px] font-medium leading-5 text-white/72">
+                        {selectedScene?.subtitle ?? "说出你想去哪里、和谁一起、玩多久。"}
                       </p>
-                      <img
-                        src={FIGMA_HOME_4737.greetingSparkle}
-                        alt=""
-                        className="h-[23px] w-[23px] shrink-0 object-contain"
-                        height={23}
-                        width={23}
-                      />
                     </div>
-                    <p
-                      className={`mt-1.5 block pb-px [font-family:'HYQiHei-Regular',Helvetica] text-[18px] font-normal leading-[24px] tracking-normal ${greetingGradientClass()}`}
-                    >
-                      {dashboard.greetingLines[1]}
-                    </p>
-                  </div>
-                  <img
-                    src={dashboard.mascotImageUrl}
-                    alt=""
-                    className="pointer-events-none h-[102px] w-[84px] shrink-0 object-contain object-bottom"
-                    height={102}
-                    width={84}
-                  />
-                </header>
-
-                <section className="mt-4">
-                  <SectionHeading title={dashboard.sceneSectionTitle} chevronSrc={FIGMA_HOME_4737.sectionChevron} />
-
-                  {/* 单列三联卡；左右箭头点击切换 */}
-                  <div className="relative mx-auto mt-1 w-full max-w-[396px]">
-                    {dashboard.scenes.length > 0 ? (
-                      <div
-                        className="flex items-center gap-1"
-                        data-testid="home-scene-strip"
-                        role="region"
-                        aria-label={
-                          dashboard.scenes.length >= 2
-                            ? "场景快选：左右箭头或两侧预览卡切换"
-                            : "场景快选"
-                        }
-                      >
-                        {dashboard.scenes.length >= 2 ? (
-                          <button
-                            type="button"
-                            className={sceneArrowBtnCls}
-                            aria-label="上一场景"
-                            onClick={() => bumpSceneCarousel(-1)}
-                          >
-                            <ChevronLeft className="h-5 w-5" strokeWidth={2} aria-hidden />
-                          </button>
-                        ) : (
-                          <div className="h-11 w-11 shrink-0" aria-hidden />
-                        )}
-                        <div className="-mx-0.5 flex min-h-[188px] min-w-0 flex-1 items-end justify-center overflow-hidden pb-px">
-                          <SceneTripleDeck
-                            scenes={dashboard.scenes}
-                            centerIndex={sceneCarouselIndex}
-                            onTapCenterScene={goToChatFromScene}
-                            onStepScene={bumpSceneCarousel}
-                          />
-                        </div>
-                        {dashboard.scenes.length >= 2 ? (
-                          <button
-                            type="button"
-                            className={sceneArrowBtnCls}
-                            aria-label="下一场景"
-                            onClick={() => bumpSceneCarousel(1)}
-                          >
-                            <ChevronRight className="h-5 w-5" strokeWidth={2} aria-hidden />
-                          </button>
-                        ) : (
-                          <div className="h-11 w-11 shrink-0" aria-hidden />
-                        )}
-                      </div>
+                    {dashboard.mascotImageUrl ? (
+                      <img src={dashboard.mascotImageUrl} alt="" className="h-[92px] w-[78px] shrink-0 object-contain" />
                     ) : null}
                   </div>
-                </section>
+                  <AppActionButton
+                    tone="gold"
+                    Icon={ArrowRight}
+                    onClick={() => selectedScene ? goFromScene(selectedScene) : goFromComposer()}
+                    className="mt-4"
+                  >
+                    用这个场景推荐
+                  </AppActionButton>
+                </div>
+              </AppCard>
 
-                <section className="mt-5 grid w-full grid-cols-4 gap-x-2 gap-y-2 px-0">
-                  {dashboard.filterTags.map((label, i) => (
-                    <div key={label} className="flex min-w-0 justify-center">
-                      <FilterChip label={label} emphasis={FILTER_EMPHASIS[i] ?? "last"} />
+              <div>
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <h2 className="text-[17px] font-bold text-[#111827]">{dashboard.sceneSectionTitle}</h2>
+                  {dashboard.scenes.length > 1 ? (
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        aria-label="上一个场景"
+                        onClick={() => setSceneIndex((index) => (index - 1 + dashboard.scenes.length) % dashboard.scenes.length)}
+                        className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#334155] shadow-[0_6px_16px_rgba(15,23,42,0.06)]"
+                      >
+                        <ChevronLeft className="h-5 w-5" strokeWidth={2.1} />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="下一个场景"
+                        onClick={() => setSceneIndex((index) => (index + 1) % dashboard.scenes.length)}
+                        className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#334155] shadow-[0_6px_16px_rgba(15,23,42,0.06)]"
+                      >
+                        <ChevronRight className="h-5 w-5" strokeWidth={2.1} />
+                      </button>
                     </div>
+                  ) : null}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {dashboard.scenes.map((scene, index) => (
+                    <SceneCard
+                      key={scene.id}
+                      scene={scene}
+                      selected={index === sceneIndex}
+                      onClick={() => {
+                        setSceneIndex(index);
+                        showToast(`已选择${scene.title}`);
+                      }}
+                    />
                   ))}
-                </section>
+                </div>
+              </div>
 
-                <section className="mt-6">
-                  <SectionHeading title={dashboard.historySectionTitle} chevronSrc={FIGMA_HOME_4737.sectionChevron} />
+              <AppCard>
+                <h2 className="text-[17px] font-bold text-[#111827]">筛选优先级</h2>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {dashboard.filterTags.map((label) => {
+                    const selected = selectedFilter === label;
+                    return (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={() => {
+                          setSelectedFilter((prev) => (prev === label ? null : label));
+                          showToast(selected ? "已取消筛选" : `已优先考虑${label}`);
+                        }}
+                        aria-pressed={selected}
+                        className={`flex min-h-11 items-center justify-center rounded-[12px] border px-3 text-[13px] font-bold transition active:scale-[0.98] ${
+                          selected
+                            ? "border-[#2456a6] bg-[#edf5ff] text-[#2456a6]"
+                            : "border-[#e5e7eb] bg-[#f8fafc] text-[#475569]"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </AppCard>
 
-                  <div className="flex flex-col gap-3">
-                    {dashboard.history.length === 0 ? (
-                      <HistoryEmptyCard />
-                    ) : (
-                      dashboard.history.map((item) => (
-                        <Link
-                          key={item.id}
-                          to={ITINERARY_HUB_PATH}
-                          state={journeyFlow}
-                          className="block transition-opacity hover:opacity-95 active:scale-[0.99]"
+              {companionOptions.length ? (
+                <AppCard>
+                  <h2 className="text-[17px] font-bold text-[#111827]">{dashboard.companionSectionTitle}</h2>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    {companionOptions.map((option) => {
+                      const selected = selectedCompanionIds.includes(option.id);
+                      return (
+                        <button
+                          key={option.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCompanionIds((prev) => {
+                              if (option.id === "self") return ["self"];
+                              const withoutSelf = prev.filter((id) => id !== "self");
+                              if (withoutSelf.includes(option.id)) {
+                                const next = withoutSelf.filter((id) => id !== option.id);
+                                return next.length ? next : ["self"];
+                              }
+                              return [...withoutSelf, option.id];
+                            });
+                            showToast(selected ? "已取消同行人" : `已选择${option.label}`);
+                          }}
+                          aria-pressed={selected}
+                          className={`min-h-[76px] rounded-[14px] border px-3 py-2 text-left transition active:scale-[0.99] ${
+                            selected ? "border-[#2456a6] bg-[#edf5ff]" : "border-[#e5e7eb] bg-[#f8fafc]"
+                          }`}
                         >
-                          <div className="overflow-hidden rounded-[15px] border border-[#50a9fe] bg-white shadow-[0px_4px_20px_#d0def8]">
-                            <div className="relative flex items-center gap-3 px-3 py-3">
-                              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#fff6cc]">
-                                <SparklesGlyph />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p
-                                  className={`[font-family:'HYQiHei-Regular',Helvetica] text-[13px] font-semibold leading-snug ${titleGradientClass()}`}
-                                >
-                                  {item.title}
-                                </p>
-                                <p className="mt-0.5 [font-family:'HYQiHei-Regular',Helvetica] text-[10.5px] text-[#343d43]">
-                                  {item.metaLine}
-                                </p>
-                              </div>
-                              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" strokeWidth={1.75} />
-                            </div>
-                          </div>
-                        </Link>
-                      ))
-                    )}
+                          <span className="flex items-center gap-2">
+                            <span className="text-[20px]">{option.avatarEmoji}</span>
+                            <span className="min-w-0">
+                              <span className="block text-[13px] font-bold text-[#111827]">{option.label}</span>
+                              <span className="block text-[11px] font-semibold text-[#64748b]">{option.roleLabel}</span>
+                            </span>
+                          </span>
+                          <span className="mt-1 line-clamp-1 block text-[11px] font-medium leading-4 text-[#64748b]">
+                            {option.summary}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
-                </section>
-              </div>
-            </>
-          )}
-          </ContentFitZoom>
+                </AppCard>
+              ) : null}
 
-          <div className={tabScreenComposerDockClass}>
-            <div className="flex min-w-0 items-center gap-2 px-0">
-              <div className="relative flex min-h-[46px] min-w-0 flex-1 items-center rounded-[30px] border-[0.5px] border-[#50a9fe] bg-white pl-2 pr-2 shadow-[0px_2px_8px_rgba(0,0,0,0.06)]">
-                {dashboard ? (
-                  <img
-                    src={dashboard.voiceInputIconUrl}
-                    alt=""
-                    className="h-7 w-[34px] shrink-0 object-contain"
-                    height={28}
-                    width={34}
-                  />
+              <div>
+                <div className="mb-2 flex items-center gap-2">
+                  <History className="h-4 w-4 text-[#2456a6]" strokeWidth={2.1} />
+                  <h2 className="text-[17px] font-bold text-[#111827]">{dashboard.historySectionTitle}</h2>
+                </div>
+                {dashboard.history.length > 0 ? (
+                  <div className="space-y-2">
+                    {dashboard.history.map((item) => (
+                      <HistoryItem key={item.id} item={item} />
+                    ))}
+                  </div>
                 ) : (
-                  <div className="h-7 w-[34px] shrink-0" />
+                  <AppStatusStrip
+                    Icon={MapPin}
+                    title="还没有历史安排"
+                    detail="创建第一条行程后，历史记录会在这里出现。"
+                  />
                 )}
-                <input
-                  type="text"
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") goToChat();
-                  }}
-                  placeholder="说说你的想法，例如今天想去哪、跟谁一起…"
-                  className="min-w-0 flex-1 bg-transparent py-2 pl-2 pr-2 [font-family:'HYQiHei-Regular',Helvetica] text-[13px] text-[#333c43] outline-none placeholder:text-[#333c4380]"
-                />
               </div>
-              <button
-                type="button"
-                onClick={goToChat}
-                aria-label="发送并进入对话"
-                className="flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-full bg-[#251e1e] text-white shadow-[0px_2px_8px_rgba(0,0,0,0.18)] transition-opacity hover:opacity-90"
-              >
-                <ChevronRight className="h-5 w-5" strokeWidth={2} />
-              </button>
             </div>
-            <AppBottomNav active="首页" journeyFlow={journeyFlow} />
-          </div>
+          )}
+        </div>
+
+        <div className={tabScreenComposerDockClass}>
+          <AppComposer
+            value={text}
+            onChange={setText}
+            onSubmit={goFromComposer}
+            placeholder="例如：今天下午和家人轻松玩一下..."
+          />
+          <AppBottomNav active="首页" journeyFlow={journeyFlow} />
         </div>
       </div>
     </AppScreenShell>
   );
 };
-
-/** 历史卡片左侧星芒 · 近似稿中小图标 */
-function SparklesGlyph(): JSX.Element {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden className="text-[#f5c814]">
-      <path
-        d="M12 2l1.2 4.2L17 8l-3.8 1.8L12 14l-1.2-4.2L7 8l3.8-1.8L12 2z"
-        fill="currentColor"
-        opacity="0.95"
-      />
-      <path d="M18 14l.8 2.8 2.8.8-2.8.8-.8 2.8-.8-2.8-2.8-.8 2.8-.8.8-2.8z" fill="currentColor" opacity="0.75" />
-    </svg>
-  );
-}

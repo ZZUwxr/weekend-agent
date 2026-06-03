@@ -1,4 +1,4 @@
-/** 与后端的契约类型；mock 与真实接口应返回同一结构 */
+/** 与后端的契约类型；所有页面数据来自真实后端 API。 */
 
 export type HomeSceneVariant = "couple" | "friends" | "family" | "solo";
 
@@ -14,9 +14,19 @@ export type HomeHistoryItemDto = {
   id: string;
   title: string;
   metaLine: string;
+  planId?: string | null;
 };
 
-/** GET /api/home/dashboard（建议路径，可与后端协商） */
+export type HomeCompanionOptionDto = {
+  id: string;
+  label: string;
+  roleLabel: string;
+  summary: string;
+  avatarEmoji: string;
+  selectedByDefault: boolean;
+};
+
+/** GET /home/dashboard */
 export type HomeDashboardDto = {
   greetingLines: [string, string];
   mascotImageUrl: string;
@@ -25,6 +35,8 @@ export type HomeDashboardDto = {
   sceneSectionTitle: string;
   scenes: HomeSceneCardDto[];
   filterTags: string[];
+  companionSectionTitle: string;
+  companionOptions: HomeCompanionOptionDto[];
   historySectionTitle: string;
   history: HomeHistoryItemDto[];
 };
@@ -32,11 +44,24 @@ export type HomeDashboardDto = {
 export type StartTravelSessionBody = {
   message: string;
   userId?: string;
+  companionIds?: string[];
 };
 
-/** POST /api/travel/sessions（建议：用户从首页发送第一条消息时创建行程） */
+/** POST /travel/sessions */
 export type StartTravelSessionResponse = {
   travelId: string;
+};
+
+export type ActiveTravelDto = {
+  travelId?: string | null;
+  planId?: string | null;
+  state?: string | null;
+  updatedAt?: string | null;
+};
+
+export type TravelPlanningStreamEvent = {
+  event: string;
+  data: Record<string, unknown>;
 };
 
 export type TravelStatusIconKey = "loader" | "alert" | "arrows" | "lightbulb";
@@ -61,7 +86,7 @@ export type ClarificationFieldDto = {
   options?: ClarificationOptionDto[];
   /** supplementary 类型的按钮文案占位 */
   placeholder?: string;
-  /** Mock / 服务端可下发：预选中的选项 id，用于与高保真稿一致的高亮边框 */
+  /** 服务端可下发：预选中的选项 id，用于与高保真稿一致的高亮边框 */
   selectedOptionIds?: string[];
 };
 
@@ -84,9 +109,10 @@ export type NeedsSectionDto = {
   cards: ParticipantNeedCardDto[];
 };
 
-/** GET /api/travel/:travelId/conversation-page（建议：对话页一次拉齐状态条+澄清+需求） */
+/** GET /travel/:travelId/conversation-page */
 export type TravelConversationPageDto = {
   travelId: string;
+  inputMessage?: string;
   statusSteps: TravelStatusStepDto[];
   clarification: ClarificationCardDto;
   needsSection: NeedsSectionDto;
@@ -131,7 +157,7 @@ export type TravelPlanCardDto = {
   compensationParagraphs?: string[];
 };
 
-/** GET /api/travel/:travelId/plan-comparison（建议：双方案对比页） */
+/** GET /travel/:travelId/plan-comparison */
 export type PlanComparisonPageDto = {
   travelId: string;
   statusBarImageUrl: string;
@@ -161,7 +187,7 @@ export type ItineraryTimelineSegmentDto = {
   transport?: ItineraryTransportDto;
 };
 
-/** GET /api/travel/:travelId/itinerary-timeline?planId=（第四屏 · 时间轴＆路线） */
+/** GET /travel/:travelId/itinerary-timeline?planId=（第四屏 · 时间轴＆路线） */
 export type ItineraryTimelinePageDto = {
   travelId: string;
   /** 与双方案卡片 id 对齐，如 plan-a */
@@ -205,7 +231,7 @@ export type BookingTodoCardDto = {
 
 /**
  * 第五屏预约流：AI 气泡、用户黄按钮、进度条、待办卡片
- * GET /api/travel/:travelId/booking-todos?planId=
+ * GET /travel/:travelId/booking-todos?planId=
  */
 export type BookingFlowItemDto =
   | { type: "ai_message"; id: string; body: string }
@@ -213,7 +239,7 @@ export type BookingFlowItemDto =
   | { type: "progress_banner"; id: string; body: string }
   | { type: "todo_card"; id: string; card: BookingTodoCardDto };
 
-/** GET /api/travel/:travelId/booking-todos?planId=（第五屏 · 行程预约与待办） */
+/** GET /travel/:travelId/booking-todos?planId=（第五屏 · 行程预约与待办） */
 export type BookingTodosPageDto = {
   travelId: string;
   planId: string;
@@ -233,7 +259,7 @@ export type BookingVenueDetailCardDto = {
   id: string;
   title: string;
   statusBadge: string;
-  thumbnailImageUrl: string;
+  thumbnailImageUrl?: string;
   rows: BookingVenueDetailRowDto[];
 };
 
@@ -262,7 +288,7 @@ export type BookingRideDetailCardDto = {
   tipText: string;
 };
 
-/** GET /api/travel/:travelId/booking-checkout?planId=（第六屏 · 预约详情与支付） */
+/** GET /travel/:travelId/booking-checkout?planId=（第六屏 · 预约详情与支付） */
 export type BookingCheckoutPageDto = {
   travelId: string;
   planId: string;
@@ -272,7 +298,7 @@ export type BookingCheckoutPageDto = {
   topProgressText: string;
   venueCards: BookingVenueDetailCardDto[];
   rideCard: BookingRideDetailCardDto;
-  /** 底部 AI 气泡，如 是否确认支付 */
+  /** 底部 AI 气泡，如 是否记录待处理支付任务 */
   paymentPromptText: string;
 };
 
@@ -298,7 +324,7 @@ export type PaymentMethodOptionDto = {
   subtitle?: string;
 };
 
-/** GET /api/travel/:travelId/payment?planId=（第七屏 · 付款方式与明细） */
+/** GET /travel/:travelId/payment?planId=（第七屏 · 付款方式与明细） */
 export type PaymentPageDto = {
   travelId: string;
   planId: string;
@@ -328,7 +354,7 @@ export type TripLiveMapSnapshotCardDto = {
   timelineText: string;
   /** 如 全程约 4 小时 */
   footerLeft: string;
-  /** 如 已支付 ¥183（展示为加粗） */
+  /** 如 预计 ¥183（展示为加粗） */
   footerEmphasis: string;
 };
 
@@ -346,7 +372,17 @@ export type TripLiveMapRemindersCardDto = {
   reminderLines: string[];
 };
 
-/** GET /api/travel/:travelId/trip-live-map?planId=（第八屏 · 行程中与地图） */
+export type TripLiveMapStopDto = {
+  id: string;
+  order: number;
+  title: string;
+  time: string;
+  statusText: string;
+  xPercent: number;
+  yPercent: number;
+};
+
+/** GET /travel/:travelId/trip-live-map?planId=（第八屏 · 行程中与地图） */
 export type TripLiveMapPageDto = {
   travelId: string;
   planId: string;
@@ -357,6 +393,7 @@ export type TripLiveMapPageDto = {
   mapImageUrl: string;
   /** 地图内右上角控件（Figma image 724，可选） */
   mapCornerImageUrl?: string;
+  mapStops: TripLiveMapStopDto[];
   snapshotCard: TripLiveMapSnapshotCardDto;
   locationCard: TripLiveMapLocationCardDto;
   remindersCard: TripLiveMapRemindersCardDto;
@@ -367,8 +404,8 @@ export type TripLiveMapPageDto = {
   voiceInputIconUrl: string;
 };
 
-/** 第九屏 · 预订确认单行状态 */
-export type PaymentConfirmRowStatusKind = "paid" | "reserved" | "remind_later";
+/** 第九屏 · 待处理任务确认单行状态 */
+export type PaymentConfirmRowStatusKind = "pending_provider" | "remind_later";
 
 /** 第九屏 · 预订确认表一行 */
 export type PaymentConfirmRowDto = {
@@ -403,7 +440,7 @@ export type PaymentConfirmHelpActionDto = {
   label: string;
 };
 
-/** GET /api/travel/:travelId/payment-confirmation?planId=（第九屏 · 支付成功与确认单） */
+/** GET /travel/:travelId/payment-confirmation?planId=（第九屏 · 待处理任务确认单） */
 export type PaymentConfirmationPageDto = {
   travelId: string;
   planId: string;
@@ -464,13 +501,14 @@ export type ItineraryHubHistoryItemDto = {
   /** 列表缩略图，可与 thumbEmoji 二选一 */
   thumbImageUrl?: string;
   thumbEmoji?: string;
+  planId?: string | null;
   dateLine: string;
   routeSummary: string;
   ratingStars: number;
   priceText: string;
 };
 
-/** GET /api/travel/:travelId/itinerary-hub?planId=（第十屏 · 行程主页） */
+/** GET /travel/:travelId/itinerary-hub?planId=（第十屏 · 行程主页） */
 export type ItineraryHubPageDto = {
   travelId: string;
   planId: string;
@@ -494,6 +532,43 @@ export type ProfileArchiveTagDto = {
   id: string;
   iconEmoji: string;
   label: string;
+};
+
+export type CompanionProfileDto = {
+  companionId: string;
+  displayName: string;
+  roleType: "spouse" | "child" | "elder" | "friend" | "user" | string;
+  roleLabel: string;
+  age?: number | null;
+  avatarEmoji: string;
+  summary: string;
+  hardConstraints: string[];
+  softPreferences: string[];
+  riskPoints: string[];
+};
+
+export type CompanionProfileListDto = {
+  statusBarImageUrl: string;
+  navTitle: string;
+  subtitle: string;
+  companions: CompanionProfileDto[];
+};
+
+export type SaveCompanionProfileBody = {
+  companionId?: string;
+  displayName: string;
+  roleType: string;
+  age?: number | null;
+  avatarEmoji?: string | null;
+  hardConstraints: string[];
+  softPreferences: string[];
+  riskPoints: string[];
+};
+
+export type CompanionProfileSaveResponseDto = {
+  ok: boolean;
+  companion: CompanionProfileDto;
+  updatedAt?: string;
 };
 
 /** 第十一屏 · 出行偏好行 kind 仅用于前端图标映射 */
@@ -525,7 +600,7 @@ export type ProfileTravelTemplateDto = {
 };
 
 /** 第十一屏 · 底栏快捷入口 */
-export type ProfileQuickFooterActionKind = "share" | "rate" | "help" | "about";
+export type ProfileQuickFooterActionKind = "share" | "rate" | "help" | "about" | "settings";
 
 export type ProfileQuickFooterActionDto = {
   id: string;
@@ -533,7 +608,7 @@ export type ProfileQuickFooterActionDto = {
   label: string;
 };
 
-/** GET /api/user/profile（第十一屏 · 我的） */
+/** GET /user/profile（第十一屏 · 我的） */
 export type ProfilePageDto = {
   statusBarImageUrl: string;
   navTitle: string;
@@ -574,7 +649,7 @@ export type TravelDurationOptionDto = {
   label: string;
 };
 
-/** GET /api/user/preferences/travel-mode（第十二屏 · 出行方式与距离） */
+/** GET /user/preferences/travel-mode（第十二屏 · 出行方式与距离） */
 export type TravelModeSettingsPageDto = {
   statusBarImageUrl: string;
   navTitle: string;
@@ -616,7 +691,7 @@ export type DietaryFamilyMemberRowDto = {
   avatarImageUrl?: string;
 };
 
-/** GET /api/user/preferences/dietary（第十三屏 · 饮食偏好） */
+/** GET /user/preferences/dietary（第十三屏 · 饮食偏好） */
 export type DietaryPreferencesPageDto = {
   statusBarImageUrl: string;
   navTitle: string;
@@ -637,7 +712,7 @@ export type ActivityTagOptionDto = {
   label: string;
 };
 
-/** GET /api/user/preferences/activity（第十四屏 · 活动偏好，Figma 1:1301） */
+/** GET /user/preferences/activity（第十四屏 · 活动偏好，Figma 1:1301） */
 export type ActivityPreferencesPageDto = {
   statusBarImageUrl: string;
   navTitle: string;
@@ -660,7 +735,7 @@ export type BudgetPaceRadioOptionDto = {
   description: string;
 };
 
-/** GET /api/user/preferences/budget-pace（第十五屏 · 预算与节奏，Figma 1:1302） */
+/** GET /user/preferences/budget-pace（第十五屏 · 预算与节奏，Figma 1:1302） */
 export type BudgetPacePreferencesPageDto = {
   statusBarImageUrl: string;
   navTitle: string;
@@ -674,28 +749,28 @@ export type BudgetPacePreferencesPageDto = {
   saveButtonLabel: string;
 };
 
-// --- 用户偏好 · 写接口（与 PUT /api/user/preferences/* 对齐）---
+// --- 用户偏好 · 写接口（与 PUT /user/preferences/* 对齐）---
 
-/** PUT /api/user/preferences/travel-mode */
+/** PUT /user/preferences/travel-mode */
 export type SaveTravelModePreferencesBody = {
   selectedMethodId: TravelModeMethodOptionId;
   selectedRadiusKm: number;
   selectedDurationId: string;
 };
 
-/** PUT /api/user/preferences/dietary */
+/** PUT /user/preferences/dietary */
 export type SaveDietaryPreferencesBody = {
   selectedNeedIds: string[];
   /** 过敏源等补充说明（有「展开填写」项时） */
   allergenNote?: string;
 };
 
-/** PUT /api/user/preferences/activity */
+/** PUT /user/preferences/activity */
 export type SaveActivityPreferencesBody = {
   selectedTagIds: string[];
 };
 
-/** PUT /api/user/preferences/budget-pace */
+/** PUT /user/preferences/budget-pace */
 export type SaveBudgetPacePreferencesBody = {
   selectedBudgetId: string;
   selectedPaceId: string;
@@ -707,9 +782,28 @@ export type UserPreferenceSaveResponseDto = {
   updatedAt?: string;
 };
 
+export type LLMSettingsDto = {
+  statusBarImageUrl: string;
+  navTitle: string;
+  backLabel: string;
+  provider: string;
+  model: string;
+  baseUrl: string;
+  apiKeyConfigured: boolean;
+  apiKeyPreview?: string | null;
+  saveButtonLabel: string;
+};
+
+export type SaveLLMSettingsBody = {
+  provider: string;
+  model: string;
+  baseUrl: string;
+  apiKey?: string | null;
+};
+
 // --- 行程流 · 写接口（下单/支付等 POST，按需对接网关）---
 
-/** POST /api/travel/:travelId/booking-todos/actions */
+/** POST /travel/:travelId/booking-todos/actions */
 export type BookingTodoActionBody = {
   planId: string;
   /** 与 BookingTodos 流里条目的 id 对齐 */
@@ -722,9 +816,12 @@ export type BookingTodoActionResponseDto = {
   ok: boolean;
   /** 服务端更新后的整页快照（可选，用于乐观更新失败时重拉） */
   bookingTodosPageUrl?: string;
+  status?: string;
+  code?: string;
+  message?: string;
 };
 
-/** POST /api/travel/:travelId/payment/orders */
+/** POST /travel/:travelId/payment/orders */
 export type TravelPaymentSubmitBody = {
   planId: string;
   paymentMethodId: string;
@@ -736,15 +833,94 @@ export type TravelPaymentSubmitResponseDto = {
   orderId?: string;
   /** 跳转第三方支付 */
   paymentUrl?: string;
+  status?: string;
+  code?: string;
+  message?: string;
 };
 
-/** POST /api/travel/:travelId/booking-checkout/confirm */
+/** POST /travel/:travelId/booking-checkout/confirm */
 export type TravelBookingCheckoutConfirmBody = {
   planId: string;
   /** 例如全选核对场地、仅当前分段等 */
   scope?: string;
 };
 
+export type TravelExecuteActionBody = {
+  planId: string;
+  action?: string;
+  metadata?: Record<string, unknown>;
+};
+
 export type TravelSimpleOkResponseDto = {
   ok: boolean;
+  status?: string;
+  code?: string;
+  message?: string;
+};
+
+export type TravelClarificationAnswerDto = {
+  questionId: string;
+  answer: string;
+};
+
+export type TravelClarificationAnswerBody = {
+  answers: TravelClarificationAnswerDto[];
+};
+
+export type PlanPatchDto = {
+  patchId: string;
+  patchType: string;
+  targetPlanId?: string;
+  targetStageId?: string;
+  oldValue?: Record<string, unknown>;
+  newValue?: Record<string, unknown>;
+  reason: string;
+};
+
+export type TravelRevisionBody = {
+  message: string;
+  targetPlanId?: string;
+  lockedItems?: Record<string, unknown>[];
+  revisionMode?: "partial" | "full";
+};
+
+export type MobileRevisionResponse = {
+  travelId: string;
+  revisionSummary: string;
+  planPage: TravelConversationPageDto;
+  patches: PlanPatchDto[];
+  warnings: string[];
+  updatedPlanComparison?: PlanComparisonPageDto;
+  updatedTimeline?: ItineraryTimelinePageDto;
+  updatedBookingTodos?: BookingTodosPageDto;
+  updatedBookingCheckout?: BookingCheckoutPageDto;
+  updatedPayment?: PaymentPageDto;
+  updatedPaymentConfirmation?: PaymentConfirmationPageDto;
+  updatedTripLiveMap?: TripLiveMapPageDto;
+  updatedItineraryHub?: ItineraryHubPageDto;
+};
+
+export type MobileExecutionTaskDto = {
+  taskId: string;
+  action: string;
+  status: string;
+  poiId?: string;
+  humanReadableConfirmation?: string;
+  result: Record<string, unknown>;
+};
+
+export type MobilePlanActionResponseDto = {
+  ok: boolean;
+  travelId: string;
+  state: string;
+  message?: string;
+  tasks: MobileExecutionTaskDto[];
+  feedbackId?: string;
+};
+
+export type TravelFeedbackBody = {
+  rating?: number | null;
+  rawFeedback?: string;
+  tags?: string[];
+  payload?: Record<string, unknown>;
 };

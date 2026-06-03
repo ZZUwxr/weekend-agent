@@ -1,25 +1,23 @@
 import type { ItineraryHubPageDto } from "./types";
-import { getApiBaseUrl } from "./config";
-import { MOCK_ITINERARY_HUB_PAGE } from "./mock/itinerary-hub.mock";
+import { apiRequest } from "./client";
 
 /**
  * 第十屏 · 行程主页（当前阶段时间轴、快捷操作、历史行程）
  *
- * **后端契约:** `GET /api/travel/:travelId/itinerary-hub?planId=...`
+ * **后端契约:** `GET /travel/:travelId/itinerary-hub?planId=...`
  * 文档：`ENDPOINTS.md` §14。
  */
 export async function fetchItineraryHubPage(
   travelId: string,
   planId: string,
 ): Promise<ItineraryHubPageDto> {
-  const base = getApiBaseUrl();
-  if (!base) {
-    await new Promise((r) => setTimeout(r, 120));
-    return { ...MOCK_ITINERARY_HUB_PAGE, travelId, planId };
-  }
-  const { apiRequest } = await import("./client");
+  assertTravelId(travelId);
   const q = new URLSearchParams({ planId });
   return apiRequest<ItineraryHubPageDto>(
-    `/api/travel/${encodeURIComponent(travelId)}/itinerary-hub?${q.toString()}`,
+    `/travel/${encodeURIComponent(travelId)}/itinerary-hub?${q.toString()}`,
   );
+}
+
+function assertTravelId(travelId: string): void {
+  if (!travelId?.trim()) throw new Error("缺少当前行程，请先从首页创建一条行程。");
 }

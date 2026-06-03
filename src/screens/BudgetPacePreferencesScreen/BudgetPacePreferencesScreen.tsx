@@ -1,11 +1,11 @@
-import { Footprints, JapaneseYen } from "lucide-react";
+import { Check, Footprints, JapaneseYen } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ContentFitZoom } from "../../components/ContentFitZoom";
 import { UserSettingsChrome, UserSettingsIconWrap, userSettingsCardClass } from "../../components/UserSettingsChrome";
+import { AppStatusStrip } from "../../components/AppUi";
 import { fetchBudgetPacePreferencesPage, saveBudgetPacePreferences } from "../../lib/api";
 import { FIGMA_USER_SETTINGS_114 } from "../../lib/api/mock/figma-user-settings-114-assets";
-import { MOCK_TRAVEL_ID } from "../../lib/api/mock/travel.mock";
+import { useResolvedTravel } from "../../hooks/useResolvedTravel";
 import type { BudgetPacePreferencesPageDto, BudgetPaceRadioOptionDto } from "../../lib/api/types";
 import { BUDGET_PACE_PREFERENCES_PATH, PROFILE_PATH } from "../../routes";
 
@@ -29,23 +29,24 @@ function RadioRows({
             key={opt.id}
             type="button"
             onClick={() => onSelect(opt.id)}
-            className={`flex w-full items-start gap-3 px-3 py-3 text-left hover:bg-[#fffef8] ${
-              i < options.length - 1 ? "border-b border-[#faf2ac]/50" : ""
-            }`}
+            aria-pressed={selected}
+            className={`flex min-h-[74px] w-full items-start gap-3 px-3 py-3 text-left transition active:scale-[0.995] ${
+              selected ? "bg-[#f1f6ff]" : "bg-white hover:bg-[#f8fafc]"
+            } ${i < options.length - 1 ? "border-b border-[#e5e7eb]" : ""}`}
           >
             <span
-              className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                selected ? "border-[#eab308] bg-white" : "border-[#d1d5db] bg-white"
-              }`}
+              className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
+                selected ? "bg-[#2456a6] text-white" : "border border-[#d1d5db] bg-white"
+            }`}
               aria-hidden
             >
-              {selected ? <span className="h-2.5 w-2.5 rounded-full bg-[#eab308]" /> : null}
+              {selected ? <Check className="h-4 w-4" strokeWidth={2.6} /> : null}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="[font-family:'HYQiHei-Regular',Helvetica] text-[13px] font-bold text-[#1e293b]">
+              <p className="text-[14px] font-bold text-[#111827]">
                 {opt.title}
               </p>
-              <p className="mt-0.5 [font-family:'HYQiHei-Regular',Helvetica] text-[11px] font-medium leading-relaxed text-[#6b7280]">
+              <p className="mt-0.5 text-[12px] font-medium leading-5 text-[#64748b]">
                 {opt.description}
               </p>
             </div>
@@ -60,8 +61,9 @@ export const BudgetPacePreferencesScreen = (): JSX.Element => {
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const loc = state as SettingsLocationState | null;
-  const travelId = loc?.travelId ?? MOCK_TRAVEL_ID;
-  const planId = loc?.planId ?? "plan-a";
+  const resolved = useResolvedTravel(loc);
+  const travelId = resolved.travelId;
+  const planId = resolved.planId;
   const flow = { travelId, planId };
 
   const [page, setPage] = useState<BudgetPacePreferencesPageDto | null>(null);
@@ -143,7 +145,7 @@ export const BudgetPacePreferencesScreen = (): JSX.Element => {
         ) : null
       }
     >
-      <ContentFitZoom className="space-y-3 pb-2" recalcKey={`${budgetId}:${paceId}`}>
+      <div className="space-y-3 pb-2">
         {saveError ? (
           <p className="rounded-lg bg-red-50 px-3 py-2 text-center text-[13px] text-red-600">{saveError}</p>
         ) : null}
@@ -153,13 +155,19 @@ export const BudgetPacePreferencesScreen = (): JSX.Element => {
           <p className="py-8 text-center text-[13px] text-[#64748b]">加载中…</p>
         ) : (
           <>
+            <AppStatusStrip
+              Icon={JapaneseYen}
+              title="当前预算与节奏"
+              detail={`${page.budgetOptions.find((opt) => opt.id === budgetId)?.title ?? "未选择"} · ${page.paceOptions.find((opt) => opt.id === paceId)?.title ?? "未选择"}`}
+            />
+
             <div className={userSettingsCardClass}>
               <div className="p-0">
-                <div className="flex items-center gap-2 border-b border-[#faf2ac]/90 px-3 py-2.5">
+                <div className="flex items-center gap-2 border-b border-[#e5e7eb] px-3 py-3">
                   <UserSettingsIconWrap>
                     <JapaneseYen className="h-4 w-4" strokeWidth={2} />
                   </UserSettingsIconWrap>
-                  <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[14px] font-bold text-[#1e293b]">
+                  <span className="text-[15px] font-bold text-[#111827]">
                     {page.budgetSectionTitle}
                   </span>
                 </div>
@@ -169,11 +177,11 @@ export const BudgetPacePreferencesScreen = (): JSX.Element => {
 
             <div className={userSettingsCardClass}>
               <div className="p-0">
-                <div className="flex items-center gap-2 border-b border-[#faf2ac]/90 px-3 py-2.5">
+                <div className="flex items-center gap-2 border-b border-[#e5e7eb] px-3 py-3">
                   <UserSettingsIconWrap>
                     <Footprints className="h-4 w-4" strokeWidth={2} />
                   </UserSettingsIconWrap>
-                  <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[14px] font-bold text-[#1e293b]">
+                  <span className="text-[15px] font-bold text-[#111827]">
                     {page.paceSectionTitle}
                   </span>
                 </div>
@@ -182,7 +190,7 @@ export const BudgetPacePreferencesScreen = (): JSX.Element => {
             </div>
           </>
         )}
-      </ContentFitZoom>
+      </div>
     </UserSettingsChrome>
   );
 };

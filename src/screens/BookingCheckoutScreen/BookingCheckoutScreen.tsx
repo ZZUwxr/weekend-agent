@@ -1,160 +1,158 @@
 import {
-  ChevronDown,
+  Banknote,
+  Car,
   ChevronLeft,
-  ChevronRight,
-  Lightbulb,
-  Search,
+  CreditCard,
+  MapPinned,
+  ShieldCheck,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AppBottomNav } from "../../components/AppBottomNav";
-import { tabScreenComposerDockMtAutoClass } from "../../lib/tabScreenDockLayout";
-import { EmbeddedStatusBarImage, EmbeddedStatusBarPlaceholder } from "../../components/EmbeddedStatusBar";
 import { AppScreenShell } from "../../components/AppScreenShell";
-import { ContentFitZoom } from "../../components/ContentFitZoom";
-import { Card, CardContent } from "../../components/ui/card";
-import { fetchBookingCheckoutPage } from "../../lib/api";
-import { MOCK_TRAVEL_ID } from "../../lib/api/mock/travel.mock";
-import { unlockTripContent } from "../../lib/tripContentUnlock";
+import { AppToast, useAppToast } from "../../components/AppToast";
+import { EmbeddedStatusBarImage, EmbeddedStatusBarPlaceholder } from "../../components/EmbeddedStatusBar";
+import {
+  AppActionButton,
+  AppBackdrop,
+  AppCard,
+  AppComposer,
+  AppErrorState,
+  AppIconButton,
+  AppLoadingState,
+  AppPageHeader,
+  AppPill,
+  AppStatusStrip,
+} from "../../components/AppUi";
+import {
+  fetchBookingCheckoutPage,
+  postBookingCheckoutConfirm,
+  reviseTravelPlan,
+} from "../../lib/api";
 import type {
   BookingCheckoutPageDto,
   BookingRideDetailCardDto,
   BookingVenueDetailCardDto,
 } from "../../lib/api/types";
+import { useResolvedTravel } from "../../hooks/useResolvedTravel";
+import { setCurrentTravel } from "../../lib/currentTravel";
+import { tabScreenComposerDockMtAutoClass } from "../../lib/tabScreenDockLayout";
+import { unlockTripContent } from "../../lib/tripContentUnlock";
 import { BOOKING_CHECKOUT_PATH, BOOKING_TODOS_PATH, PAYMENT_PATH } from "../../routes";
 
 type CheckoutLocationState = { travelId?: string; planId?: string };
 
-function titleGradientClass(): string {
-  return "bg-[linear-gradient(48deg,rgba(95,115,128,1)_16%,rgba(62,82,101,1)_73%,rgba(42,114,176,1)_100%)] bg-clip-text text-transparent [-webkit-background-clip:text]";
-}
+function VenueCard({ card }: { card: BookingVenueDetailCardDto }): JSX.Element {
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = Boolean(card.thumbnailImageUrl && !imageFailed);
 
-function StatusBadge({ children }: { children: ReactNode }): JSX.Element {
   return (
-    <span className="shrink-0 rounded-lg border border-[#e8d4a0] bg-gradient-to-br from-[#fff6cc] via-[#fff9e3] to-white px-2 py-0.5 text-center shadow-[0px_0.8px_1.2px_#d1e8ff] [font-family:'HYQiHei-Regular',Helvetica] text-[8.5px] font-semibold leading-tight text-[#343d43]">
-      {children}
-    </span>
-  );
-}
-
-function VenueDetailCard({ card }: { card: BookingVenueDetailCardDto }): JSX.Element {
-  return (
-    <Card className="overflow-hidden rounded-[15px] border border-[#50a9fe] bg-white shadow-[0px_4px_20px_#d0def8]">
-      <CardContent className="relative bg-gradient-to-br from-[#fffef8] via-white to-[#f5f9ff] p-3">
-        <div className="mb-2 flex items-start gap-2">
+    <AppCard>
+      <div className="flex items-start gap-3">
+        {showImage ? (
           <img
             src={card.thumbnailImageUrl}
             alt=""
-            className="h-9 w-9 shrink-0 rounded-full object-cover"
-            width={36}
-            height={36}
+            className="h-16 w-16 shrink-0 rounded-[14px] object-cover"
+            onError={() => setImageFailed(true)}
           />
-          <h3
-            className={`min-w-0 flex-1 pt-0.5 [font-family:'HYQiHei-Regular',Helvetica] text-[15px] font-semibold leading-tight ${titleGradientClass()}`}
-          >
-            {card.title}
-          </h3>
-          <StatusBadge>{card.statusBadge}</StatusBadge>
-        </div>
-        <div className="flex gap-2.5">
-          <div className="min-w-0 flex-1 space-y-2">
+        ) : (
+          <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[14px] bg-[#e8f1ff] text-[#2456a6] shadow-[0_6px_18px_rgba(36,86,166,0.12)]">
+            <MapPinned className="h-7 w-7" strokeWidth={2.1} />
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="text-[16px] font-bold leading-5 text-[#111827]">{card.title}</h3>
+            <AppPill className="min-h-6 shrink-0 bg-[#e8f7f0] px-2 text-[10px] text-[#047857]">
+              {card.statusBadge}
+            </AppPill>
+          </div>
+          <div className="mt-3 space-y-2">
             {card.rows.map((row) => (
-              <div
-                key={`${card.id}-${row.label}`}
-                className="flex items-baseline justify-between gap-2 border-b border-[#ececec] pb-2 last:border-0"
-              >
-                <span className="shrink-0 [font-family:'PingFang_SC-Regular',Helvetica] text-[10px] font-semibold text-[#626262]">
-                  {row.label}
-                </span>
-                <span className="text-right [font-family:'PingFang_SC-Regular',Helvetica] text-[10px] font-semibold leading-snug text-[#626262]">
-                  {row.value}
-                </span>
+              <div key={`${card.id}-${row.label}`} className="flex items-start justify-between gap-3">
+                <span className="text-[12px] font-semibold text-[#94a3b8]">{row.label}</span>
+                <span className="text-right text-[12px] font-semibold leading-5 text-[#475569]">{row.value}</span>
               </div>
             ))}
           </div>
-          <img
-            src={card.thumbnailImageUrl}
-            alt=""
-            className="h-[86px] w-[134px] shrink-0 rounded-[9px] object-cover"
-            width={134}
-            height={86}
-          />
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </AppCard>
   );
 }
 
-function RideDetailCard({ card }: { card: BookingRideDetailCardDto }): JSX.Element {
+function RideCard({ card }: { card: BookingRideDetailCardDto }): JSX.Element {
   return (
-    <Card className="overflow-hidden rounded-[15px] border border-[#50a9fe] bg-white shadow-[0px_4px_20px_#d0def8]">
-      <CardContent className="relative bg-gradient-to-br from-[#fffef8] via-white to-[#f5f9ff] p-3">
-        <div className="mb-2 flex items-start gap-2">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fff6cc] text-[18px]">
-            🚕
-          </div>
-          <h3
-            className={`min-w-0 flex-1 pt-0.5 [font-family:'HYQiHei-Regular',Helvetica] text-[15px] font-semibold leading-tight ${titleGradientClass()}`}
-          >
-            {card.title}
-          </h3>
-          <StatusBadge>{card.statusBadge}</StatusBadge>
+    <AppCard>
+      <div className="mb-3 flex items-center gap-2">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e8f1ff] text-[#2456a6]">
+          <Car className="h-5 w-5" strokeWidth={2.1} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-[17px] font-bold text-[#111827]">{card.title}</h2>
+          <p className="mt-0.5 text-[12px] text-[#64748b]">{card.statusBadge}</p>
         </div>
+      </div>
 
-        <div className="overflow-x-auto [-webkit-overflow-scrolling:touch]">
-          <table className="w-full min-w-[310px] border-separate border-spacing-0 [font-family:'PingFang_SC-Regular',Helvetica] text-[8px] text-[#626262]">
-            <thead>
-              <tr className="border-b border-[#e0e0e0]">
-                <th className="pb-1.5 pr-1 text-left font-semibold">段次</th>
-                <th className="pb-1.5 px-0.5 text-left font-semibold">类别</th>
-                <th className="pb-1.5 px-0.5 text-left font-semibold">路线</th>
-                <th className="pb-1.5 px-0.5 text-left font-semibold">距离</th>
-                <th className="pb-1.5 px-0.5 text-left font-semibold">用时</th>
-                <th className="pb-1.5 px-0.5 text-left font-semibold">费用</th>
-                <th className="pb-1.5 pl-0.5 text-left font-semibold">处理</th>
-              </tr>
-            </thead>
-            <tbody>
-              {card.legs.map((leg) => (
-                <tr key={leg.id} className="border-b border-[#f0f0f0] last:border-0">
-                  <td className="py-1.5 pr-1 align-top font-normal">{leg.legIndex}</td>
-                  <td className="px-0.5 py-1.5 align-top font-normal">{leg.categoryLabel}</td>
-                  <td className="px-0.5 py-1.5 align-top leading-snug">{leg.route}</td>
-                  <td className="px-0.5 py-1.5 align-top whitespace-nowrap">{leg.distanceLabel}</td>
-                  <td className="px-0.5 py-1.5 align-top whitespace-nowrap">{leg.durationLabel}</td>
-                  <td className="px-0.5 py-1.5 align-top whitespace-nowrap">{leg.feeLabel}</td>
-                  <td className="pl-0.5 py-1.5 align-top whitespace-nowrap">{leg.handlingLabel}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="space-y-2">
+        {card.legs.map((leg) => (
+          <article key={leg.id} className="rounded-[14px] border border-[#e5e7eb] bg-[#f8fafc] px-3 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[13px] font-bold text-[#111827]">
+                  {leg.legIndex} {leg.categoryLabel}
+                </p>
+                <p className="mt-1 text-[12px] leading-5 text-[#64748b]">{leg.route}</p>
+              </div>
+              <AppPill className="min-h-6 shrink-0 bg-white px-2 text-[10px]">
+                {leg.handlingLabel}
+              </AppPill>
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              <div className="rounded-[10px] bg-white px-2 py-2">
+                <p className="text-[10px] font-semibold text-[#94a3b8]">距离</p>
+                <p className="mt-0.5 text-[12px] font-bold text-[#111827]">{leg.distanceLabel}</p>
+              </div>
+              <div className="rounded-[10px] bg-white px-2 py-2">
+                <p className="text-[10px] font-semibold text-[#94a3b8]">用时</p>
+                <p className="mt-0.5 text-[12px] font-bold text-[#111827]">{leg.durationLabel}</p>
+              </div>
+              <div className="rounded-[10px] bg-white px-2 py-2">
+                <p className="text-[10px] font-semibold text-[#94a3b8]">费用</p>
+                <p className="mt-0.5 text-[12px] font-bold text-[#111827]">{leg.feeLabel}</p>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
 
-        <div className="mt-2 flex gap-2 rounded-[10px] bg-[#ffd100] px-2.5 py-2">
-          <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#626262]" strokeWidth={2} />
-          <p className="[font-family:'PingFang_SC-Regular',Helvetica] text-[7px] font-semibold leading-[1.35] text-[#626262]">
-            {card.tipText}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+      <div className="mt-3 rounded-[12px] bg-[#fff8dc] px-3 py-2">
+        <p className="text-[12px] font-semibold leading-5 text-[#8a5a00]">{card.tipText}</p>
+      </div>
+    </AppCard>
   );
 }
 
 export const BookingCheckoutScreen = (): JSX.Element => {
+  const navigate = useNavigate();
   const { state, pathname } = useLocation();
   const loc = state as CheckoutLocationState | null;
-  const travelId = loc?.travelId ?? MOCK_TRAVEL_ID;
-  const planId = loc?.planId ?? "plan-a";
+  const resolved = useResolvedTravel(loc);
+  const travelId = resolved.travelId;
+  const planId = resolved.planId;
+  const resolvingTravel = resolved.loading && !loc?.travelId;
 
   const [page, setPage] = useState<BookingCheckoutPageDto | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [input, setInput] = useState("");
+  const [submitPending, setSubmitPending] = useState(false);
+  const { toastMessage, showToast } = useAppToast();
 
   useEffect(() => {
     const prev = document.title;
     if (pathname === BOOKING_CHECKOUT_PATH) {
-      document.title = "预约详情 · 出行助手";
+      document.title = "预约确认 · 出行助手";
     }
     return () => {
       document.title = prev;
@@ -162,6 +160,7 @@ export const BookingCheckoutScreen = (): JSX.Element => {
   }, [pathname]);
 
   useEffect(() => {
+    if (!travelId) return;
     let active = true;
     setLoadError(null);
     setPage(null);
@@ -170,118 +169,144 @@ export const BookingCheckoutScreen = (): JSX.Element => {
         if (active) setPage(data);
       })
       .catch((e: unknown) => {
-        if (active) {
-          setLoadError(e instanceof Error ? e.message : "加载失败");
-        }
+        if (active) setLoadError(e instanceof Error ? e.message : "加载失败");
       });
     return () => {
       active = false;
     };
   }, [travelId, planId]);
 
-  const todosBack = { travelId, planId };
+  async function handleComposerSubmit(): Promise<void> {
+    const text = input.trim();
+    if (!text) {
+      showToast("请输入想补充或修改的预约信息");
+      return;
+    }
+
+    setSubmitPending(true);
+    setLoadError(null);
+    try {
+      const revised = await reviseTravelPlan(travelId, {
+        message: text,
+        targetPlanId: planId,
+        revisionMode: "partial",
+      });
+      setPage(revised.updatedBookingCheckout ?? await fetchBookingCheckoutPage(travelId, planId));
+      setInput("");
+    } catch (e: unknown) {
+      setLoadError(e instanceof Error ? e.message : "修改预约详情失败");
+    } finally {
+      setSubmitPending(false);
+    }
+  }
+
+  async function confirmAndGoPayment(): Promise<void> {
+    setSubmitPending(true);
+    setLoadError(null);
+    try {
+      const result = await postBookingCheckoutConfirm(travelId, { planId, scope: "all" });
+      if (!result.ok) {
+        showToast(result.message || "真实预约服务暂未接入，已记录待处理任务");
+      }
+      unlockTripContent();
+      setCurrentTravel({ travelId, planId });
+      navigate(PAYMENT_PATH, { state: { travelId, planId } });
+    } catch (e: unknown) {
+      setLoadError(e instanceof Error ? e.message : "确认方案失败");
+    } finally {
+      setSubmitPending(false);
+    }
+  }
 
   return (
-    <AppScreenShell frameClassName="bg-[linear-gradient(180deg,#fffef5_0%,#ffffff_40%,#ffffff_100%)]">
-        {page ? (
-          <EmbeddedStatusBarImage src={page.statusBarImageUrl} height={61} width={402} />
+    <AppScreenShell frameClassName="bg-[#f6f7fb]">
+      <AppToast message={toastMessage} />
+      <AppBackdrop />
+      {page ? (
+        <EmbeddedStatusBarImage src={page.statusBarImageUrl} height={61} width={402} />
+      ) : (
+        <EmbeddedStatusBarPlaceholder />
+      )}
+      <AppIconButton
+        to={BOOKING_TODOS_PATH}
+        state={{ travelId, planId }}
+        label="返回预约待办"
+        className="absolute left-3 top-[61px] z-20"
+      >
+        <ChevronLeft className="h-5 w-5" strokeWidth={2.1} />
+      </AppIconButton>
+
+      <div className="relative z-[1] flex min-h-0 flex-1 flex-col px-[14px] pb-3 pt-2">
+        {resolvingTravel ? (
+          <AppLoadingState label="正在同步当前行程..." />
+        ) : loadError && !page ? (
+          <AppErrorState message={loadError} />
+        ) : !page ? (
+          <AppLoadingState />
         ) : (
-          <EmbeddedStatusBarPlaceholder className="bg-white/80" />
-        )}
+          <>
+            <div className="min-h-0 flex-1 overflow-y-auto pb-5">
+              <AppPageHeader
+                className="pb-4 pl-12"
+                eyebrow={`${page.planId.replace("-", " ").toUpperCase()} · 预约确认`}
+                title="核对预约详情"
+                subtitle="确认场馆、交通和费用后再进入付款。"
+              />
 
-        <div className="flex min-h-0 flex-1 flex-col px-8 pb-3 pt-2">
-          <header className="mb-2 flex items-center gap-1">
-            <Link
-              to={BOOKING_TODOS_PATH}
-              state={todosBack}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#0f1c2d] hover:bg-black/[0.04]"
-              aria-label="返回行程预约"
-            >
-              <ChevronLeft className="h-6 w-6" strokeWidth={1.75} />
-            </Link>
-            <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[15px] font-medium text-[#333c43]">
-              预约确认
-            </span>
-          </header>
+              <div className="space-y-4">
+                <AppStatusStrip Icon={ShieldCheck} title={page.topProgressText} detail={page.paymentPromptText} />
 
-          {page ? (
-            <div className="mb-3 flex items-start gap-2 rounded-br-[11.53px] rounded-bl-[11.53px] rounded-tr-[11.53px] bg-white px-3 py-2 shadow-[0px_2.88px_7.2px_rgba(0,0,0,0.03)]">
-              <Search className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" strokeWidth={2} />
-              <p className="min-w-0 flex-1 [font-family:'PingFang_SC-Regular',Helvetica] text-[12px] font-semibold leading-relaxed text-[#626262]">
-                {page.topProgressText}
-              </p>
-              <ChevronDown className="mt-0.5 h-4 w-4 shrink-0 text-[#6b7280]" strokeWidth={2} />
-            </div>
-          ) : null}
-
-          <ContentFitZoom
-            className="space-y-3 pb-2"
-            recalcKey={page ? `${page.venueCards.length}:${page.rideCard.legs.length}:${page.paymentPromptText}` : ""}
-          >
-            {loadError ? (
-              <p className="text-center text-[13px] text-red-600">{loadError}</p>
-            ) : !page ? (
-              <p className="pt-6 text-center text-[13px] text-[#6b7280]">加载中…</p>
-            ) : (
-              <>
-                {page.venueCards.map((c) => (
-                  <VenueDetailCard key={c.id} card={c} />
-                ))}
-                <RideDetailCard card={page.rideCard} />
-                <div className="flex flex-col items-start gap-2 pt-1">
-                  <div className="rounded-br-[11.53px] rounded-bl-[11.53px] rounded-tr-[11.53px] bg-white px-3 py-2 shadow-[0px_2.88px_7.2px_rgba(0,0,0,0.03)]">
-                    <p className="[font-family:'PingFang_SC-Regular',Helvetica] text-[12px] font-semibold text-[#626262]">
-                      {page.paymentPromptText}
-                    </p>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 px-1">
+                    <MapPinned className="h-4 w-4 text-[#2456a6]" strokeWidth={2.1} />
+                    <h2 className="text-[15px] font-bold text-[#111827]">场馆预约</h2>
                   </div>
-                  <Link
-                    to={PAYMENT_PATH}
-                    state={{ travelId, planId }}
-                    onClick={() => {
-                      unlockTripContent();
-                    }}
-                    className="rounded-full bg-[#0f6fdc] px-4 py-2 [font-family:'HYQiHei-Regular',Helvetica] text-[12px] font-semibold text-white shadow-[0px_2px_8px_rgba(15,109,220,0.35)] transition-opacity hover:opacity-90"
-                  >
-                    前往支付
-                  </Link>
+                  {page.venueCards.map((card) => <VenueCard key={card.id} card={card} />)}
                 </div>
-              </>
-            )}
-          </ContentFitZoom>
 
-          <div className={tabScreenComposerDockMtAutoClass}>
-            <div className="flex items-center gap-2">
-              <div className="relative flex min-h-[46px] flex-1 items-center rounded-[30px] border-[0.5px] border-[#50a9fe] bg-white pl-2 pr-2 shadow-[0px_2px_8px_#00000008]">
-                {page ? (
-                  <img
-                    src={page.voiceInputIconUrl}
-                    alt=""
-                    className="h-7 w-[34px] shrink-0 object-contain"
-                    height={28}
-                    width={34}
-                  />
-                ) : (
-                  <div className="h-7 w-[34px] shrink-0" />
-                )}
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="有疑问可以在这里补充…"
-                  className="min-w-0 flex-1 bg-transparent py-2 pl-2 pr-2 [font-family:'HYQiHei-Regular',Helvetica] text-[13px] text-[#333c43] outline-none placeholder:text-[#333c4380]"
-                />
+                <RideCard card={page.rideCard} />
+
+                <AppCard className="bg-[linear-gradient(135deg,#fffdf5_0%,#ffffff_60%,#f1f6ff_100%)]">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#fff4d6] text-[#8a5a00]">
+                      <Banknote className="h-5 w-5" strokeWidth={2.1} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-[16px] font-bold text-[#111827]">下一步付款</h2>
+                      <p className="mt-1 text-[12px] leading-5 text-[#64748b]">{page.paymentPromptText}</p>
+                    </div>
+                  </div>
+                </AppCard>
+
+                {loadError ? (
+                  <div className="rounded-[14px] border border-red-100 bg-white px-4 py-3 text-[12px] font-semibold leading-5 text-red-700">
+                    {loadError}
+                  </div>
+                ) : null}
               </div>
-              <button
-                type="button"
-                aria-label="发送"
-                className="flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-full bg-[#251e1e] text-white shadow-[0px_2px_8px_#00000025] transition-opacity hover:opacity-90"
-              >
-                <ChevronRight className="h-5 w-5" strokeWidth={2} />
-              </button>
             </div>
-            <AppBottomNav active="首页" journeyFlow={{ travelId, planId }} />
-          </div>
-        </div>
+
+            <div className={tabScreenComposerDockMtAutoClass}>
+              <AppActionButton
+                tone="blue"
+                Icon={CreditCard}
+                disabled={submitPending}
+                onClick={() => void confirmAndGoPayment()}
+              >
+                {submitPending ? "确认中…" : "确认无误，前往支付"}
+              </AppActionButton>
+              <AppComposer
+                value={input}
+                onChange={setInput}
+                onSubmit={() => void handleComposerSubmit()}
+                pending={submitPending}
+                placeholder={submitPending ? "正在处理…" : "补充预约问题，例如换个时间..."}
+              />
+              <AppBottomNav active="首页" journeyFlow={{ travelId, planId }} />
+            </div>
+          </>
+        )}
+      </div>
     </AppScreenShell>
   );
 };

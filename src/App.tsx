@@ -4,15 +4,18 @@ import {
   BOOKING_CHECKOUT_PATH,
   BOOKING_TODOS_PATH,
   CHAT_PATH,
+  COMPANION_PROFILES_PATH,
   HOME_PATH,
   HOME_PATH_ALT,
   ITINERARY_HUB_PATH,
+  LLM_SETTINGS_PATH,
   PAYMENT_CONFIRMATION_PATH,
   PAYMENT_PATH,
   PLANS_PATH,
   PROFILE_PATH,
   TIMELINE_PATH,
   ACTIVITY_PREFERENCES_PATH,
+  AI_TASK_PATH,
   BUDGET_PACE_PREFERENCES_PATH,
   DIETARY_PREFERENCES_PATH,
   TRAVEL_MODE_SETTINGS_PATH,
@@ -28,8 +31,11 @@ import { ItineraryHubScreen } from "./screens/ItineraryHubScreen";
 import { PaymentConfirmationScreen } from "./screens/PaymentConfirmationScreen";
 import { PaymentScreen } from "./screens/PaymentScreen";
 import { ProfileScreen } from "./screens/ProfileScreen";
+import { CompanionProfilesScreen } from "./screens/CompanionProfilesScreen";
+import { LLMSettingsScreen } from "./screens/LLMSettingsScreen";
 import { BookingTodosScreen } from "./screens/BookingTodosScreen";
 import { HomeScreen } from "./screens/HomeScreen";
+import { AiTaskProgressScreen } from "./screens/AiTaskProgressScreen";
 import { IphonePro } from "./screens/IphonePro";
 import { PlanCompareScreen } from "./screens/PlanCompareScreen";
 import { TimelineRouteScreen } from "./screens/TimelineRouteScreen";
@@ -83,6 +89,7 @@ export default function App(): JSX.Element {
         <Routes>
           <Route path={HOME_PATH_ALT} element={<HomeScreen />} />
           <Route path={HOME_PATH} element={<HomeScreen />} />
+          <Route path={AI_TASK_PATH} element={<AiTaskProgressScreen />} />
           <Route path={CHAT_PATH} element={<IphonePro />} />
           <Route path={PLANS_PATH} element={<PlanCompareScreen />} />
           <Route path={TIMELINE_PATH} element={<TimelineRouteScreen />} />
@@ -95,6 +102,8 @@ export default function App(): JSX.Element {
           <Route path={TRIP_FEEDBACK_DONE_PATH} element={<TripFeedbackDoneScreen />} />
           <Route path={ITINERARY_HUB_PATH} element={<ItineraryHubScreen />} />
           <Route path={PROFILE_PATH} element={<ProfileScreen />} />
+          <Route path={COMPANION_PROFILES_PATH} element={<CompanionProfilesScreen />} />
+          <Route path={LLM_SETTINGS_PATH} element={<LLMSettingsScreen />} />
           <Route path={TRAVEL_MODE_SETTINGS_PATH} element={<TravelModeSettingsScreen />} />
           <Route path={DIETARY_PREFERENCES_PATH} element={<DietaryPreferencesScreen />} />
           <Route path={ACTIVITY_PREFERENCES_PATH} element={<ActivityPreferencesScreen />} />

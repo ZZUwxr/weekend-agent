@@ -2,111 +2,210 @@ import {
   Bell,
   Calendar,
   Check,
-  ChevronRight,
   ClipboardList,
   Map as MapIcon,
-  MapPin,
   Pencil,
+  RefreshCw,
   Share2,
   Sparkles,
   XCircle,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { JourneyBottomNav } from "../../components/JourneyBottomNav";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { AppBottomNav } from "../../components/AppBottomNav";
+import { AppScreenShell } from "../../components/AppScreenShell";
+import { AppToast, useAppToast } from "../../components/AppToast";
 import {
-  tabScreenComposerDockMtAutoClass,
+  AppActionButton,
+  AppBackdrop,
+  AppCard,
+  AppComposer,
+  AppErrorState,
+  AppIconButton,
+  AppLoadingState,
+  AppPageHeader,
+  AppPill,
+  AppStatusStrip,
+} from "../../components/AppUi";
+import { EmbeddedStatusBarImage, EmbeddedStatusBarPlaceholder } from "../../components/EmbeddedStatusBar";
+import { useResolvedTravel } from "../../hooks/useResolvedTravel";
+import { fetchItineraryHubPage, reviseTravelPlan } from "../../lib/api";
+import { executeTravelPlan } from "../../lib/api";
+import type {
+  ItineraryHubHistoryItemDto,
+  ItineraryHubPageDto,
+  ItineraryHubQuickActionDto,
+  ItineraryHubTimelineNodeDto,
+} from "../../lib/api/types";
+import { setCurrentTravel } from "../../lib/currentTravel";
+import {
+  tabScreenComposerDockClass,
   tabScreenPrimaryColumnPaddingXClass,
 } from "../../lib/tabScreenDockLayout";
-import { EmbeddedStatusBarImage } from "../../components/EmbeddedStatusBar";
-import { AppScreenShell } from "../../components/AppScreenShell";
-import { ContentFitZoom } from "../../components/ContentFitZoom";
-import { useTripContentUnlocked } from "../../hooks/useTripContentUnlocked";
-import { fetchItineraryHubPage } from "../../lib/api";
-import { FIGMA_ITINERARY_HUB_111_1754 } from "../../lib/api/mock/figma-itinerary-hub-111-1754-assets";
-import { MOCK_TRAVEL_ID } from "../../lib/api/mock/travel.mock";
 import { cn } from "../../lib/utils";
-import type { ItineraryHubPageDto, ItineraryHubQuickActionDto } from "../../lib/api/types";
 import {
-  CHAT_PATH,
   ITINERARY_HUB_PATH,
   PAYMENT_CONFIRMATION_PATH,
   PLANS_PATH,
   TIMELINE_PATH,
   TRIP_LIVE_MAP_PATH,
+  TRIP_WRAP_PATH,
 } from "../../routes";
 import { ItineraryHubEmptyView } from "./ItineraryHubEmptyView";
 
 type HubLocationState = { travelId?: string; planId?: string };
 
-function StarRow({ n }: { n: number }): JSX.Element {
+function TimelineNode({ node, isLast }: { node: ItineraryHubTimelineNodeDto; isLast: boolean }): JSX.Element {
+  const isDone = node.kind === "done";
+  const isActive = node.kind === "active";
+
   return (
-    <span className="text-[11px] text-amber-400" aria-label={`${n} 星`}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <span key={i}>{i <= n ? "★" : "☆"}</span>
-      ))}
-    </span>
+    <li className="relative flex gap-3">
+      <div className="flex w-9 shrink-0 flex-col items-center">
+        <span
+          className={cn(
+            "flex h-8 w-8 items-center justify-center rounded-full text-[15px] font-bold shadow-sm",
+            isDone && "bg-[#0f766e] text-white",
+            isActive && "bg-[#ffd95a] text-[#3f3421]",
+            !isDone && !isActive && "border border-[#dbe3ee] bg-white text-[#475569]",
+          )}
+        >
+          {isDone ? <Check className="h-4 w-4" strokeWidth={2.5} /> : node.iconEmoji}
+        </span>
+        {!isLast ? <span className="mt-1 h-full min-h-8 w-px bg-[#dbe3ee]" /> : null}
+      </div>
+      <div
+        className={cn(
+          "min-w-0 flex-1 rounded-[14px] px-3 py-2.5",
+          isActive ? "border border-[#fde68a] bg-[#fff9db]" : "bg-white/70",
+          !isLast && "mb-2",
+        )}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px] font-bold leading-5 text-[#111827]">{node.title}</p>
+            {node.subtitle ? (
+              <p className="mt-0.5 text-[12px] leading-5 text-[#64748b]">{node.subtitle}</p>
+            ) : null}
+          </div>
+          <span className="shrink-0 text-[12px] font-bold text-[#475569]">{node.time}</span>
+        </div>
+      </div>
+    </li>
   );
 }
 
-function QuickActionButton({
+function QuickAction({
   action,
   flow,
+  onProviderAction,
 }: {
   action: ItineraryHubQuickActionDto;
   flow: { travelId: string; planId: string };
+  onProviderAction: (action: ItineraryHubQuickActionDto) => void;
 }): JSX.Element {
-  const shell =
-    "flex h-[4.25rem] w-full flex-col items-center justify-center gap-1 rounded-xl border-[0.76px] border-[#faf2ac] bg-[#fffef8] shadow-[0px_1px_6px_rgba(0,0,0,0.04)] transition-opacity hover:opacity-90 active:scale-[0.98]";
-  const labelCls =
-    "[font-family:'HYQiHei-Regular',Helvetica] text-[9px] font-semibold text-[#334155]";
-  const iconAmber = "h-5 w-5 text-[#ca8a04]";
-  const iconRed = "h-5 w-5 text-red-500";
+  const Icon =
+    action.kind === "map"
+      ? MapIcon
+      : action.kind === "share"
+        ? Share2
+        : action.kind === "calendar"
+          ? Calendar
+          : action.kind === "edit"
+            ? Pencil
+            : XCircle;
+  const tone = action.kind === "cancel" ? "text-[#dc2626] bg-[#fff1f2]" : "text-[#2456a6] bg-[#edf5ff]";
+  const classes =
+    "flex min-h-[76px] flex-col items-center justify-center gap-2 rounded-[16px] border border-[#e5e7eb] bg-white px-2 text-center shadow-[0_8px_20px_rgba(15,23,42,0.05)] transition active:scale-[0.98]";
 
   if (action.kind === "map") {
     return (
-      <Link to={TRIP_LIVE_MAP_PATH} state={flow} className={shell}>
-        <MapIcon className={iconAmber} strokeWidth={1.75} />
-        <span className={labelCls}>{action.label}</span>
+      <Link to={TRIP_LIVE_MAP_PATH} state={flow} onClick={() => setCurrentTravel(flow)} className={classes}>
+        <span className={cn("flex h-9 w-9 items-center justify-center rounded-full", tone)}>
+          <Icon className="h-4 w-4" strokeWidth={2.1} />
+        </span>
+        <span className="text-[11px] font-bold leading-4 text-[#334155]">{action.label}</span>
       </Link>
     );
   }
 
-  const Icon =
-    action.kind === "share"
-      ? Share2
-      : action.kind === "calendar"
-        ? Calendar
-        : action.kind === "edit"
-          ? Pencil
-          : XCircle;
-  const cls = action.kind === "cancel" ? iconRed : iconAmber;
-
   return (
-    <button type="button" className={shell}>
-      <Icon className={cls} strokeWidth={1.75} />
-      <span className={action.kind === "cancel" ? `${labelCls} text-red-600` : labelCls}>
+    <button
+      type="button"
+      onClick={() => onProviderAction(action)}
+      className={classes}
+    >
+      <span className={cn("flex h-9 w-9 items-center justify-center rounded-full", tone)}>
+        <Icon className="h-4 w-4" strokeWidth={2.1} />
+      </span>
+      <span className={cn("text-[11px] font-bold leading-4", action.kind === "cancel" ? "text-[#dc2626]" : "text-[#334155]")}>
         {action.label}
       </span>
     </button>
   );
 }
 
-function SectionSparkle(): JSX.Element {
+function HistoryCard({
+  item,
+}: {
+  item: ItineraryHubHistoryItemDto;
+}): JSX.Element {
+  const flow = { travelId: item.id, planId: item.planId || "plan-a" };
   return (
-    <Sparkles className="h-4 w-4 shrink-0 text-[#eab308] drop-shadow-[0_0_8px_rgba(234,179,8,0.55)]" strokeWidth={1.75} />
+    <AppCard as="article" className="p-3">
+      <div className="flex gap-3">
+        <div className="flex h-[74px] w-[74px] shrink-0 items-center justify-center overflow-hidden rounded-[14px] bg-[#f1f5f9] text-[28px]">
+          {item.thumbImageUrl ? (
+            <img src={item.thumbImageUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <span>{item.thumbEmoji ?? "📍"}</span>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[12px] font-semibold leading-5 text-[#64748b]">{item.dateLine}</p>
+          <h3 className="mt-0.5 text-[14px] font-bold leading-5 text-[#111827]">{item.routeSummary}</h3>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <AppPill className="bg-[#fff7df] text-[#92400e]">{item.ratingStars} 星体验</AppPill>
+            <AppPill className="bg-[#eefcf6] text-[#047857]">{item.priceText}</AppPill>
+          </div>
+        </div>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <Link
+          to={TIMELINE_PATH}
+          state={flow}
+          className="flex min-h-11 items-center justify-center rounded-[12px] bg-[#f1f5f9] text-[13px] font-bold text-[#334155]"
+        >
+          查看详情
+        </Link>
+        <Link
+          to={PLANS_PATH}
+          state={flow}
+          className="flex min-h-11 items-center justify-center gap-2 rounded-[12px] bg-[#111827] text-[13px] font-bold text-white"
+        >
+          <RefreshCw className="h-4 w-4" strokeWidth={2.1} />
+          再来一次
+        </Link>
+      </div>
+    </AppCard>
   );
 }
 
 export const ItineraryHubScreen = (): JSX.Element => {
   const { state, pathname } = useLocation();
+  const navigate = useNavigate();
   const loc = state as HubLocationState | null;
-  const travelId = loc?.travelId ?? MOCK_TRAVEL_ID;
-  const planId = loc?.planId ?? "plan-a";
+  const resolved = useResolvedTravel(loc);
+  const travelId = resolved.travelId;
+  const planId = resolved.planId;
+  const resolvingTravel = resolved.loading && !loc?.travelId;
+  const flow = useMemo(() => ({ travelId, planId }), [travelId, planId]);
 
   const [page, setPage] = useState<ItineraryHubPageDto | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [hubVoiceText, setHubVoiceText] = useState("");
+  const [submitPending, setSubmitPending] = useState(false);
+  const { toastMessage, showToast } = useAppToast();
 
   useEffect(() => {
     const prev = document.title;
@@ -118,15 +217,14 @@ export const ItineraryHubScreen = (): JSX.Element => {
     };
   }, [pathname]);
 
-  const unlocked = useTripContentUnlocked();
-
   useEffect(() => {
-    if (!unlocked) {
+    if (!travelId) {
       setPage(null);
       setLoadError(null);
       return;
     }
     let active = true;
+    setCurrentTravel({ travelId, planId });
     setLoadError(null);
     setPage(null);
     fetchItineraryHubPage(travelId, planId)
@@ -139,283 +237,219 @@ export const ItineraryHubScreen = (): JSX.Element => {
     return () => {
       active = false;
     };
-  }, [travelId, planId, unlocked]);
+  }, [travelId, planId]);
 
-  const flow = { travelId, planId };
+  async function handleHubComposerSubmit(): Promise<void> {
+    const text = hubVoiceText.trim();
+    if (!text) {
+      showToast("请输入想调整的行程内容");
+      return;
+    }
 
-  if (!unlocked) {
+    setSubmitPending(true);
+    setLoadError(null);
+    try {
+      const revised = await reviseTravelPlan(travelId, {
+        message: text,
+        targetPlanId: planId,
+        revisionMode: "partial",
+      });
+      setPage(revised.updatedItineraryHub ?? await fetchItineraryHubPage(travelId, planId));
+      setHubVoiceText("");
+      showToast("已更新当前行程");
+    } catch (e: unknown) {
+      setLoadError(e instanceof Error ? e.message : "修改行程失败");
+    } finally {
+      setSubmitPending(false);
+    }
+  }
+
+  async function handleQuickAction(action: ItineraryHubQuickActionDto): Promise<void> {
+    if (action.kind === "edit") {
+      showToast("可以在底部输入修改需求");
+      return;
+    }
+    const actionMap: Partial<Record<ItineraryHubQuickActionDto["kind"], string>> = {
+      share: "share_itinerary",
+      calendar: "calendar_reminder",
+      cancel: "cancel_trip",
+    };
+    const providerAction = actionMap[action.kind] ?? action.kind;
+    setSubmitPending(true);
+    setLoadError(null);
+    try {
+      const result = await executeTravelPlan(travelId, {
+        planId,
+        action: providerAction,
+        metadata: { source: "itinerary_hub", label: action.label },
+      });
+      showToast(result.message || "外部服务暂未接入，已记录待处理任务");
+    } catch (e: unknown) {
+      setLoadError(e instanceof Error ? e.message : "记录外部服务任务失败");
+    } finally {
+      setSubmitPending(false);
+    }
+  }
+
+  if (!travelId && !resolvingTravel) {
     return <ItineraryHubEmptyView travelId={travelId} planId={planId} />;
   }
 
-  const statusBarSrc = page?.statusBarImageUrl ?? FIGMA_ITINERARY_HUB_111_1754.statusBar;
+  const activeNode = page?.timelineNodes.find((node) => node.kind === "active");
+  const nextNode = page?.timelineNodes.find((node) => node.kind === "upcoming");
 
   return (
-    <AppScreenShell frameClassName="bg-[linear-gradient(180deg,#fffbeb_0%,#fffef9_38%,#ffffff_100%)]">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <img
-          src={FIGMA_ITINERARY_HUB_111_1754.bgBlobB}
-          alt=""
-          className="absolute -left-[100px] top-[42%] h-[760px] w-[1080px] max-w-none opacity-[0.06]"
+    <AppScreenShell frameClassName="bg-[#f8fafc]">
+      <AppBackdrop />
+      <AppToast message={toastMessage} />
+      {page ? (
+        <EmbeddedStatusBarImage src={page.statusBarImageUrl} className="relative z-20" height={61} width={402} />
+      ) : (
+        <EmbeddedStatusBarPlaceholder className="relative z-20 bg-white/60" />
+      )}
+
+      <div className={cn("relative z-10 flex min-h-0 flex-1 flex-col pb-2 pt-2", tabScreenPrimaryColumnPaddingXClass)}>
+        <AppPageHeader
+          eyebrow={`${planId.toUpperCase()} · 当前行程`}
+          title={page?.navTitle ?? "行程"}
+          subtitle={page ? `${page.overviewTimeRange} · ${page.overviewFooterLine}` : "正在同步你的行程"}
+          action={
+            page?.showNotificationsBell ? (
+              <AppIconButton label="通知" onClick={() => showToast("暂无新的行程通知")}>
+                <Bell className="h-5 w-5" strokeWidth={2.1} />
+              </AppIconButton>
+            ) : null
+          }
         />
-      </div>
 
-      <EmbeddedStatusBarImage src={statusBarSrc} className="relative z-[2]" height={61} width={402} />
-
-      <div
-        className={cn(
-          "relative z-[1] flex min-h-0 flex-1 flex-col pb-2 pt-2",
-          tabScreenPrimaryColumnPaddingXClass,
-        )}
-      >
-        <header className="mb-3 flex shrink-0 items-center justify-between gap-2">
-          <h1 className="[font-family:'HYQiHei-Regular',Helvetica] text-[20px] font-bold text-[#1e293b]">
-            {page?.navTitle ?? "行程"}
-          </h1>
-          {page?.showNotificationsBell ? (
-            <button
-              type="button"
-              aria-label="通知"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#64748b] hover:bg-black/[0.04]"
-            >
-              <Bell className="h-5 w-5" strokeWidth={1.75} />
-            </button>
+        <div className="mt-4 min-h-0 flex-1 overflow-y-auto pb-3">
+          {resolvingTravel ? (
+            <AppLoadingState label="正在同步当前行程..." />
+          ) : loadError && !page ? (
+            <AppErrorState message={loadError} />
+          ) : !page ? (
+            <AppLoadingState label="正在加载行程..." />
           ) : (
-            <span className="w-10 shrink-0" />
-          )}
-        </header>
-
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <ContentFitZoom
-            className="space-y-3 pb-2"
-            recalcKey={
-              page
-                ? `${page.timelineNodes.length}:${page.historyItems.length}:${page.quickActions.map((a) => a.id).join(",")}`
-                : ""
-            }
-          >
-            {loadError ? (
-              <p className="text-center text-[13px] text-red-600">{loadError}</p>
-            ) : !page ? (
-              <p className="py-8 text-center text-[13px] text-[#64748b]">加载中…</p>
-            ) : (
-              <>
-                {/* Figma 111:1754 · 今日行程 + 时间轴（单卡黄头白身） */}
-                <div className="overflow-hidden rounded-[18px] border-[0.76px] border-[#faf2ac] bg-white shadow-[0px_6px_24px_rgba(15,23,42,0.06)]">
-                  <div className="bg-[linear-gradient(95deg,#fde047_0%,#fef08a_42%,#fef9c3_100%)] px-4 py-3.5">
-                    <div className="flex items-start gap-2.5">
-                      <SectionSparkle />
-                      <div className="min-w-0 flex-1">
-                        <p className="[font-family:'HYQiHei-Regular',Helvetica] text-[16px] font-bold leading-tight text-[#1e293b]">
-                          今日行程
-                        </p>
-                        <div className="mt-1 flex items-center gap-1.5">
-                          <Calendar className="h-3.5 w-3.5 shrink-0 text-[#ca8a04]" strokeWidth={1.75} />
-                          <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[13px] font-semibold text-[#ca8a04]">
-                            {page.overviewTimeRange}
-                          </span>
-                        </div>
-                        <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 [font-family:'HYQiHei-Regular',Helvetica] text-[12px] font-medium text-[#334155]">
-                          {page.overviewFlowChips.map((c, idx) => (
-                            <span key={c.id} className="inline-flex items-center gap-1">
-                              {idx > 0 ? <span className="text-[#94a3b8]">→</span> : null}
-                              <span className="text-base leading-none">{c.iconEmoji}</span>
-                              <span>{c.label}</span>
-                            </span>
-                          ))}
-                        </div>
-                        <p className="mt-2 [font-family:'HYQiHei-Regular',Helvetica] text-[11px] font-medium text-[#92400e]/90">
-                          {page.overviewFooterLine}
-                        </p>
+            <div className="space-y-3">
+              <AppCard className="overflow-hidden p-0">
+                <div className="bg-[#111827] px-4 py-4 text-white">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/14">
+                      <Sparkles className="h-5 w-5 text-[#ffd95a]" strokeWidth={2.1} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-semibold leading-5 text-white/72">现在进行到</p>
+                      <h2 className="mt-1 text-[20px] font-bold leading-6">{page.currentStageTitle}</h2>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <AppPill className="bg-white/12 text-white">{page.currentStageStatusBadge}</AppPill>
+                        <AppPill className="bg-[#ffd95a] text-[#3f3421]">{planId.toUpperCase()}</AppPill>
                       </div>
                     </div>
                   </div>
-
-                  <div className="border-t border-[#fef3c7] bg-white px-3 pb-3 pt-3">
-                    <div className="mb-3 flex items-center justify-between gap-2">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <MapPin className="h-4 w-4 shrink-0 text-[#ca8a04]" strokeWidth={1.75} />
-                        <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[14px] font-bold text-[#1e293b]">
-                          {page.currentStageTitle}
-                        </span>
-                      </div>
-                      <span className="shrink-0 rounded-full bg-[#fef3c7] px-2.5 py-0.5 [font-family:'HYQiHei-Regular',Helvetica] text-[10px] font-semibold text-[#92400e]">
-                        {page.currentStageStatusBadge}
-                      </span>
-                    </div>
-
-                    <ul className="relative space-y-0">
-                      {page.timelineNodes.map((node, index) => {
-                        const isLast = index === page.timelineNodes.length - 1;
-                        const contentInner = (
-                          <>
-                            <div className="flex items-baseline gap-2">
-                              <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[12px] font-bold text-[#0f172a]">
-                                {node.time}
-                              </span>
-                              <span className="text-base leading-none">{node.iconEmoji}</span>
-                              <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[12px] font-semibold text-[#334155]">
-                                {node.title}
-                              </span>
-                            </div>
-                            {node.subtitle ? (
-                              <p className="mt-0.5 pl-1 [font-family:'HYQiHei-Regular',Helvetica] text-[10px] font-medium text-[#64748b]">
-                                🕐 {node.subtitle}
-                              </p>
-                            ) : null}
-                          </>
-                        );
-
-                        return (
-                          <li key={node.id} className="relative flex gap-3">
-                            <div className="flex w-8 shrink-0 flex-col items-center pt-0.5">
-                              {node.kind === "done" ? (
-                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm">
-                                  <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-                                </span>
-                              ) : node.kind === "active" ? (
-                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#eab308] text-sm shadow-sm">
-                                  {node.iconEmoji}
-                                </span>
-                              ) : (
-                                <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#fde68a] bg-white text-sm">
-                                  {node.iconEmoji}
-                                </span>
-                              )}
-                              {!isLast ? (
-                                <div className="mt-0.5 min-h-[1.25rem] w-0.5 flex-1 bg-[#fde68a]/70" />
-                              ) : null}
-                            </div>
-                            <div className={`min-w-0 flex-1 ${!isLast ? "pb-3" : ""}`}>
-                              {node.kind === "active" ? (
-                                <div className="rounded-xl border border-[#fde68a] bg-[#fffbeb] px-3 py-2 shadow-sm">
-                                  {contentInner}
-                                </div>
-                              ) : (
-                                <div
-                                  className={
-                                    node.kind === "upcoming" ? "rounded-lg py-0.5 opacity-95" : "py-0.5"
-                                  }
-                                >
-                                  {contentInner}
-                                </div>
-                              )}
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
                 </div>
-
-                <div className="grid grid-cols-5 gap-2">
-                  {page.quickActions.map((a) => (
-                    <QuickActionButton key={a.id} action={a} flow={flow} />
-                  ))}
-                </div>
-
-                <div>
-                  <div className="mb-2 flex items-center gap-2">
-                    <SectionSparkle />
-                    <ClipboardList className="h-4 w-4 text-[#ca8a04]" strokeWidth={1.75} />
-                    <h2 className="[font-family:'HYQiHei-Regular',Helvetica] text-[14px] font-bold text-[#1e293b]">
-                      {page.historySectionTitle}
-                    </h2>
-                  </div>
-                  <div className="space-y-2.5">
-                    {page.historyItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex gap-2.5 rounded-[14px] border-[0.76px] border-[#faf2ac] bg-[#fffef9] p-2.5 shadow-[0px_2px_8px_rgba(0,0,0,0.04)]"
-                      >
-                        <div className="flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#fef3c7]/40 text-2xl">
-                          {item.thumbImageUrl ? (
-                            <img
-                              src={item.thumbImageUrl}
-                              alt=""
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <span>{item.thumbEmoji ?? "📷"}</span>
-                          )}
-                        </div>
-                        <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
-                          <div>
-                            <p className="[font-family:'HYQiHei-Regular',Helvetica] text-[11px] font-semibold text-[#64748b]">
-                              {item.dateLine}
-                            </p>
-                            <p className="[font-family:'HYQiHei-Regular',Helvetica] text-[12px] font-bold text-[#1e293b]">
-                              {item.routeSummary}
-                            </p>
-                            <div className="mt-0.5 flex flex-wrap items-center gap-2">
-                              <StarRow n={item.ratingStars} />
-                              <span className="[font-family:'HYQiHei-Regular',Helvetica] text-[12px] font-bold text-[#ea580c]">
-                                {item.priceText}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="mt-2 flex flex-wrap gap-1.5">
-                            <Link
-                              to={TIMELINE_PATH}
-                              state={flow}
-                              className="rounded-lg border-[0.76px] border-[#fde68a] bg-white px-2 py-1 [font-family:'HYQiHei-Regular',Helvetica] text-[9px] font-semibold text-[#b45309] hover:bg-[#fffbeb]"
-                            >
-                              查看详情
-                            </Link>
-                            <Link
-                              to={PLANS_PATH}
-                              state={flow}
-                              className="rounded-lg bg-[#ffd100] px-2 py-1 [font-family:'HYQiHei-Regular',Helvetica] text-[9px] font-semibold text-[#78350f] shadow-[0px_2px_6px_rgba(245,200,20,0.35)] hover:opacity-95"
-                            >
-                              再来一次
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
+                <div className="px-4 py-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {page.overviewFlowChips.map((chip) => (
+                      <AppPill key={chip.id} className="bg-[#f8fafc] text-[#334155]">
+                        <span className="mr-1">{chip.iconEmoji}</span>
+                        {chip.label}
+                      </AppPill>
                     ))}
                   </div>
                 </div>
+              </AppCard>
 
-                <Link
-                  to={PAYMENT_CONFIRMATION_PATH}
-                  state={flow}
-                  className="inline-flex text-[11px] font-medium text-[#64748b] underline-offset-2 hover:text-[#ca8a04] hover:underline"
-                >
-                  上一屏：支付确认
-                </Link>
-              </>
-            )}
-          </ContentFitZoom>
+              {activeNode || nextNode ? (
+                <div className="grid grid-cols-2 gap-2">
+                  {activeNode ? (
+                    <AppStatusStrip
+                      Icon={Check}
+                      title={activeNode.title}
+                      detail={`${activeNode.time}${activeNode.subtitle ? ` · ${activeNode.subtitle}` : ""}`}
+                      className="h-full"
+                    />
+                  ) : null}
+                  {nextNode ? (
+                    <AppStatusStrip
+                      Icon={Calendar}
+                      title="下一步"
+                      detail={`${nextNode.time} · ${nextNode.title}`}
+                      className="h-full"
+                    />
+                  ) : null}
+                </div>
+              ) : null}
 
-          <div className={tabScreenComposerDockMtAutoClass}>
-            <div className="flex min-w-0 items-center gap-2">
-              <div className="relative flex min-h-[46px] min-w-0 flex-1 items-center rounded-[30px] border-[0.5px] border-[#50a9fe] bg-white pl-2 pr-2 shadow-[0px_2px_8px_rgba(0,0,0,0.06)]">
-                <img
-                  src={FIGMA_ITINERARY_HUB_111_1754.voiceInput}
-                  alt=""
-                  className="h-7 w-[34px] shrink-0 object-contain"
-                  height={28}
-                  width={34}
-                />
-                <input
-                  type="text"
-                  value={hubVoiceText}
-                  onChange={(e) => setHubVoiceText(e.target.value)}
-                  placeholder="有疑问可以在这里补充…"
-                  className="min-w-0 flex-1 bg-transparent py-2 pl-2 pr-2 [font-family:'HYQiHei-Regular',Helvetica] text-[13px] text-[#333c43] outline-none placeholder:text-[#333c4380]"
-                />
+              <AppCard>
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <h2 className="text-[17px] font-bold text-[#111827]">路线进度</h2>
+                  <Link to={TIMELINE_PATH} state={flow} className="text-[12px] font-bold text-[#2456a6]">
+                    完整时间轴
+                  </Link>
+                </div>
+                <ol>
+                  {page.timelineNodes.map((node, index) => (
+                    <TimelineNode
+                      key={node.id}
+                      node={node}
+                      isLast={index === page.timelineNodes.length - 1}
+                    />
+                  ))}
+                </ol>
+              </AppCard>
+
+              <div className="grid grid-cols-3 gap-2">
+                {page.quickActions.map((action) => (
+                  <QuickAction
+                    key={action.id}
+                    action={action}
+                    flow={flow}
+                    onProviderAction={(next) => void handleQuickAction(next)}
+                  />
+                ))}
               </div>
-              <Link
-                to={CHAT_PATH}
-                state={{ message: hubVoiceText.trim() || "我想继续调整行程", travelId }}
-                aria-label="进入对话"
-                className="flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-full bg-[#251e1e] text-white shadow-[0px_2px_8px_rgba(0,0,0,0.18)] transition-opacity hover:opacity-90"
-              >
-                <ChevronRight className="h-5 w-5" strokeWidth={2} />
-              </Link>
-            </div>
 
-            <JourneyBottomNav active="行程" travelId={travelId} planId={planId} />
+              <div>
+                <div className="mb-2 flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4 text-[#2456a6]" strokeWidth={2.1} />
+                  <h2 className="text-[17px] font-bold text-[#111827]">{page.historySectionTitle}</h2>
+                </div>
+                <div className="space-y-2.5">
+                  {page.historyItems.map((item) => (
+                    <HistoryCard key={item.id} item={item} />
+                  ))}
+                </div>
+              </div>
+
+              {loadError ? (
+                <div className="rounded-[14px] border border-red-100 bg-white px-4 py-3 text-[12px] font-semibold leading-5 text-red-700">
+                  {loadError}
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
+
+        <div className={tabScreenComposerDockClass}>
+          <div className="grid grid-cols-2 gap-2">
+            <AppActionButton tone="muted" onClick={() => navigate(PAYMENT_CONFIRMATION_PATH, { state: flow })}>
+              查看确认单
+            </AppActionButton>
+            <AppActionButton tone="blue" onClick={() => navigate(TRIP_LIVE_MAP_PATH, { state: flow })}>
+              实时地图
+            </AppActionButton>
           </div>
+          <AppActionButton tone="green" onClick={() => navigate(TRIP_WRAP_PATH, { state: flow })}>
+            结束行程并反馈
+          </AppActionButton>
+          <AppComposer
+            value={hubVoiceText}
+            onChange={setHubVoiceText}
+            onSubmit={() => void handleHubComposerSubmit()}
+            pending={submitPending}
+            placeholder={submitPending ? "正在修改行程..." : "补充想调整的行程内容..."}
+          />
+          <AppBottomNav active="行程" journeyFlow={flow} variant="journey" />
         </div>
       </div>
     </AppScreenShell>

@@ -1,228 +1,548 @@
 import {
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Clock3,
+  Route,
+  SendHorizontal,
+  Sparkles,
+  UsersRound,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AppBottomNav } from "../../components/AppBottomNav";
-import { tabScreenComposerDockMtAutoClass } from "../../lib/tabScreenDockLayout";
-import { EmbeddedStatusBarImage } from "../../components/EmbeddedStatusBar";
 import { AppScreenShell } from "../../components/AppScreenShell";
-import { ContentFitZoom } from "../../components/ContentFitZoom";
-import { fetchPlanComparisonPage } from "../../lib/api";
+import { AppToast, useAppToast } from "../../components/AppToast";
+import { RevisionNotice, type RevisionNoticeState } from "../../components/RevisionNotice";
+import { EmbeddedStatusBarImage } from "../../components/EmbeddedStatusBar";
+import { embeddedBackButtonTopClass } from "../../lib/embeddedStatusBar";
+import { fetchPlanComparisonPage, reviseTravelPlan } from "../../lib/api";
 import { FIGMA_PLANS_1119 } from "../../lib/api/mock/figma-plans-1119-assets";
-import { MOCK_TRAVEL_ID } from "../../lib/api/mock/travel.mock";
 import type {
   PlanActivityDto,
   PlanComparisonPageDto,
   PlanMemberRatingDto,
   TravelPlanCardDto,
 } from "../../lib/api/types";
-import {
-  CHAT_PATH,
-  PLANS_PATH,
-  TIMELINE_PATH,
-} from "../../routes";
-import { embeddedBackButtonTopClass } from "../../lib/embeddedStatusBar";
+import { useResolvedTravel } from "../../hooks/useResolvedTravel";
+import { setCurrentTravel } from "../../lib/currentTravel";
+import { tabScreenComposerDockMtAutoClass } from "../../lib/tabScreenDockLayout";
 import { cn } from "../../lib/utils";
+import { CHAT_PATH, PLANS_PATH, TIMELINE_PATH } from "../../routes";
 
-type PlansLocationState = { travelId?: string };
+type PlansLocationState = { travelId?: string; planId?: string };
+type PlanChoiceLetter = "a" | "b" | "c";
 
-/** 用户在第三页输入里表达选 A/B 即进入对应时间轴（第四页） */
-function detectPlanChoiceFromInput(text: string): "plan-a" | "plan-b" | null {
+type PlanTheme = {
+  badge: string;
+  border: string;
+  button: string;
+  dot: string;
+  faint: string;
+  progress: string;
+  ring: string;
+  softText: string;
+};
+
+const PLAN_LETTERS = ["A", "B", "C", "D", "E"];
+
+const PLAN_THEMES: PlanTheme[] = [
+  {
+    badge: "bg-[#fff4d6] text-[#8a5a00]",
+    border: "border-[#f1c96d]",
+    button: "bg-[#1f2937] text-white shadow-[0_8px_18px_rgba(31,41,55,0.18)]",
+    dot: "bg-[#f5b740]",
+    faint: "bg-[#fff9ea]",
+    progress: "bg-[#f5b740]",
+    ring: "ring-[#f5b740]/25",
+    softText: "text-[#8a5a00]",
+  },
+  {
+    badge: "bg-[#e8f1ff] text-[#1d4ed8]",
+    border: "border-[#93b9f8]",
+    button: "bg-[#2456a6] text-white shadow-[0_8px_18px_rgba(36,86,166,0.2)]",
+    dot: "bg-[#3b82f6]",
+    faint: "bg-[#f1f6ff]",
+    progress: "bg-[#3b82f6]",
+    ring: "ring-[#3b82f6]/20",
+    softText: "text-[#1d4ed8]",
+  },
+  {
+    badge: "bg-[#e8f7f0] text-[#047857]",
+    border: "border-[#8dd8b8]",
+    button: "bg-[#0f766e] text-white shadow-[0_8px_18px_rgba(15,118,110,0.18)]",
+    dot: "bg-[#10b981]",
+    faint: "bg-[#f0fbf7]",
+    progress: "bg-[#10b981]",
+    ring: "ring-[#10b981]/20",
+    softText: "text-[#047857]",
+  },
+];
+
+/** 用户在第三页输入里表达选 A/B/C 即进入对应时间轴（第四页） */
+function detectPlanChoiceFromInput(text: string): PlanChoiceLetter | null {
   const raw = text.trim();
   if (!raw) return null;
-  const spaced = raw.toLowerCase().replace(/\s+/g, " ");
-  const compactAlpha = spaced.replace(/\s/g, "");
 
-  const hasB =
-    /\bplan\s*[-_]?\s*b\b/i.test(spaced) ||
-    /\bb\s+plan\b/i.test(spaced) ||
-    /方案\s*[-_]?\s*b(?:\s|$|[,，.。!])/i.test(raw) ||
-    /^planb$/i.test(compactAlpha);
-  const hasA =
-    /\bplan\s*[-_]?\s*a\b/i.test(spaced) ||
-    /\ba\s+plan\b/i.test(spaced) ||
-    /方案\s*[-_]?\s*a(?:\s|$|[,，.。!])/i.test(raw) ||
-    /^plana$/i.test(compactAlpha);
+  const compact = raw.toLowerCase().replace(/\s+/g, "");
+  const direct = compact.match(/^(?:plan)?([abc])$/);
+  if (direct?.[1]) return direct[1] as PlanChoiceLetter;
 
-  if (hasB && !hasA) return "plan-b";
-  if (hasA && !hasB) return "plan-a";
-  return null;
+  const hits = (["a", "b", "c"] as PlanChoiceLetter[]).filter((letter) => {
+    const planPattern = new RegExp(`\\bplan\\s*[-_]?\\s*${letter}\\b`, "i");
+    const reversePattern = new RegExp(`\\b${letter}\\s*plan\\b`, "i");
+    const chinesePattern = new RegExp(`方案\\s*[-_]?\\s*${letter}`, "i");
+    const choosePattern = new RegExp(`(?:选|选择|要|用|定|看)\\s*(?:plan\\s*)?${letter}`, "i");
+    return (
+      planPattern.test(raw) ||
+      reversePattern.test(raw) ||
+      chinesePattern.test(raw) ||
+      choosePattern.test(raw)
+    );
+  });
+
+  return hits.length === 1 ? hits[0] : null;
 }
 
-function planCardTitleClass(accent: "warm" | "cool"): string {
-  /** 不用 bg-clip-text：父级 zoom 时 WebView 上常把渐变字绘成「透明」，Plan B 标题会消失 */
-  return accent === "warm"
-    ? "[font-family:'HYQiHei-Regular',Helvetica] text-[14px] font-semibold leading-[1.35] text-[#1e293b]"
-    : "[font-family:'HYQiHei-Regular',Helvetica] text-[14px] font-semibold leading-[1.35] text-[#1e3a4c]";
+function resolveChoicePlanId(
+  choice: PlanChoiceLetter,
+  plans: TravelPlanCardDto[] | undefined,
+): string {
+  const upper = choice.toUpperCase();
+  const matched = (plans ?? []).find((plan) => {
+    const id = plan.id.toLowerCase();
+    const label = `${plan.planLabel} ${plan.headline}`.toUpperCase();
+    return (
+      id === `plan-${choice}` ||
+      id.endsWith(`-${choice}`) ||
+      label.includes(`PLAN ${upper}`) ||
+      label.includes(`方案${upper}`)
+    );
+  });
+  return matched?.id ?? `plan-${choice}`;
 }
 
-function compensationTitleClass(): string {
-  return "[font-family:'HYQiHei-Regular',Helvetica] text-[10px] font-semibold leading-snug text-[#475569]";
+function getPlanTheme(plan: TravelPlanCardDto, index: number): PlanTheme {
+  if (plan.accent === "warm") return PLAN_THEMES[0];
+  if (plan.accent === "cool") return PLAN_THEMES[1];
+  return PLAN_THEMES[index % PLAN_THEMES.length];
 }
 
-function parseTopStrip(text: string): { semi: string; tail: string } | null {
-  const m = text.match(/^(.*?)(…|⋯|\.\.\.?)$/);
-  if (!m || !text.includes("详细时间轴")) return null;
-  return { semi: m[1], tail: m[2] ?? "…" };
+function getPlanName(plan: TravelPlanCardDto, index: number): string {
+  const raw = (plan.planLabel ?? "")
+    .replace(/\s*[·•|:：-]\s*$/u, "")
+    .trim();
+  if (raw) return raw;
+  return `Plan ${PLAN_LETTERS[index] ?? index + 1}`;
 }
 
-function StarRow({ filled, accent }: { filled: number; accent: "warm" | "cool" }): JSX.Element {
-  const n = Math.max(0, Math.min(5, Math.round(filled)));
-  const on = accent === "warm" ? "#f5c814" : "#50a9fe";
-  const off = "#d1d5db";
+function getPlanHeadline(plan: TravelPlanCardDto, index: number): string {
+  const label = plan.planLabel?.trim() ?? "";
+  let headline = plan.headline?.trim() ?? "";
+  if (label && headline.startsWith(label)) {
+    headline = headline.slice(label.length).trim();
+  }
+  headline = headline.replace(/^[·•|:：-]\s*/u, "");
+  return headline || getPlanName(plan, index);
+}
+
+function getPlanTags(plan: TravelPlanCardDto, limit = 6): string[] {
+  const seen = new Set<string>();
+  const tags: string[] = [];
+  for (const activity of plan.activities ?? []) {
+    for (const tag of activity.tags ?? []) {
+      const label = tag.label.trim();
+      if (!label || seen.has(label)) continue;
+      seen.add(label);
+      tags.push(label);
+      if (tags.length >= limit) return tags;
+    }
+  }
+  return tags;
+}
+
+function getScorePercent(member: PlanMemberRatingDto): number {
+  const value = Number.isFinite(member.score) ? member.score : 0;
+  return Math.max(0, Math.min(100, (value / 5) * 100));
+}
+
+function getFirstReason(plan: TravelPlanCardDto): string | null {
+  return plan.compensationParagraphs?.find((line) => line.trim().length > 0) ?? null;
+}
+
+function selectRecommendedPlan(plans: TravelPlanCardDto[]): {
+  plan: TravelPlanCardDto | null;
+  index: number;
+} {
+  const index = Math.max(0, plans.findIndex((plan) => plan.recommended));
+  return { plan: plans[index] ?? null, index };
+}
+
+function LoadingState(): JSX.Element {
   return (
-    <div className="flex justify-center gap-px pt-px text-[11px] leading-none">
-      {Array.from({ length: 5 }, (_, i) => (
-        <span key={i} style={{ color: i < n ? on : off }}>
-          ★
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function TagPill({ label }: { label: string }): JSX.Element {
-  return (
-    <span className="inline-flex items-center rounded-[6px] border-[0.5px] border-[#d8d8d8] bg-[linear-gradient(rgba(225,240,255,0.44)_23.58%,rgba(255,255,255,0.44)_100%)] px-[5px] py-px shadow-[0px_0.6px_1.2px_0px_#d1e8ff] [font-family:'HYQiHei-Regular',Helvetica] text-[6.2px] font-normal leading-tight text-[#343d43]">
-      {label}
-    </span>
-  );
-}
-
-function PlanTimelineActivities({
-  plan,
-  spineSrc,
-}: {
-  plan: TravelPlanCardDto;
-  spineSrc: string;
-}): JSX.Element {
-  return (
-    <div className="relative mt-[2px] flex gap-3 pl-0">
-      <div className="relative w-[22px] shrink-0 pt-1">
-        <img src={spineSrc} alt="" className="absolute left-[1px] top-0 h-[93px] w-4 max-w-none object-cover object-center" />
-      </div>
-      <div className="min-w-0 flex-1 space-y-2.5 pt-px">
-        {plan.activities.map((act: PlanActivityDto) => (
-          <div key={act.id}>
-            <p className="whitespace-normal [font-family:'HYQiHei-Regular',Helvetica] text-[10.5px] font-normal leading-tight tracking-normal text-[#343d43]">
-              {act.title}
-              {act.durationLabel ? `\u3000${act.durationLabel}` : null}
-            </p>
-            {act.tags.length > 0 ? (
-              <div className="mt-[6px] flex flex-wrap gap-x-2 gap-y-2">{act.tags.map((t) => <TagPill key={t.id} label={t.label} />)}</div>
-            ) : null}
-          </div>
+    <div className="flex min-h-0 flex-1 flex-col px-[14px] py-5">
+      <div className="mb-4 h-9 w-36 animate-pulse rounded-[8px] bg-[#e5e7eb]" />
+      <div className="mb-4 h-28 animate-pulse rounded-[16px] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.06)]" />
+      <div className="space-y-3">
+        {[0, 1, 2].map((item) => (
+          <div
+            key={item}
+            className="h-44 animate-pulse rounded-[16px] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.06)]"
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function MemberRatingCell({
-  m,
-  accent,
-}: {
-  m: PlanMemberRatingDto;
-  accent: "warm" | "cool";
-}): JSX.Element {
+function ErrorState({ message }: { message: string }): JSX.Element {
   return (
-    <div className="flex flex-col rounded-[8.5px] border-[0.474px] border-[#c8c8c8] px-[2px] py-[5px] [font-family:'HYQiHei-Regular',Helvetica]">
-      <div className="flex items-start justify-between gap-1 px-1 text-[15px] leading-none text-black">
-        <span aria-hidden>{m.emoji}</span>
+    <div className="flex min-h-0 flex-1 items-center justify-center px-[22px] text-center">
+      <div className="rounded-[16px] border border-red-100 bg-white px-5 py-5 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+        <p className="text-[15px] font-semibold text-[#991b1b]">方案加载失败</p>
+        <p className="mt-2 text-[12px] leading-5 text-[#64748b]">{message}</p>
       </div>
-      <div className="mt-px flex justify-between px-2 text-[8px] text-[#343d43]">
-        <span>{m.label}</span>
-        <span>{m.score.toFixed(2)}</span>
-      </div>
-      <StarRow filled={m.starsFilled} accent={accent} />
     </div>
   );
 }
 
-function ComparisonPlanCard({ plan }: { plan: TravelPlanCardDto }): JSX.Element {
-  const accent = plan.accent ?? "warm";
-  const glow1 = accent === "warm" ? FIGMA_PLANS_1119.cardGlowA1 : FIGMA_PLANS_1119.cardGlowB1;
-  const glow2 = accent === "warm" ? FIGMA_PLANS_1119.cardGlowA2 : FIGMA_PLANS_1119.cardGlowB2;
-  const spineSrc = accent === "warm" ? FIGMA_PLANS_1119.timelineSpineA : FIGMA_PLANS_1119.timelineSpineB;
-  const sparkleImg = accent === "warm" ? FIGMA_PLANS_1119.sparkleGold : FIGMA_PLANS_1119.sparkleBlue;
-  const titleCls = planCardTitleClass(accent);
+function SmallPill({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}): JSX.Element {
+  return (
+    <span
+      className={cn(
+        "inline-flex min-h-7 items-center rounded-full px-3 text-[11px] font-semibold leading-none",
+        className,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+function RecommendationPanel({
+  page,
+  onSelectPlan,
+}: {
+  page: PlanComparisonPageDto;
+  onSelectPlan: (planId: string) => void;
+}): JSX.Element {
+  const plans = Array.isArray(page.plans) ? page.plans : [];
+  const { plan: recommended, index } = selectRecommendedPlan(plans);
+  const theme = recommended ? getPlanTheme(recommended, index) : PLAN_THEMES[0];
+  const tags = recommended ? getPlanTags(recommended, 3) : [];
+  const name = recommended ? getPlanName(recommended, index) : "推荐方案";
+  const headline = recommended ? getPlanHeadline(recommended, index) : "正在整理更合适的安排";
 
   return (
-    <div className="relative mx-auto w-[calc(100%-6px)] max-w-[342px] overflow-hidden rounded-[15px] border border-[#50a9fe] bg-white shadow-[0px_4px_20px_0px_#d0def8] lg:mx-auto">
-      <img
-        src={glow1}
-        alt=""
-        className="pointer-events-none absolute right-[-72px] top-[33px] z-0 h-[242px] w-[293px] max-w-none object-cover opacity-95"
-      />
-      <img
-        src={glow2}
-        alt=""
-        className="pointer-events-none absolute -left-[110px] -top-[147px] z-0 h-[220px] w-[271px] max-w-none object-cover opacity-[0.93]"
-      />
-      <div className="relative z-10 pb-2 pl-[10px] pr-[12px] pt-3">
-        <header className="relative flex gap-2 pb-2 pr-3">
-          <img src={sparkleImg} alt="" width={24} height={24} className="h-5 w-5 shrink-0 overflow-hidden rounded-full object-cover" />
-          <div className="min-w-0 flex-1 pr-[76px]">
-            <h2 className={cn("break-words", titleCls)}>
-              {plan.planLabel}
-              {plan.headline}
-            </h2>
-          </div>
-          <div className="pointer-events-none absolute right-[6px] top-3 z-[20]">
-            <TagPill label={plan.overallScoreLabel} />
-          </div>
-        </header>
+    <section className="rounded-[16px] border border-[#e5e7eb] bg-white p-4 shadow-[0_10px_26px_rgba(15,23,42,0.07)]">
+      <div className="flex items-center gap-2 text-[12px] font-semibold text-[#475569]">
+        <span className={cn("flex h-7 w-7 items-center justify-center rounded-full", theme.faint)}>
+          <Sparkles className={cn("h-4 w-4", theme.softText)} strokeWidth={2.2} />
+        </span>
+        推荐结果
+      </div>
 
-        <PlanTimelineActivities plan={plan} spineSrc={spineSrc} />
-
-        <div className="my-2 h-px bg-[linear-gradient(transparent,#e8e9eb,transparent)]" aria-hidden />
-
-        <div className="grid grid-cols-3 gap-x-1.5 gap-y-2">
-          {plan.memberRatings.map((m: PlanMemberRatingDto) => (
-            <MemberRatingCell key={m.id + plan.id} m={m} accent={accent} />
-          ))}
+      <div className="mt-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-[22px] font-bold leading-[1.18] tracking-[0] text-[#111827]">
+            我更推荐 {name}
+          </h1>
+          <p className="mt-2 text-[14px] font-semibold leading-5 text-[#374151]">{headline}</p>
         </div>
+        {recommended?.overallScoreLabel ? (
+          <SmallPill className={cn("shrink-0", theme.badge)}>
+            {recommended.overallScoreLabel}
+          </SmallPill>
+        ) : null}
+      </div>
 
-        {plan.compensationTitle && plan.compensationParagraphs && plan.compensationParagraphs.length > 0 ? (
-          <section className="mt-2 rounded-[11px] border border-transparent bg-transparent px-[2px] pt-2">
-            <div className="flex items-start gap-1.5">
-              <img src={sparkleImg} alt="" width={24} height={24} className="h-5 w-5 shrink-0 rounded-full object-cover" />
-              <div className="min-w-0">
-                <h3 className={compensationTitleClass()}>{plan.compensationTitle}</h3>
-                <div className="mt-[5px] space-y-1 text-[9px] font-normal leading-[13px] text-[#343d43]">
-                  {plan.compensationParagraphs.map((para, idx) => (
-                    <p key={idx}>{para}</p>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
+      {page.assistantMessage ? (
+        <p className="mt-3 line-clamp-3 text-[13px] leading-5 text-[#64748b]">
+          {page.assistantMessage}
+        </p>
+      ) : null}
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        <SmallPill className="bg-[#f1f5f9] text-[#475569]">共 {plans.length} 个方案</SmallPill>
+        {tags.map((tag) => (
+          <SmallPill key={tag} className="bg-[#f8fafc] text-[#64748b]">
+            {tag}
+          </SmallPill>
+        ))}
+      </div>
+
+      {recommended ? (
+        <button
+          type="button"
+          onClick={() => onSelectPlan(recommended.id)}
+          className={cn(
+            "mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-[12px] text-[14px] font-semibold transition active:scale-[0.99]",
+            theme.button,
+          )}
+        >
+          直接查看路线
+          <ChevronRight className="h-4 w-4" strokeWidth={2.2} />
+        </button>
+      ) : null}
+    </section>
+  );
+}
+
+function RouteStep({
+  activity,
+  index,
+  isLast,
+  theme,
+}: {
+  activity: PlanActivityDto;
+  index: number;
+  isLast: boolean;
+  theme: PlanTheme;
+}): JSX.Element {
+  const tags = (activity.tags ?? []).slice(0, 3);
+
+  return (
+    <div className="grid grid-cols-[30px_1fr] gap-3">
+      <div className="flex flex-col items-center">
+        <span className={cn("flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-bold text-white", theme.dot)}>
+          {index + 1}
+        </span>
+        {!isLast ? <span className="mt-2 h-full min-h-5 w-px bg-[#d9dee7]" /> : null}
+      </div>
+      <div className={cn("min-w-0", !isLast && "pb-4")}>
+        <div className="flex items-start justify-between gap-3">
+          <p className="min-w-0 text-[14px] font-semibold leading-5 text-[#1f2937]">
+            {activity.title}
+          </p>
+          {activity.durationLabel ? (
+            <span className="mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full bg-[#f1f5f9] px-2 py-1 text-[10px] font-semibold text-[#64748b]">
+              <Clock3 className="h-3 w-3" strokeWidth={2} />
+              {activity.durationLabel}
+            </span>
+          ) : null}
+        </div>
+        {tags.length > 0 ? (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {tags.map((tag) => (
+              <span
+                key={tag.id}
+                className="rounded-full bg-[#f8fafc] px-2 py-1 text-[10px] font-medium text-[#64748b]"
+              >
+                {tag.label}
+              </span>
+            ))}
+          </div>
         ) : null}
       </div>
     </div>
   );
 }
 
-function CollapsedGeneratingStrip({ text }: { text: string }): JSX.Element {
-  const parsed = parseTopStrip(text);
+function MemberFitRow({
+  member,
+  theme,
+}: {
+  member: PlanMemberRatingDto;
+  theme: PlanTheme;
+}): JSX.Element {
   return (
-    <div className="flex h-8 w-full items-center rounded-bl-[11.525px] rounded-br-[11.525px] rounded-tr-[11.525px] bg-white px-2.5 shadow-[0px_2.881px_7.203px_rgba(0,0,0,0.03)]">
-      <img src={FIGMA_PLANS_1119.topStripIconLeft} alt="" className="h-[10px] w-[10px] shrink-0 object-contain" />
-      <div className="min-w-0 flex-1 pl-[14px] pr-6">
-        {parsed ? (
-          <p className="[font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[12px] leading-[17.288px] text-[#626262]">
-            <span className="font-semibold text-[#626262]">
-              {parsed.semi}
-            </span>
-            <span className="font-normal">{parsed.tail}</span>
+    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 border-t border-[#edf0f4] py-2 first:border-t-0 first:pt-0 last:pb-0">
+      <span className="flex h-7 w-7 items-center justify-center text-[18px]" aria-hidden>
+        {member.emoji}
+      </span>
+      <div className="min-w-0">
+        <div className="flex items-center justify-between gap-2">
+          <p className="truncate text-[12px] font-semibold text-[#475569]">{member.label}</p>
+          <p className="shrink-0 text-[11px] font-bold text-[#111827]">
+            {member.score.toFixed(1)}
           </p>
-        ) : (
-          <p className="line-clamp-2 [font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[12px] leading-[17px] text-[#626262]">{text}</p>
-        )}
+        </div>
+        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#e5e7eb]">
+          <div
+            className={cn("h-full rounded-full", theme.progress)}
+            style={{ width: `${getScorePercent(member)}%` }}
+          />
+        </div>
       </div>
-      <img src={FIGMA_PLANS_1119.topStripChevron} alt="" className="mr-px h-[6px] w-[9px] shrink-0 object-contain opacity-80" />
+      <CheckCircle2 className={cn("h-4 w-4", theme.softText)} strokeWidth={2.1} />
+    </div>
+  );
+}
+
+function ComparisonPlanCard({
+  plan,
+  index,
+  onSelect,
+}: {
+  plan: TravelPlanCardDto;
+  index: number;
+  onSelect: () => void;
+}): JSX.Element {
+  const theme = getPlanTheme(plan, index);
+  const name = getPlanName(plan, index);
+  const headline = getPlanHeadline(plan, index);
+  const tags = getPlanTags(plan, 5);
+  const activities = (plan.activities ?? []).slice(0, 4);
+  const remainingActivities = Math.max(0, (plan.activities?.length ?? 0) - activities.length);
+  const reason = getFirstReason(plan);
+
+  return (
+    <article
+      onClick={onSelect}
+      className={cn(
+        "rounded-[16px] border bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition active:scale-[0.995]",
+        theme.border,
+        plan.recommended && "ring-4",
+        plan.recommended && theme.ring,
+      )}
+    >
+      <header className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <SmallPill className={theme.badge}>{name}</SmallPill>
+          {plan.recommended ? (
+            <SmallPill className="bg-[#111827] text-white">
+              <CheckCircle2 className="mr-1 h-3.5 w-3.5" strokeWidth={2.2} />
+              推荐
+            </SmallPill>
+          ) : null}
+        </div>
+        {plan.overallScoreLabel ? (
+          <span className="shrink-0 text-[12px] font-bold text-[#111827]">
+            {plan.overallScoreLabel}
+          </span>
+        ) : null}
+      </header>
+
+      <h2 className="mt-3 text-[18px] font-bold leading-[1.25] tracking-[0] text-[#111827]">
+        {headline}
+      </h2>
+
+      {tags.length > 0 ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {tags.map((tag) => (
+            <span
+              key={tag}
+              className={cn("rounded-full px-2.5 py-1 text-[11px] font-semibold", theme.faint, theme.softText)}
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      {activities.length > 0 ? (
+        <section className="mt-4 border-y border-[#edf0f4] py-4">
+          <div className="mb-3 flex items-center gap-2 text-[13px] font-bold text-[#111827]">
+            <Route className={cn("h-4 w-4", theme.softText)} strokeWidth={2.2} />
+            路线安排
+          </div>
+          <div>
+            {activities.map((activity, activityIndex) => (
+              <RouteStep
+                key={activity.id}
+                activity={activity}
+                index={activityIndex}
+                isLast={activityIndex === activities.length - 1}
+                theme={theme}
+              />
+            ))}
+          </div>
+          {remainingActivities > 0 ? (
+            <p className="mt-3 text-[11px] font-medium text-[#94a3b8]">
+              还有 {remainingActivities} 个行程细节会在时间轴里展开
+            </p>
+          ) : null}
+        </section>
+      ) : null}
+
+      {plan.memberRatings?.length ? (
+        <section className="mt-4">
+          <div className="mb-2 flex items-center gap-2 text-[13px] font-bold text-[#111827]">
+            <UsersRound className={cn("h-4 w-4", theme.softText)} strokeWidth={2.2} />
+            成员匹配
+          </div>
+          <div>
+            {plan.memberRatings.map((member) => (
+              <MemberFitRow key={`${plan.id}-${member.id}`} member={member} theme={theme} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {reason ? (
+        <section className={cn("mt-4 rounded-[12px] px-3 py-3", theme.faint)}>
+          <p className={cn("text-[12px] font-bold", theme.softText)}>
+            {plan.compensationTitle || "安排理由"}
+          </p>
+          <p className="mt-1.5 line-clamp-3 text-[12px] leading-5 text-[#475569]">{reason}</p>
+        </section>
+      ) : null}
+
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onSelect();
+        }}
+        className={cn(
+          "mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-[12px] text-[14px] font-semibold transition active:scale-[0.99]",
+          theme.button,
+        )}
+      >
+        选择并查看路线
+        <ChevronRight className="h-4 w-4" strokeWidth={2.2} />
+      </button>
+    </article>
+  );
+}
+
+function ComposerDock({
+  input,
+  onInputChange,
+  onSubmit,
+  submitPending,
+  journeyFlow,
+}: {
+  input: string;
+  onInputChange: (value: string) => void;
+  onSubmit: () => void;
+  submitPending: boolean;
+  journeyFlow: { travelId: string; planId: string };
+}): JSX.Element {
+  return (
+    <div className={tabScreenComposerDockMtAutoClass}>
+      <div className="flex items-center gap-2">
+        <div className="flex min-h-[48px] flex-1 items-center rounded-[16px] border border-[#dbe3ee] bg-white px-4 shadow-[0_6px_18px_rgba(15,23,42,0.06)] focus-within:border-[#94a3b8]">
+          <input
+            type="text"
+            value={input}
+            onChange={(event) => onInputChange(event.target.value)}
+            placeholder={submitPending ? "正在修改方案…" : "告诉我想改哪里，例如更近一点、少排队..."}
+            disabled={submitPending}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") onSubmit();
+            }}
+            className="min-w-0 flex-1 bg-transparent py-3 text-[13px] text-[#1f2937] outline-none placeholder:text-[#94a3b8]"
+          />
+        </div>
+        <button
+          type="button"
+          aria-label="发送"
+          disabled={submitPending}
+          onClick={onSubmit}
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#111827] text-white shadow-[0_8px_18px_rgba(17,24,39,0.22)] transition active:scale-95 disabled:opacity-50"
+        >
+          <SendHorizontal className="h-5 w-5" strokeWidth={2.2} />
+        </button>
+      </div>
+
+      <AppBottomNav active="首页" journeyFlow={journeyFlow} />
     </div>
   );
 }
@@ -231,17 +551,21 @@ export const PlanCompareScreen = (): JSX.Element => {
   const navigate = useNavigate();
   const { state, pathname } = useLocation();
   const loc = state as PlansLocationState | null;
-  const travelId = loc?.travelId ?? MOCK_TRAVEL_ID;
-  const navPlanFallback = "plan-a";
+  const resolved = useResolvedTravel(loc);
+  const travelId = resolved.travelId;
+  const resolvingTravel = resolved.loading && !loc?.travelId;
 
   const [page, setPage] = useState<PlanComparisonPageDto | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [input, setInput] = useState("");
+  const [submitPending, setSubmitPending] = useState(false);
+  const [revisionNotice, setRevisionNotice] = useState<RevisionNoticeState>(null);
+  const { toastMessage, showToast } = useAppToast();
 
   useEffect(() => {
     const prev = document.title;
     if (pathname === PLANS_PATH) {
-      document.title = "双方案对比 · 出行助手";
+      document.title = "推荐方案 · 出行助手";
     }
     return () => {
       document.title = prev;
@@ -249,6 +573,7 @@ export const PlanCompareScreen = (): JSX.Element => {
   }, [pathname]);
 
   useEffect(() => {
+    if (!travelId) return;
     let active = true;
     setLoadError(null);
     setPage(null);
@@ -266,104 +591,123 @@ export const PlanCompareScreen = (): JSX.Element => {
     };
   }, [travelId]);
 
+  const plans = Array.isArray(page?.plans) ? page.plans : [];
+  const navPlanFallback =
+    loc?.planId ??
+    resolved.planId ??
+    plans.find((plan) => plan.recommended)?.id ??
+    plans[0]?.id ??
+    "plan-a";
   const chatBackState = { travelId };
   const journeyFlow = { travelId, planId: navPlanFallback };
 
-  const voiceFallback = FIGMA_PLANS_1119.voiceChip;
+  function handleSelectPlan(planId: string): void {
+    setCurrentTravel({ travelId, planId });
+    navigate(TIMELINE_PATH, { state: { travelId, planId } });
+  }
 
-  function trySubmitPlanChoice(): void {
-    const choice = detectPlanChoiceFromInput(input);
-    if (!choice) return;
-    navigate(TIMELINE_PATH, { state: { travelId, planId: choice } });
-    setInput("");
+  async function handleComposerSubmit(): Promise<void> {
+    const text = input.trim();
+    const choice = detectPlanChoiceFromInput(text);
+    if (choice) {
+      const planId = resolveChoicePlanId(choice, plans);
+      setInput("");
+      handleSelectPlan(planId);
+      return;
+    }
+    if (!text) {
+      showToast("请先选择一个方案，或输入想调整的内容");
+      return;
+    }
+
+    setSubmitPending(true);
+    setLoadError(null);
+    setRevisionNotice(null);
+    try {
+      const revised = await reviseTravelPlan(travelId, {
+        message: text,
+        targetPlanId: navPlanFallback,
+        revisionMode: "partial",
+      });
+      if (revised.updatedPlanComparison) {
+        setPage(revised.updatedPlanComparison);
+      } else {
+        setPage(await fetchPlanComparisonPage(travelId));
+      }
+      setRevisionNotice({ summary: revised.revisionSummary, warnings: revised.warnings });
+      showToast("方案已根据你的要求更新");
+      setInput("");
+    } catch (e: unknown) {
+      setLoadError(e instanceof Error ? e.message : "修改方案失败");
+    } finally {
+      setSubmitPending(false);
+    }
   }
 
   return (
-    <AppScreenShell>
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <img
-            src={FIGMA_PLANS_1119.bgBlobA}
-            alt=""
-            className="absolute -left-[551px] -top-[321px] h-[795px] w-[1293px] max-w-none opacity-95"
-          />
-          <img
-            src={FIGMA_PLANS_1119.bgBlobB}
-            alt=""
-            className="absolute -left-[122px] top-[100px] h-[1046px] w-[1507px] max-w-none opacity-[0.93]"
-          />
-        </div>
+    <AppScreenShell frameClassName="bg-[#f6f7fb]">
+      <AppToast message={toastMessage} />
 
-        <Link
-          to={CHAT_PATH}
-          state={chatBackState}
-          className={cn(
-            "absolute left-[10px] z-20 flex h-10 w-10 items-center justify-center rounded-full text-[#251e1e] hover:bg-black/[0.04]",
-            embeddedBackButtonTopClass(),
-          )}
-          aria-label="返回对话"
-        >
-          <ChevronLeft className="h-6 w-6" strokeWidth={1.75} />
-        </Link>
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[210px] bg-[linear-gradient(180deg,#eef5ff_0%,#f6f7fb_100%)]" />
 
-        <div className="relative z-[1] flex min-h-0 flex-1 flex-col overflow-x-hidden">
-          <EmbeddedStatusBarImage src={page?.statusBarImageUrl ?? FIGMA_PLANS_1119.statusBar} />
-          <div className="flex min-h-0 flex-1 flex-col px-[29px] pb-3 pt-3">
-            {loadError ? (
-              <p className="py-12 text-center text-[13px] text-red-600">{loadError}</p>
-            ) : !page ? (
-              <p className="py-12 text-center text-[13px] text-[#6b7280]">加载中…</p>
-            ) : (
-              <div className="flex min-h-0 flex-1 flex-col">
-                <ContentFitZoom
-                  className="space-y-2 pb-2"
-                  recalcKey={`${page.plans?.length ?? 0}:${(page.assistantMessage ?? "").slice(0, 120)}`}
-                >
-                  <CollapsedGeneratingStrip text={page.topStatusText ?? ""} />
-                  {(Array.isArray(page.plans) ? page.plans : []).map((p: TravelPlanCardDto) => (
-                    <ComparisonPlanCard key={p.id} plan={p} />
+      <Link
+        to={CHAT_PATH}
+        state={chatBackState}
+        className={cn(
+          "absolute left-[10px] z-20 flex h-11 w-11 items-center justify-center rounded-full border border-white/70 bg-white/80 text-[#111827] shadow-[0_6px_18px_rgba(15,23,42,0.08)] backdrop-blur-sm transition-colors hover:bg-white",
+          embeddedBackButtonTopClass(),
+        )}
+        aria-label="返回对话"
+      >
+        <ChevronLeft className="h-6 w-6" strokeWidth={1.8} />
+      </Link>
+
+      <div className="relative z-[1] flex min-h-0 flex-1 flex-col overflow-hidden">
+        <EmbeddedStatusBarImage src={page?.statusBarImageUrl ?? FIGMA_PLANS_1119.statusBar} />
+
+        {resolvingTravel ? (
+          <LoadingState />
+        ) : loadError ? (
+          <ErrorState message={loadError} />
+        ) : !page ? (
+          <LoadingState />
+        ) : (
+          <div className="flex min-h-0 flex-1 flex-col px-[14px] pb-3 pt-2">
+            <div className="min-h-0 flex-1 overflow-y-auto pb-5">
+              <header className="pb-3 pl-12 pr-1">
+                <p className="text-[12px] font-semibold text-[#64748b]">{page.topStatusText}</p>
+                <h1 className="mt-1 text-[26px] font-bold leading-[1.12] tracking-[0] text-[#111827]">
+                  推荐方案
+                </h1>
+              </header>
+
+              <div className="space-y-4">
+                <RevisionNotice notice={revisionNotice} />
+                <RecommendationPanel page={page} onSelectPlan={handleSelectPlan} />
+
+                <section className="space-y-3" aria-label="方案列表">
+                  {plans.map((plan, index) => (
+                    <ComparisonPlanCard
+                      key={plan.id}
+                      plan={plan}
+                      index={index}
+                      onSelect={() => handleSelectPlan(plan.id)}
+                    />
                   ))}
-                  <div className="max-w-[277px] rounded-bl-[11.525px] rounded-br-[11.525px] rounded-tr-[11.525px] bg-white px-3 py-2 shadow-[0px_2.881px_7.203px_rgba(0,0,0,0.03)]">
-                    <p className="[font-family:'PingFang_SC','PingFang_SC-Regular',sans-serif] text-[11px] font-semibold leading-snug text-[#626262]">
-                      {page.assistantMessage ?? ""}
-                    </p>
-                  </div>
-                </ContentFitZoom>
-
-                <div className={tabScreenComposerDockMtAutoClass}>
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex min-h-[46px] flex-1 items-center rounded-[30px] border-[0.5px] border-[#50a9fe] bg-white pl-3 pr-[46px] shadow-[0px_2px_8px_rgba(0,0,0,0.06)]">
-                      <img
-                        src={page.voiceInputIconUrl || voiceFallback}
-                        alt=""
-                        className="absolute right-4 top-1/2 z-[2] h-7 w-[34px] -translate-y-1/2 select-none object-contain"
-                      />
-                      <input
-                        type="text"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="输入 plan A / plan B 进入对应时间轴…"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") trySubmitPlanChoice();
-                        }}
-                        className="min-w-0 flex-1 bg-transparent py-2 pr-14 [font-family:'HYQiHei-Regular',Helvetica] text-[13px] text-[#333c43] outline-none placeholder:text-[#343d4380]"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      aria-label="发送"
-                      onClick={() => trySubmitPlanChoice()}
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#251e1e] text-white shadow-[0px_2px_8px_rgba(0,0,0,0.18)] transition-opacity hover:opacity-90"
-                    >
-                      <ChevronRight className="h-5 w-5" strokeWidth={2} />
-                    </button>
-                  </div>
-
-                  <AppBottomNav active="首页" journeyFlow={journeyFlow} />
-                </div>
+                </section>
               </div>
-            )}
+            </div>
+
+            <ComposerDock
+              input={input}
+              onInputChange={setInput}
+              onSubmit={() => void handleComposerSubmit()}
+              submitPending={submitPending}
+              journeyFlow={journeyFlow}
+            />
           </div>
-        </div>
+        )}
+      </div>
     </AppScreenShell>
   );
 };
