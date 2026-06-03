@@ -55,7 +55,10 @@ tasks.register('startLocalBackend', Exec) {
 }
 
 tasks.matching { task -> task.name == 'installDebug' }.configureEach {
-    dependsOn tasks.named('startLocalBackend')
+    if (project.hasProperty('weekendAgentStartLocalBackend') &&
+        project.property('weekendAgentStartLocalBackend').toString().toBoolean()) {
+        dependsOn tasks.named('startLocalBackend')
+    }
 }
 
 try {
