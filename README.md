@@ -9,11 +9,13 @@ Weekend Agent 是一个面向周末出行和本地探索场景的移动端 Agent
 - ReAct Agent Runtime，支持 LLM/Mock Decider、工具注册、策略约束、状态归约、校验与修复。
 - 本地 JSON 数据资产，包括 POI、路线边、排队、天气、用户记忆、反馈和运行时状态。
 
-生产移动端 API 默认指向：
+## 在线展示页
 
-```text
-https://weekendagent.fcxy.online/api/v1/mobile
-```
+项目官网与 APK 下载页：
+
+[https://weekapk.fcxy.online/](https://weekapk.fcxy.online/)
+
+![Weekend Agent 展示页首页](docs/screenshots/weekapk-homepage.png)
 
 ## App 截图
 
@@ -294,4 +296,6 @@ npm run build
 
 ## License
 
-当前仓库未声明开源许可证。正式公开前请补充 License，并确认第三方素材、截图和数据源的使用权限。
+本项目采用 [PolyForm Noncommercial License 1.0.0](LICENSE)。
+
+你可以出于学习、研究、测试和非商业目的查看、使用、修改和分发本项目代码；未经作者额外授权，不允许将本项目或其衍生作品用于商业用途。正式复用前请同时确认第三方素材、截图和数据源的使用权限。
