@@ -20,18 +20,18 @@ https://weekendagent.fcxy.online/api/v1/mobile
 <table>
   <tr>
     <td align="center"><img src="docs/screenshots/home-scene-picker.jpg" width="210" alt="首页场景快选"/><br/>首页场景快选</td>
+    <td align="center"><img src="docs/screenshots/ai-task-progress.jpg" width="210" alt="AI 任务进度"/><br/>AI 任务进度</td>
+    <td align="center"><img src="docs/screenshots/plan-comparison.jpg" width="210" alt="方案对比"/><br/>方案对比</td>
+  </tr>
+  <tr>
     <td align="center"><img src="docs/screenshots/live-map.jpg" width="210" alt="行程中地图"/><br/>行程中地图</td>
     <td align="center"><img src="docs/screenshots/itinerary-hub.jpg" width="210" alt="行程主页"/><br/>行程主页</td>
+    <td align="center"><img src="docs/screenshots/trip-wrap.jpg" width="210" alt="行程收尾"/><br/>行程收尾</td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/screenshots/trip-wrap.jpg" width="210" alt="行程收尾"/><br/>行程收尾</td>
     <td align="center"><img src="docs/screenshots/feedback.jpg" width="210" alt="体验反馈"/><br/>体验反馈</td>
     <td align="center"><img src="docs/screenshots/profile-preferences.jpg" width="210" alt="偏好记忆"/><br/>偏好记忆</td>
-  </tr>
-  <tr>
     <td align="center"><img src="docs/screenshots/companion-profiles.jpg" width="210" alt="同行人档案"/><br/>同行人档案</td>
-    <td></td>
-    <td></td>
   </tr>
 </table>
 
@@ -291,23 +291,6 @@ ruff check .
 ```bash
 npm run build
 ```
-
-## 当前边界
-
-- 预约、支付、叫车、导航、日历和分享尚未接入真实第三方服务。后端会记录为 `pending_provider` 任务，不会伪造真实成功。
-- 当前数据以本地 JSON 为主，适合 demo、算法原型和 Agent 编排实验；生产环境需要替换为真实地图/POI/订单/账户系统。
-- 移动端暂未做账号登录，使用 `X-Device-User-Id` 做匿名设备态。
-- Android 包名和部分历史命名仍保留早期 Anima/Travel Assistant 痕迹，后续可以统一品牌命名。
-
-## 后续算法与 Agent 方向
-
-如果把项目继续打造成更像“大模型/Agent 项目”的作品，可以优先补这几类工作：
-
-- Agent 轨迹数据集：记录 query、user memory、tool specs、每一步 action、observation、validator result、repair result 和最终用户反馈。
-- 编排评测集：构造多轮任务，包括缺失信息、多人偏好冲突、天气变化、排队超时、用户临时修改和 provider 失败。
-- 自动评测指标：工具选择正确率、约束违反率、修复成功率、推荐满意度、平均工具调用次数、SSE 延迟和最终方案可执行性。
-- 策略优化：先做 prompt/decider ablation，再考虑基于轨迹的 SFT 或偏好优化；不要一开始就训练基座模型。
-- 工具生态扩展：接入真实地图、POI、天气、日历、导航和支付沙箱，让 Agent 编排从 mock tool 走向真实 tool use。
 
 ## License
 
