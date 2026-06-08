@@ -9,6 +9,10 @@ Weekend Agent 是一个面向周末出行和本地探索场景的移动端 Agent
 - ReAct Agent Runtime，支持 LLM/Mock Decider、工具注册、策略约束、状态归约、校验与修复。
 - 本地 JSON 数据资产，包括 POI、路线边、排队、天气、用户记忆、反馈和运行时状态。
 
+**项目文档：[PROJECT_DOCUMENT.md](https://github.com/ZZUwxr/weekend-agent/blob/main/docs/PROJECT_DOCUMENT.md)**
+
+**核心设计文档：[PLANNING_MEMORY_DESIGN.md](https://github.com/ZZUwxr/weekend-agent/blob/main/docs/PLANNING_MEMORY_DESIGN.md)**
+
 ## 在线展示页
 
 项目官网与 APK 下载页：
